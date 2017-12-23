@@ -1,0 +1,31 @@
+<HTML>
+<HEAD>
+
+<!-- By Fonzie Voltonov From FVRING.COM -->
+<TITLE>Pic d - Planes are made of tiles !</TITLE>
+
+</HEAD>
+<BODY bgcolor="white" alink="red" vlink="gray" link="black">
+<FONT face="verdana" size="2" color="black">
+<A href="index.html"><IMG src="pics/title.gif" border="0" align="right" alt="Go home"></A><BR><BR><BR><BR><BR><BR><BR>
+<BR><CENTER>
+<B><U>Pic d - Planes are made of tiles !</U></B><BR><BR>
+</CENTER>
+Basicaly, a plane is a big array (a 512px*512px plane is a 64*64 cases array. Aka PlaneData). In each case, you can specify:<BR>
+1-Priority (HP or LP).<BR>
+2-Palette (0-3).<BR>
+3-Flip (V,H,HV).<BR>
+<Font color="red">4-Id of the starting tile (0-2047).</FONT><BR>
+It's a bit like sprites, but here, you can specify 1 independant tiles / case of the plane.<BR>
+<B>You must define the order of tiles on the plane yourself</B>.<BR>
+In the fallowing example, the complete font tiles are stored in the VRAM (pattern).<BR>
+And when the program reload the plane with *text* it just put: A=1,B=2,C=3....<BR>
+Infact, when the letter A is used 3 times or more in the text, it's a bit like a clone (in the PlaneData, not in the pattern). <BR>
+<FOnt color="green">This *cloning* technique is used in 99% of the games to save VRAM pattern space. Because, when you want to display a full screen pic, it's 40*28 tiles (1120 tiles) and this is enormous to store  in the VRAM (the pattern).</font><BR>
+<BR><BR><CENTER>
+<IMG src="pics/pic_d.gif">
+
+</CENTER>
+</FONT>
+</BODY>
+</HTML>

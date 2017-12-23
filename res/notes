@@ -1,0 +1,19 @@
+dgen github
+https://github.com/rasky/genemu
+https://github.com/tomaka/glutin
+https://github.com/totallymike/oxidizer
+https://github.com/koute/pinky/blob/master/pinky-libretro/src/lib.rs
+https://github.com/rust-lang-nursery/rust-clippy
+https://github.com/TASVideos/BizHawk/tree/master/BizHawk.Emulation.Cores/CPUs/68000
+http://fms.komkon.org/EMUL8/HOWTO.html
+
+// https://raw.githubusercontent.com/sonicretro/s2disasm/master/s2.asm
+// http://fms.komkon.org/EMUL8/HOWTO.html
+//https://emu-docs.org/CPU%2068k/68000inst.txt
+//https://github.com/ryanterry131/jaxboy SDL
+//
+// a0-a7
+// d0-d7
+// RAM
+// VRAM
+// GFX

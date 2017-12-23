@@ -1,29 +1,25 @@
 use rom::Rom;
 use m68k::M68k;
+use std::io::Error;
 
 #[derive(Debug)]
 pub struct Console {
-    rom: Option<Rom>,
+    rom: Rom,
     m68k: M68k,
     // mode
     // region
 }
 
 impl Console {
-    pub fn new() -> Self {
-        Console {
-            rom: None,
+    pub fn new(path: &str) -> Result<Self, Error> {
+        Ok(Console {
+            rom: Rom::new(path)?,
             m68k: M68k::new(),
-        }
-    }
-
-    pub fn load_rom(&mut self, path: &str) {
-        self.rom = Rom::new(path).ok(); // convert Result to Option
-        self.start();
+        })
     }
 
     pub fn start(&mut self) {
-        self.m68k.pc = self.rom.unwrap().entry_point();
+        self.m68k.pc = self.rom.entry_point();
 
         println!("{:#?}", self.m68k);
     }

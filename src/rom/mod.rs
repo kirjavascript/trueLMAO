@@ -74,16 +74,4 @@ impl Rom {
         String::from(str::from_utf8(&tmp).unwrap())
     }
 
-
-    // instructions
 }
-// https://raw.githubusercontent.com/sonicretro/s2disasm/master/s2.asm
-// http://fms.komkon.org/EMUL8/HOWTO.html
-//https://emu-docs.org/CPU%2068k/68000inst.txt
-//https://github.com/ryanterry131/jaxboy SDL
-//
-// a0-a7
-// d0-d7
-// RAM
-// VRAM
-// GFX
