@@ -1,6 +1,7 @@
 mod console;
-mod rom;
 mod m68k;
+mod ram;
+mod rom;
 
 use console::Console;
 
