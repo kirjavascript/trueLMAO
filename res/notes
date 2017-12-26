@@ -5,15 +5,39 @@ https://github.com/totallymike/oxidizer
 https://github.com/koute/pinky/blob/master/pinky-libretro/src/lib.rs
 https://github.com/rust-lang-nursery/rust-clippy
 https://github.com/TASVideos/BizHawk/tree/master/BizHawk.Emulation.Cores/CPUs/68000
+https://www.retrodev.com/blastem/
 http://fms.komkon.org/EMUL8/HOWTO.html
 
 https://www.nxp.com/docs/en/reference-manual/M68000PRM.pdf
 https://segaretro.org/images/1/18/GenesisTechnicalOverview.pdf
+http://www.hacking-cult.org/?r/18/23
+https://en.wikibooks.org/wiki/Genesis_Programming
+
  https://raw.githubusercontent.com/sonicretro/s2disasm/master/s2.asm
- http://fms.komkon.org/EMUL8/HOWTO.html
 https://emu-docs.org/CPU%2068k/68000inst.txt
 https://github.com/ryanterry131/jaxboy SDL
-flamewing cycle counting
 
 --script build.sh --rom s2.bin
 --watch
+
+16:24:54 < Jorge> A10000 region only goes upto A1001F
+16:25:29 < Jorge> it has the version register followed by the port1/2/3 controls & data
+16:26:09 < Jorge> A10020 doesn't give you data acknolewdge, so the system just hangs
+16:27:27 <%snkenjoi> just by reading it?
+16:27:33 < Jorge> or writing it
+16:27:39 < Jorge> it's basically touch and die
+
+16:28:21 <%snkenjoi> what about if you try writing to the version addr
+16:28:26 <%snkenjoi> hang or ignore?
+16:28:39 < Jorge> 99% sure nothing will happen
+
+16:49:22 < Jorge> many old MD emulators are what something called "line emulators"
+16:49:35 < Jorge> they render a line
+16:49:43 < Jorge> line is 3420 cycles
+16:50:02 < Jorge> >run CPU for 3420 / 7 cycles
+16:50:09 < Jorge> (basically)
+16:50:36 < Jorge> exodus is a cycle emulator, meaning that every cycle it evaulates everything
+16:51:54 <%snkenjoi> a line being a horizontal interrupt?
+16:51:59 < Jorge> no, a video line
+
+https://segaretro.org/images/a/a2/Genesis_Software_Manual.pdf page 72

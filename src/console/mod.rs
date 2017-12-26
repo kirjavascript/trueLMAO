@@ -1,13 +1,15 @@
-use m68k::{M68k,opcode};
+use m68k::M68k;
 use rom::Rom;
 use ram::Ram;
+use opcodes::Opcode;
+
 use std::io::Error;
 
 #[derive(Debug)]
 pub struct Console {
-    m68k: M68k,
-    rom: Rom,
-    ram: Ram,
+    pub m68k: M68k,
+    pub rom: Rom,
+    pub ram: Ram,
     // mode
     // region
 }
@@ -24,7 +26,7 @@ impl Console {
     pub fn start(&mut self) {
         self.m68k.pc = self.rom.entry_point();
 
-        let next_word = self.rom.read_word(self.m68k.pc as usize);
+        Opcode::next(&self);
 
         println!("{}", self.m68k);
     }

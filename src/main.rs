@@ -2,6 +2,7 @@ mod console;
 mod m68k;
 mod ram;
 mod rom;
+mod opcodes;
 
 use console::Console;
 
