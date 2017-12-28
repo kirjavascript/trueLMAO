@@ -7,15 +7,22 @@ https://github.com/rust-lang-nursery/rust-clippy
 https://github.com/TASVideos/BizHawk/tree/master/BizHawk.Emulation.Cores/CPUs/68000
 https://www.retrodev.com/blastem/
 http://fms.komkon.org/EMUL8/HOWTO.html
+https://github.com/ryanterry131/jaxboy SDL
 
 https://www.nxp.com/docs/en/reference-manual/M68000PRM.pdf
 https://segaretro.org/images/1/18/GenesisTechnicalOverview.pdf
 http://www.hacking-cult.org/?r/18/23
 https://en.wikibooks.org/wiki/Genesis_Programming
+https://www.tcd.ie/Engineering/courses/BAI/JS_Subjects/3D1/Documents/Handouts/ExVecTab.pdf
+
+http://www.cs.mcgill.ca/~cs573/fall2002/notes/lec273/lecture10/
+https://stackoverflow.com/questions/33343362/addressing-mode-distinguishing-between-absolute-short-and-absolute-long
+http://www.scarpaz.com/Attic/Didattica/Scarpazza-2005-68k-1-addressing.pdf
 
  https://raw.githubusercontent.com/sonicretro/s2disasm/master/s2.asm
 https://emu-docs.org/CPU%2068k/68000inst.txt
-https://github.com/ryanterry131/jaxboy SDL
+http://engr.case.edu/merat_francis/eeap282f97/lectures/13_Addressing%20Modes.pdf
+http://wpage.unina.it/rcanonic/didattica/ce1/docs/68000.pdf addressing
 
 --script build.sh --rom s2.bin
 --watch

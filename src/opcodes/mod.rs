@@ -21,6 +21,13 @@ enum Code {
     Tst,
 }
 
+enum Mode {
+    AbsShort, // (xxx).w
+    AbsLong, // (xxx).l
+    Immediate, // #<data>*
+    // AddrIndirect(u32),
+}
+
 impl Opcode {
     pub fn next(cn: &Console) {
         let next_word = cn.rom.read_word(cn.m68k.pc as usize);
@@ -52,8 +59,11 @@ impl Opcode {
     }
 
     fn get_addr_mode(bits: u16) {
-
+        match bits {
+            0b111000 => Mode::AbsShort,
+        }
     }
 
     // pub fn pc_inc()
+    // impl fmt::Display for Opcode
 }
