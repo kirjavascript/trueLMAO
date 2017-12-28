@@ -18,9 +18,10 @@ enum Size {
 
 #[derive(Debug)]
 enum Code {
-    Tst,
+    Tst = "tst",
 }
 
+#[derive(Debug)]
 enum Mode {
     AbsShort, // (xxx).w
     AbsLong, // (xxx).l
@@ -59,9 +60,9 @@ impl Opcode {
     }
 
     fn get_addr_mode(bits: u16) {
-        match bits {
-            0b111000 => Mode::AbsShort,
-        }
+        // match bits {
+        //     0b111000 => Mode::AbsShort,
+        // }
     }
 
     // pub fn pc_inc()
