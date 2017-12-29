@@ -7,8 +7,8 @@ pub struct Opcode {
     length: usize, // in bytes (amount to increase pc)
     size: Option<Size>, // size of operation
     mode: Option<EAddr>,
-    // src: Option<Register>,
-    // dst: Option<Register>,
+    src: Option<u32>,
+    dst: Option<u32>,
 }
 
 
@@ -51,25 +51,30 @@ enum Mode {
 
 impl Opcode {
     pub fn next(cn: &Console) -> Self {
-        let next_word = cn.rom.read_word(cn.m68k.pc as usize);
+        let pc = cn.m68k.pc as usize;
+        let next_word = cn.rom.read_word(pc);
         let mut length = 2;
 
         // NOP
         if next_word == 0x4E71 {
             Opcode {
                 code: Code::Nop,
-                length: 2,
+                length,
                 size: None,
                 mode: None,
+                src: None,
+                dst: None,
             }
         }
         // RTS
         else if next_word == 0x4E75 {
             Opcode {
                 code: Code::Rts,
-                length: 2,
+                length,
                 size: None,
                 mode: None,
+                src: None,
+                dst: None,
             }
         }
         // TST
@@ -81,13 +86,29 @@ impl Opcode {
 
             println!("{}", format!("{:b}", next_word));
             println!("{}", format!("{:x}", next_word));
-            println!("{:#?}", mode);
+
+            let dst = match mode.typ {
+                Mode::AbsLong => {
+                    length += 4;
+                    Some(cn.rom.read_long(pc + 2))
+                },
+                Mode::AbsShort => {
+                    length += 2;
+                    Some(cn.rom.read_word(pc + 2) as u32)
+                },
+                Mode::Immediate => {
+                    None // TODO: maybe data (but not supported for tst)
+                },
+                _ => None, // TODO: maybe other modes grab data
+            };
 
             Opcode {
                 code,
                 length,
                 size: Some(size),
                 mode: Some(mode),
+                src: None,
+                dst,
             }
         }
         else {

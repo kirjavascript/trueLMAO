@@ -30,6 +30,7 @@ impl Console {
         let opcode = Opcode::next(&self);
 
         println!("{}", opcode.to_string());
+        println!("{:#?}", opcode);
 
     }
 }
