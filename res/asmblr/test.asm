@@ -6,5 +6,7 @@
 
 EntryPoint:
     tst.l	($A10008).l
+    nop
+    rts
 
 System_Stack:
