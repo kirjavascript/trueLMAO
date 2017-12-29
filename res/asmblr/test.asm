@@ -5,6 +5,6 @@
     nop
 
 EntryPoint:
-    tst.b	($A10008).l
+    tst.l	($A10008).l
 
 System_Stack:
