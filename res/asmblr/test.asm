@@ -5,7 +5,7 @@
     nop
 
 EntryPoint:
-    tst.l	#$FFFFFFFF
+    tst.l	($A10008).l
     nop
     rts
 

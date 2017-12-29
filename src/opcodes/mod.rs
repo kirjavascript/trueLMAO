@@ -38,7 +38,7 @@ struct EAddr {
 #[derive(Debug)]
 enum Mode {
     DataDirect, // Dn
-    AddrDirect, // An*
+    AddrDirect, // An
     AddrIndirect, // (An)
     AddrIndirectPostInc, // (An) +
     AddrIndirectPreInc, // - (An)
@@ -46,7 +46,7 @@ enum Mode {
     // (d8,An,Xn)
     AbsShort, // (xxx).w
     AbsLong, // (xxx).l
-    Immediate, // #<data>*
+    Immediate, // #<data>
 }
 
 impl Opcode {
@@ -159,6 +159,21 @@ impl Opcode {
             Some(Size::Word) => code.push_str(".w"),
             Some(Size::Long) => code.push_str(".l"),
             None => {},
+        }
+
+        match self.mode {
+            None => {},
+            Some(ref mode) => {
+                match mode.typ {
+                    Mode::AbsShort => {
+                        code = format!("{}\t(${:X}).w", code, self.dst.unwrap());
+                    },
+                    Mode::AbsLong => {
+                        code = format!("{}\t(${:X}).l", code, self.dst.unwrap());
+                    },
+                    _ => panic!("Unknown addressing mode (display)"),
+                }
+            },
         }
 
         code
