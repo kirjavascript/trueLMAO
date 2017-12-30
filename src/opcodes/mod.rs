@@ -6,10 +6,10 @@ pub struct Opcode {
     code: Code,
     length: usize, // in bytes (amount to increase pc)
     size: Option<Size>, // size of operation
-    mode: Option<EAddr>,
+    mode: Option<EAddr>, // effective address
+    ext: Option<Ext>, // extension word
     src: Option<u32>,
     dst: Option<u32>,
-    // ext: Option<Ext>
 }
 
 
@@ -29,7 +29,6 @@ impl fmt::Display for Code {
 #[derive(Debug)]
 enum Size { Byte, Word, Long }
 
-// effective address
 #[derive(Debug)]
 struct EAddr {
     typ: Mode,
@@ -50,6 +49,13 @@ enum Mode {
     Immediate, // #<data>
 }
 
+#[derive(Debug)]
+struct Ext {
+    displace: u32,
+    // size: Option<u32>
+    // reg_type: Option<RegType>
+}
+
 macro_rules! basic_opcode {
     ($x:expr) => (
         Opcode {
@@ -57,6 +63,7 @@ macro_rules! basic_opcode {
             length: 2,
             size: None,
             mode: None,
+            ext: None,
             src: None,
             dst: None,
         }
@@ -65,48 +72,67 @@ macro_rules! basic_opcode {
 
 impl Opcode {
 	// clr.b	1(a0,d1.w)
-    // pub fn from(cn: Console, addr: usize)
 
     pub fn next(cn: &Console) -> Self {
         let pc = cn.m68k.pc as usize;
-        let next_word = cn.rom.read_word(pc);
-        let mut length = 2;
+        Opcode::from(cn, pc)
+    }
+
+    pub fn from(cn: &Console, pc: usize) -> Self {
+        let first_word = cn.rom.read_word(pc);
 
         // NOP
-        if next_word == 0x4E71 {
+        if first_word == 0x4E71 {
             basic_opcode!(Code::Nop)
         }
         // RTS
-        else if next_word == 0x4E75 {
+        else if first_word == 0x4E75 {
             basic_opcode!(Code::Rts)
         }
         // ILLEGAL
-        else if next_word == 0x4AFC {
+        else if first_word == 0x4AFC {
             basic_opcode!(Code::Illegal)
         }
         // TST
-        else if next_word & 0xFF00 == 0x4A00 {
+        else if first_word & 0xFF00 == 0x4A00 {
             let code = Code::Tst;
-            let size_bits = (next_word & 0b11000000) >> 6;
+            let mut length = 2;
+            let size_bits = (first_word & 0b11000000) >> 6;
             let size = Self::get_size(size_bits);
-            let mode = Self::get_addr_mode(next_word & 0b111111);
-
-            println!("{}", format!("{:b}", next_word));
-            println!("{}", format!("{:x}", next_word));
+            let mode = Self::get_addr_mode(first_word & 0b111111);
 
             let dst = match mode.typ {
                 Mode::AbsLong => {
                     length += 4;
                     Some(cn.rom.read_long(pc + 2))
                 },
-                Mode::AbsShort | Mode::AddrIndirectDisplace => {
+                Mode::AbsShort => {
                     length += 2;
                     Some(cn.rom.read_word(pc + 2) as u32)
                 },
                 Mode::Immediate => {
                     None // not supported for TST (on 68000)
                 },
-                _ => None, // TODO: maybe other modes grab data
+                _ => None,
+            };
+
+            let ext = match mode.typ {
+                Mode::AddrIndirectDisplace => {
+                    length += 2;
+                    Some(Ext {
+                        displace: cn.rom.read_word(pc + 2) as u32
+                    })
+                },
+                Mode::AddrIndirectIndexDisplace => {
+                    length += 2;
+                    let ext_word = cn.rom.read_word(pc + 2) as u32;
+                    let displace = ext_word & 0xFF;
+
+            println!("{}", format!("{:b}", ext_word));
+
+                    None
+                },
+                _ => None,
             };
 
             Opcode {
@@ -114,12 +140,13 @@ impl Opcode {
                 length,
                 size: Some(size),
                 mode: Some(mode),
+                ext,
                 src: None,
                 dst,
             }
         }
         else {
-            panic!("Unknown opcode {}", format!("{:b}", next_word));
+            panic!("Unknown opcode {}", format!("{:b}", first_word));
         }
 
     }
@@ -195,10 +222,11 @@ impl Opcode {
                         code = format!("{}\t-(a{})", code, mode.reg.unwrap());
                     },
                     Mode::AddrIndirectDisplace => {
-                        code = format!("{}\t${:X}(a{})", code, self.dst.unwrap(), mode.reg.unwrap());
+                        let displacement = self.ext.as_ref().unwrap().displace;
+                        code = format!("{}\t${:X}(a{})", code, displacement, mode.reg.unwrap());
                     },
                     Mode::AddrIndirectIndexDisplace => {
-                        code = format!("{}\t", code);
+                        code = format!("{}\t[TODO]", code);
                     },
                     _ => panic!("Unknown addressing mode (to_string)"),
                 }
