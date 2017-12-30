@@ -5,7 +5,8 @@
     nop
 
 EntryPoint:
-    tst.l	($A10008).l
+    tst.l	4(a0)
+    ; tst.l	4(a3,d2.l)
     nop
     rts
 

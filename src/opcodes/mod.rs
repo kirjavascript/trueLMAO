@@ -9,14 +9,15 @@ pub struct Opcode {
     mode: Option<EAddr>,
     src: Option<u32>,
     dst: Option<u32>,
+    // ext: Option<Ext>
 }
 
 
 #[derive(Debug)]
 enum Code {
     Tst,
-    Nop,
-    Rts,
+    // Move,
+    Nop, Rts, Illegal,
 }
 
 impl fmt::Display for Code {
@@ -43,13 +44,29 @@ enum Mode {
     AddrIndirectPostInc, // (An) +
     AddrIndirectPreInc, // - (An)
     AddrIndirectDisplace, // (d16, An)
-    // (d8,An,Xn)
+    AddrIndirectIndexDisplace, // (d8,An,Xn)
     AbsShort, // (xxx).w
     AbsLong, // (xxx).l
     Immediate, // #<data>
 }
 
+macro_rules! basic_opcode {
+    ($x:expr) => (
+        Opcode {
+            code: $x,
+            length: 2,
+            size: None,
+            mode: None,
+            src: None,
+            dst: None,
+        }
+    )
+}
+
 impl Opcode {
+	// clr.b	1(a0,d1.w)
+    // pub fn from(cn: Console, addr: usize)
+
     pub fn next(cn: &Console) -> Self {
         let pc = cn.m68k.pc as usize;
         let next_word = cn.rom.read_word(pc);
@@ -57,25 +74,15 @@ impl Opcode {
 
         // NOP
         if next_word == 0x4E71 {
-            Opcode {
-                code: Code::Nop,
-                length,
-                size: None,
-                mode: None,
-                src: None,
-                dst: None,
-            }
+            basic_opcode!(Code::Nop)
         }
         // RTS
         else if next_word == 0x4E75 {
-            Opcode {
-                code: Code::Rts,
-                length,
-                size: None,
-                mode: None,
-                src: None,
-                dst: None,
-            }
+            basic_opcode!(Code::Rts)
+        }
+        // ILLEGAL
+        else if next_word == 0x4AFC {
+            basic_opcode!(Code::Illegal)
         }
         // TST
         else if next_word & 0xFF00 == 0x4A00 {
@@ -92,12 +99,12 @@ impl Opcode {
                     length += 4;
                     Some(cn.rom.read_long(pc + 2))
                 },
-                Mode::AbsShort => {
+                Mode::AbsShort | Mode::AddrIndirectDisplace => {
                     length += 2;
                     Some(cn.rom.read_word(pc + 2) as u32)
                 },
                 Mode::Immediate => {
-                    None // TODO: maybe data (but not supported for tst)
+                    None // not supported for TST (on 68000)
                 },
                 _ => None, // TODO: maybe other modes grab data
             };
@@ -142,7 +149,7 @@ impl Opcode {
                     0b011 => EAddr { typ: Mode::AddrIndirectPostInc, reg },
                     0b100 => EAddr { typ: Mode::AddrIndirectPreInc, reg },
                     0b101 => EAddr { typ: Mode::AddrIndirectDisplace, reg },
-                    0b110 => panic!("(d8,An,Xn) not implemented"),
+                    0b110 => EAddr { typ: Mode::AddrIndirectIndexDisplace, reg },
                     _ => panic!("Unknown addressing mode {}", mode),
                 }
             },
@@ -161,6 +168,7 @@ impl Opcode {
             None => {},
         }
 
+        // just dst
         match self.mode {
             None => {},
             Some(ref mode) => {
@@ -171,13 +179,32 @@ impl Opcode {
                     Mode::AbsLong => {
                         code = format!("{}\t(${:X}).l", code, self.dst.unwrap());
                     },
-                    _ => panic!("Unknown addressing mode (display)"),
+                    Mode::DataDirect => {
+                        code = format!("{}\td{}", code, mode.reg.unwrap());
+                    },
+                    Mode::AddrDirect => {
+                        code = format!("{}\ta{}", code, mode.reg.unwrap());
+                    },
+                    Mode::AddrIndirect => {
+                        code = format!("{}\t(a{})", code, mode.reg.unwrap());
+                    },
+                    Mode::AddrIndirectPostInc => {
+                        code = format!("{}\t(a{})+", code, mode.reg.unwrap());
+                    },
+                    Mode::AddrIndirectPreInc => {
+                        code = format!("{}\t-(a{})", code, mode.reg.unwrap());
+                    },
+                    Mode::AddrIndirectDisplace => {
+                        code = format!("{}\t${:X}(a{})", code, self.dst.unwrap(), mode.reg.unwrap());
+                    },
+                    Mode::AddrIndirectIndexDisplace => {
+                        code = format!("{}\t", code);
+                    },
+                    _ => panic!("Unknown addressing mode (to_string)"),
                 }
             },
         }
 
         code
     }
-
-    // impl fmt::Display for Opcode
 }
