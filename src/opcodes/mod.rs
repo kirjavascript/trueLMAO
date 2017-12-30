@@ -12,6 +12,7 @@ pub struct Opcode {
     dst: Option<u32>,
 }
 
+// for move, maybe make src/dst Option<(u32, EAddr)>
 
 #[derive(Debug)]
 enum Code {
@@ -52,8 +53,15 @@ enum Mode {
 #[derive(Debug)]
 struct Ext {
     displace: u32,
-    // size: Option<u32>
-    // reg_type: Option<RegType>
+    // the following are only used in IndexDisplacement addressing
+    reg: Option<u32>,
+    reg_type: Option<ExtRegType>,
+    reg_size: Option<Size>,
+}
+
+#[derive(Debug)]
+enum ExtRegType {
+    Data, Addr,
 }
 
 macro_rules! basic_opcode {
@@ -71,8 +79,6 @@ macro_rules! basic_opcode {
 }
 
 impl Opcode {
-	// clr.b	1(a0,d1.w)
-
     pub fn next(cn: &Console) -> Self {
         let pc = cn.m68k.pc as usize;
         Opcode::from(cn, pc)
@@ -120,17 +126,37 @@ impl Opcode {
                 Mode::AddrIndirectDisplace => {
                     length += 2;
                     Some(Ext {
-                        displace: cn.rom.read_word(pc + 2) as u32
+                        displace: cn.rom.read_word(pc + 2) as u32,
+                        reg: None,
+                        reg_type: None,
+                        reg_size: None,
                     })
                 },
                 Mode::AddrIndirectIndexDisplace => {
                     length += 2;
                     let ext_word = cn.rom.read_word(pc + 2) as u32;
                     let displace = ext_word & 0xFF;
+                    let reg = (ext_word & 0b0111000000000000) >> 12;
+                    let reg_type = (ext_word >> 15) & 1; // 1 == a
+                    let reg_size = (ext_word >> 11) & 1;
 
-            println!("{}", format!("{:b}", ext_word));
+            // println!("{}", format!("{:0>16b}", ext_word));
+            // println!("{:#?}", (displace, reg, reg_type, reg_size));
 
-                    None
+                    Some(Ext {
+                        displace,
+                        reg: Some(reg),
+                        reg_type: Some(if reg_type == 1 {
+                            ExtRegType::Addr
+                        } else {
+                            ExtRegType::Data
+                        }),
+                        reg_size: Some(if reg_size == 1 {
+                            Size::Long
+                        } else {
+                            Size::Word
+                        }),
+                    })
                 },
                 _ => None,
             };
@@ -177,7 +203,7 @@ impl Opcode {
                     0b100 => EAddr { typ: Mode::AddrIndirectPreInc, reg },
                     0b101 => EAddr { typ: Mode::AddrIndirectDisplace, reg },
                     0b110 => EAddr { typ: Mode::AddrIndirectIndexDisplace, reg },
-                    _ => panic!("Unknown addressing mode {}", mode),
+                    _ => panic!("Unknown addressing mode {:b}", mode),
                 }
             },
         }
@@ -226,7 +252,26 @@ impl Opcode {
                         code = format!("{}\t${:X}(a{})", code, displacement, mode.reg.unwrap());
                     },
                     Mode::AddrIndirectIndexDisplace => {
-                        code = format!("{}\t[TODO]", code);
+                        let mode_reg = mode.reg.unwrap();
+                        let displacement = self.ext.as_ref().unwrap().displace;
+                        let ext_size = match *self.ext.as_ref().unwrap().reg_size.as_ref().unwrap() {
+                            Size::Long => ".l",
+                            Size::Word => ".w",
+                            _ => panic!("this should never happen"),
+                        };
+                        let ext_reg_type = match *self.ext.as_ref().unwrap().reg_type.as_ref().unwrap() {
+                            ExtRegType::Data => "d",
+                            ExtRegType::Addr => "a",
+                        };
+                        let ext_reg = self.ext.as_ref().unwrap().reg.as_ref().unwrap();
+                        code = format!("{}\t${:X}(a{}, {}{}{})",
+                            code,
+                            displacement,
+                            mode_reg,
+                            ext_reg_type,
+                            ext_reg,
+                            ext_size,
+                        );
                     },
                     _ => panic!("Unknown addressing mode (to_string)"),
                 }
