@@ -3,4 +3,7 @@ name = "truelmao"
 version = "0.1.0"
 authors = ["kirjavascript <snkenjoi@gmail.com>"]
 
-[dependencies]
+[dependencies.sdl2]
+version = "0.31"
+default-features = false
+features = ["ttf"]

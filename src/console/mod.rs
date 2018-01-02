@@ -10,6 +10,7 @@ pub struct Console {
     pub m68k: M68k,
     pub rom: Rom,
     pub ram: Ram,
+    // vdp
     // mode
     // region
 }
@@ -28,8 +29,8 @@ impl Console {
         println!("{}", self.m68k);
 
         let opcode = Opcode::next(&self);
-
         println!("{}", opcode.to_string());
+
         println!("{:#?}", opcode);
 
     }

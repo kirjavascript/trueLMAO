@@ -4,7 +4,7 @@ use std::fmt;
 #[derive(Debug)]
 pub struct Opcode {
     code: Code,
-    length: usize, // in bytes (amount to increase pc)
+    pub length: u32, // in bytes (amount to increase pc) ( change to u32 )
     size: Option<Size>, // size of operation
     mode: Option<EAddr>, // effective address
     ext: Option<Ext>, // extension word
@@ -13,6 +13,8 @@ pub struct Opcode {
 }
 
 // for move, maybe make src/dst Option<(u32, EAddr)>
+// or dst_mode: Option<(EAddr, Ext)>
+// get_addr_mode(mode, register)
 
 #[derive(Debug)]
 enum Code {
@@ -33,7 +35,7 @@ enum Size { Byte, Word, Long }
 #[derive(Debug)]
 struct EAddr {
     typ: Mode,
-    reg: Option<usize>,
+    reg_num: Option<usize>,
 }
 
 #[derive(Debug)]
@@ -54,7 +56,7 @@ enum Mode {
 struct Ext {
     displace: u32,
     // the following are only used in IndexDisplacement addressing
-    reg: Option<u32>,
+    reg_num: Option<u32>,
     reg_type: Option<ExtRegType>,
     reg_size: Option<Size>,
 }
@@ -127,7 +129,7 @@ impl Opcode {
                     length += 2;
                     Some(Ext {
                         displace: cn.rom.read_word(pc + 2) as u32,
-                        reg: None,
+                        reg_num: None,
                         reg_type: None,
                         reg_size: None,
                     })
@@ -136,7 +138,7 @@ impl Opcode {
                     length += 2;
                     let ext_word = cn.rom.read_word(pc + 2) as u32;
                     let displace = ext_word & 0xFF;
-                    let reg = (ext_word & 0b0111000000000000) >> 12;
+                    let reg_num = (ext_word >> 12) & 0b111;
                     let reg_type = (ext_word >> 15) & 1; // 1 == a
                     let reg_size = (ext_word >> 11) & 1;
 
@@ -145,7 +147,7 @@ impl Opcode {
 
                     Some(Ext {
                         displace,
-                        reg: Some(reg),
+                        reg_num: Some(reg_num),
                         reg_type: Some(if reg_type == 1 {
                             ExtRegType::Addr
                         } else {
@@ -188,21 +190,21 @@ impl Opcode {
 
     fn get_addr_mode(bits: u16) -> EAddr {
         match bits {
-            0b111000 => EAddr { typ: Mode::AbsShort, reg: None },
-            0b111001 => EAddr { typ: Mode::AbsLong, reg: None },
-            0b111100 => EAddr { typ: Mode::Immediate, reg: None },
+            0b111000 => EAddr { typ: Mode::AbsShort, reg_num: None },
+            0b111001 => EAddr { typ: Mode::AbsLong, reg_num: None },
+            0b111100 => EAddr { typ: Mode::Immediate, reg_num: None },
             _ => {
-                let reg = Some((bits & 0b111) as usize);
+                let reg_num = Some((bits & 0b111) as usize);
                 let mode = bits >> 3;
 
                 match mode {
-                    0b000 => EAddr { typ: Mode::DataDirect, reg },
-                    0b001 => EAddr { typ: Mode::AddrDirect, reg },
-                    0b010 => EAddr { typ: Mode::AddrIndirect, reg },
-                    0b011 => EAddr { typ: Mode::AddrIndirectPostInc, reg },
-                    0b100 => EAddr { typ: Mode::AddrIndirectPreInc, reg },
-                    0b101 => EAddr { typ: Mode::AddrIndirectDisplace, reg },
-                    0b110 => EAddr { typ: Mode::AddrIndirectIndexDisplace, reg },
+                    0b000 => EAddr { typ: Mode::DataDirect, reg_num },
+                    0b001 => EAddr { typ: Mode::AddrDirect, reg_num },
+                    0b010 => EAddr { typ: Mode::AddrIndirect, reg_num },
+                    0b011 => EAddr { typ: Mode::AddrIndirectPostInc, reg_num },
+                    0b100 => EAddr { typ: Mode::AddrIndirectPreInc, reg_num },
+                    0b101 => EAddr { typ: Mode::AddrIndirectDisplace, reg_num },
+                    0b110 => EAddr { typ: Mode::AddrIndirectIndexDisplace, reg_num },
                     _ => panic!("Unknown addressing mode {:b}", mode),
                 }
             },
@@ -233,26 +235,26 @@ impl Opcode {
                         code = format!("{}\t(${:X}).l", code, self.dst.unwrap());
                     },
                     Mode::DataDirect => {
-                        code = format!("{}\td{}", code, mode.reg.unwrap());
+                        code = format!("{}\td{}", code, mode.reg_num.unwrap());
                     },
                     Mode::AddrDirect => {
-                        code = format!("{}\ta{}", code, mode.reg.unwrap());
+                        code = format!("{}\ta{}", code, mode.reg_num.unwrap());
                     },
                     Mode::AddrIndirect => {
-                        code = format!("{}\t(a{})", code, mode.reg.unwrap());
+                        code = format!("{}\t(a{})", code, mode.reg_num.unwrap());
                     },
                     Mode::AddrIndirectPostInc => {
-                        code = format!("{}\t(a{})+", code, mode.reg.unwrap());
+                        code = format!("{}\t(a{})+", code, mode.reg_num.unwrap());
                     },
                     Mode::AddrIndirectPreInc => {
-                        code = format!("{}\t-(a{})", code, mode.reg.unwrap());
+                        code = format!("{}\t-(a{})", code, mode.reg_num.unwrap());
                     },
                     Mode::AddrIndirectDisplace => {
                         let displacement = self.ext.as_ref().unwrap().displace;
-                        code = format!("{}\t${:X}(a{})", code, displacement, mode.reg.unwrap());
+                        code = format!("{}\t${:X}(a{})", code, displacement, mode.reg_num.unwrap());
                     },
                     Mode::AddrIndirectIndexDisplace => {
-                        let mode_reg = mode.reg.unwrap();
+                        let mode_reg = mode.reg_num.unwrap();
                         let displacement = self.ext.as_ref().unwrap().displace;
                         let ext_size = match *self.ext.as_ref().unwrap().reg_size.as_ref().unwrap() {
                             Size::Long => ".l",
@@ -263,7 +265,7 @@ impl Opcode {
                             ExtRegType::Data => "d",
                             ExtRegType::Addr => "a",
                         };
-                        let ext_reg = self.ext.as_ref().unwrap().reg.as_ref().unwrap();
+                        let ext_reg = self.ext.as_ref().unwrap().reg_num.as_ref().unwrap();
                         code = format!("{}\t${:X}(a{}, {}{}{})",
                             code,
                             displacement,

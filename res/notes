@@ -3,11 +3,16 @@ https://github.com/rasky/genemu
 https://github.com/tomaka/glutin
 https://github.com/totallymike/oxidizer
 https://github.com/koute/pinky/blob/master/pinky-libretro/src/lib.rs
+https://github.com/koute/pinky
 https://github.com/rust-lang-nursery/rust-clippy
 https://github.com/TASVideos/BizHawk/tree/master/BizHawk.Emulation.Cores/CPUs/68000
 https://www.retrodev.com/blastem/
 http://fms.komkon.org/EMUL8/HOWTO.html
 https://github.com/ryanterry131/jaxboy SDL
+https://www.reddit.com/r/rust/comments/7ndu55/webassembly_debuggeremulator_for_a_homebrew_mos/
+https://github.com/jakedeichert/wasm-astar
+https://github.com/yupferris/rustendo64 test roms
+https://github.com/rust-unofficial/awesome-rust#applications-written-in-rust -> emulators
 
 https://www.nxp.com/docs/en/reference-manual/M68000PRM.pdf
 https://segaretro.org/images/1/18/GenesisTechnicalOverview.pdf
