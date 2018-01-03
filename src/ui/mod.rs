@@ -10,7 +10,8 @@ use std::path::Path;
 pub struct UI<'ttf, 'r> {
     ctx: sdl2::Sdl,
     video: sdl2::VideoSubsystem,
-    ttf: sdl2::ttf::Font<'ttf, 'r>,
+    ttf: sdl2::ttf::Sdl2TtfContext,
+    font: sdl2::ttf::Font<'ttf, 'r>,
     debug: sdl2::render::Canvas<sdl2::video::Window>,
 }
 
@@ -34,7 +35,8 @@ impl<'ttf, 'r> UI<'ttf, 'r> {
             ctx: sdl_context,
             video: video_subsystem,
             debug: debug_canvas,
-            ttf: font<'ttf, 'r>,
+            ttf: ttf_context,
+            font: font,
         }
     }
 
