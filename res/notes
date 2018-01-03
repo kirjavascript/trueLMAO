@@ -52,4 +52,9 @@ http://wpage.unina.it/rcanonic/didattica/ce1/docs/68000.pdf addressing
 16:51:54 <%snkenjoi> a line being a horizontal interrupt?
 16:51:59 < Jorge> no, a video line
 
+TMSS is a 2-stage process
+the first is that "sega" needs to exist on address 256 (or 257)
+afaik, all licensed games have it
+the second is that before touching the VDP, A14000 needs to have the sega string in it
+
 https://segaretro.org/images/a/a2/Genesis_Software_Manual.pdf page 72

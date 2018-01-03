@@ -8,17 +8,19 @@ mod opcodes;
 mod ui;
 
 use console::Console;
+use ui::UI;
 
 // fn main() {
 //     let mut console = Console::new("res/s2.bin").unwrap();
 //     let mut console = Console::new("res/asmblr/test.bin").unwrap();
 //     console.start();
+//     console.step(); ??
 // }
 
 
 fn main() {
-    ui::init();
+    let ui = UI::new();
 
     // loop {}
-    // ui::render();
+    // ui::render(&console);
 }
