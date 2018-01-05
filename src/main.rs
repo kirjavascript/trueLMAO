@@ -17,9 +17,9 @@ use ui::UI;
 //     console.step(); ??
 // }
 
-
 fn main() {
-    let ui = UI::init();
+    let ttf_context = sdl2::ttf::init().unwrap();
+    let ui = UI::new(&ttf_context);
 
 
     // loop {}

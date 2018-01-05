@@ -11,7 +11,7 @@ use std::path::Path;
 pub struct UI<'ttf, 'r> {
     ctx: sdl2::Sdl,
     video: sdl2::VideoSubsystem,
-    // ttf: ttf::Sdl2TtfContext,
+    // ttf: &'ttf ttf::Sdl2TtfContext,
     font: Option<ttf::Font<'ttf, 'r>>,
     debug: sdl2::render::Canvas<sdl2::video::Window>,
 }
