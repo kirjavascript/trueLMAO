@@ -20,9 +20,10 @@ use sdl2::ttf;
 //     console.step(); ??
 // }
 
-
 fn main() {
-    let ui = UI::new();
+    let ttf_context = sdl2::ttf::init().unwrap();
+    let ui = UI::new(&ttf_context);
+
 
     while ui.render() {}
 }

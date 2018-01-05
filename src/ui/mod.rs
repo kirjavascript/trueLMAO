@@ -10,21 +10,16 @@ use std::path::Path;
 
 static FONT_PATH: &'static str = "assets/font.ttf";
 
-pub struct UI {
+pub struct UI<'ttf, 'r> {
     ctx: sdl2::Sdl,
     video: sdl2::VideoSubsystem,
+    // ttf: &'ttf ttf::Sdl2TtfContext,
+    font: Option<ttf::Font<'ttf, 'r>>,
     debug: sdl2::render::Canvas<sdl2::video::Window>,
-    // ttf: ttf::Sdl2TtfContext,
-    // font: Option<ttf::Font<'ttf, 'static>>,
 }
 
-// fn get_font<'ttf, 'r>() -> sdl2::ttf::Font<'ttf, 'r> {
-//     let ttf_context = ttf::init().unwrap();
-//     ttf_context.load_font(FONT_PATH, 8).unwrap()
-// }
-
-impl UI {
-    pub fn new() -> Self {
+impl<'ttf, 'r> UI<'ttf, 'r> {
+    pub fn new(ttf_context: &'ttf ttf::Sdl2TtfContext) -> Self {
         let sdl_context = sdl2::init().unwrap();
         let video_subsystem = sdl_context.video().unwrap();
 
@@ -38,15 +33,14 @@ impl UI {
         debug_canvas.clear();
 
         // font
-        let ttf_context = ttf::init().unwrap();
         let font = ttf_context.load_font(FONT_PATH, 8).unwrap();
 
-    let texture_creator = debug_canvas.texture_creator();
-    let surface = font.render("testing")
-        .blended_wrapped(Color::RGBA(255, 255, 255, 255), 1).unwrap();
-    let rect = Rect::new(0, 0, 400, 120);
-    let texture = texture_creator.create_texture_from_surface(&surface).unwrap();
-    debug_canvas.copy(&texture, None, Some(rect));
+    // let texture_creator = debug_canvas.texture_creator();
+    // let surface = font.render("testing")
+    //     .blended_wrapped(Color::RGBA(255, 255, 255, 255), 1).unwrap();
+    // let rect = Rect::new(0, 0, 400, 120);
+    // let texture = texture_creator.create_texture_from_surface(&surface).unwrap();
+    // debug_canvas.copy(&texture, None, Some(rect));
 
         debug_canvas.present();
 
@@ -55,7 +49,7 @@ impl UI {
             video: video_subsystem,
             debug: debug_canvas,
             // ttf: ttf_context,
-            // font: Some(font),
+            font: Some(font),
         }
 
     }
