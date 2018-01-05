@@ -4,19 +4,20 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::rect::Rect;
 use sdl2::pixels::Color;
+use sdl2::ttf;
 use std::time::Duration;
 use std::path::Path;
 
 pub struct UI<'ttf, 'r> {
     ctx: sdl2::Sdl,
     video: sdl2::VideoSubsystem,
-    ttf: sdl2::ttf::Sdl2TtfContext,
-    font: sdl2::ttf::Font<'ttf, 'r>,
+    // ttf: ttf::Sdl2TtfContext,
+    font: Option<ttf::Font<'ttf, 'r>>,
     debug: sdl2::render::Canvas<sdl2::video::Window>,
 }
 
 impl<'ttf, 'r> UI<'ttf, 'r> {
-    pub fn new() -> Self {
+    pub fn new(ttf_context: &'ttf ttf::Sdl2TtfContext) -> Self {
         let sdl_context = sdl2::init().unwrap();
         let video_subsystem = sdl_context.video().unwrap();
 
@@ -28,15 +29,14 @@ impl<'ttf, 'r> UI<'ttf, 'r> {
 
         // font
         let font_path: &Path = Path::new("assets/font.ttf");
-        let ttf_context = sdl2::ttf::init().unwrap();
         let mut font = ttf_context.load_font(font_path, 8).unwrap();
 
         UI {
             ctx: sdl_context,
             video: video_subsystem,
             debug: debug_canvas,
-            ttf: ttf_context,
-            font: font,
+            // ttf: ttf_context,
+            font: Some(font),
         }
     }
 

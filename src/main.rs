@@ -19,7 +19,8 @@ use ui::UI;
 
 
 fn main() {
-    let ui = UI::new();
+    let ui = UI::init();
+
 
     // loop {}
     // ui::render(&console);
