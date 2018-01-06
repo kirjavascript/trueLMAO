@@ -48,16 +48,25 @@ impl<'ttf, 'r> UI<'ttf, 'r> {
     pub fn render(&mut self, i: u32) -> bool {
 
         let mut running = true;
-        let mut event_pump = self.ctx.event_pump().unwrap();
+        let mut events = self.ctx.event_pump().unwrap();
 
-        for event in event_pump.poll_iter() {
+        for event in events.poll_iter() {
             match event {
                 Event::Quit {..} | Event::KeyDown {keycode: Some(Keycode::Escape), ..} => {
                     running = false;
                 },
+                Event::MouseButtonDown {
+
+                },
                 _ => {},
             }
         }
+
+        // self.click(|x, y| {
+        //     println!("{} {}", x, y);
+        // });
+
+        // self.is_running()
 
     let surface = self.font.render(format!("{}", i).as_ref())
         .blended_wrapped(Color::RGBA(255, 255, 255, 255), 1).unwrap();
