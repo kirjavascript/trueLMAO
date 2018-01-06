@@ -7,11 +7,9 @@ mod rom;
 mod opcodes;
 mod ui;
 
-
 use console::Console;
 use ui::UI;
 use sdl2::ttf;
-
 
 // fn main() {
 //     let mut console = Console::new("res/s2.bin").unwrap();
@@ -22,8 +20,9 @@ use sdl2::ttf;
 
 fn main() {
     let ttf_context = sdl2::ttf::init().unwrap();
-    let ui = UI::new(&ttf_context);
+    let mut ui = UI::new(&ttf_context);
 
+    let mut i = 0;
 
-    while ui.render() {}
+    while ui.render(i) { i += 1; }
 }
