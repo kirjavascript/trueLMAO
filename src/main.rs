@@ -1,4 +1,3 @@
-extern crate gio;
 extern crate gtk;
 
 mod console;
@@ -31,5 +30,4 @@ fn main() {
     };
     gtk::idle_add(tick);
     gtk::main();
-
 }
