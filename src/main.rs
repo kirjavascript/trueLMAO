@@ -1,4 +1,5 @@
-extern crate sdl2;
+extern crate gio;
+extern crate gtk;
 
 mod console;
 mod m68k;
@@ -7,22 +8,28 @@ mod rom;
 mod opcodes;
 mod ui;
 
-use console::Console;
+// use console::Console;
 use ui::UI;
-use sdl2::ttf;
 
 // fn main() {
 //     let mut console = Console::new("res/s2.bin").unwrap();
-//     let mut console = Console::new("res/asmblr/test.bin").unwrap();
+//     let mut console = Console::new("res/test.bin").unwrap();
 //     console.start();
 //     console.step(); ??
 // }
 
 fn main() {
-    let ttf_context = sdl2::ttf::init().unwrap();
-    let mut ui = UI::new(&ttf_context);
-
     let mut i = 0;
 
-    while ui.render(i) { i += 1; }
+    let mut ui = UI::new();
+
+    let tick = move || {
+        i += 1;
+        ui.render(i);
+
+        gtk::Continue(true)
+    };
+    gtk::idle_add(tick);
+    gtk::main();
+
 }
