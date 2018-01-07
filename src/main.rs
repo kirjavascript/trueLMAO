@@ -24,9 +24,9 @@ fn main() {
 
     let mut ui = UI::new();
 
-    ui.debug_step.connect_clicked(move |_| {
-        console.step();
-    });
+    // ui.debug_step.connect_clicked(move |_| {
+    //     console.step();
+    // });
 
     let tick = move || {
         ui.render(&console);
