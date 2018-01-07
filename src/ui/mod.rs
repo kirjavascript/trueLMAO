@@ -39,7 +39,6 @@ impl<'ttf, 'r> UI<'ttf, 'r> {
             ctx: sdl_context,
             video: video_subsystem,
             debug: debug_canvas,
-            // ttf: ttf_context,
             font: font,
         }
 
@@ -55,18 +54,13 @@ impl<'ttf, 'r> UI<'ttf, 'r> {
                 Event::Quit {..} | Event::KeyDown {keycode: Some(Keycode::Escape), ..} => {
                     running = false;
                 },
-                Event::MouseButtonDown {
-
-                },
                 _ => {},
             }
         }
 
-        // self.click(|x, y| {
-        //     println!("{} {}", x, y);
-        // });
-
-        // self.is_running()
+        self.click(|x, y| {
+            println!("{} {}", x, y);
+        });
 
     let surface = self.font.render(format!("{}", i).as_ref())
         .blended_wrapped(Color::RGBA(255, 255, 255, 255), 1).unwrap();
@@ -79,5 +73,11 @@ impl<'ttf, 'r> UI<'ttf, 'r> {
     self.debug.present();
 
         running
+    }
+
+    fn click(&self, func: fn(u32, u32)) {
+    }
+    fn draw_text(&self) {
+        // remove bg
     }
 }
