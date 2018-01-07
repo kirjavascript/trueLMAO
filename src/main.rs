@@ -7,8 +7,9 @@ mod rom;
 mod opcodes;
 mod ui;
 
-// use console::Console;
+use console::Console;
 use ui::UI;
+use gtk::ButtonExt;
 
 // fn main() {
 //     let mut console = Console::new("res/s2.bin").unwrap();
@@ -18,16 +19,21 @@ use ui::UI;
 // }
 
 fn main() {
-    let mut i = 0;
+    let mut console = Console::new("res/test.bin").unwrap();
+    console.start();
 
     let mut ui = UI::new();
 
+    ui.debug_step.connect_clicked(move |_| {
+        console.step();
+    });
+
     let tick = move || {
-        i += 1;
-        ui.render(i);
+        ui.render(&console);
 
         gtk::Continue(true)
     };
+
     gtk::idle_add(tick);
     gtk::main();
 }

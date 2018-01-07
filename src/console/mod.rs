@@ -26,12 +26,13 @@ impl Console {
 
     pub fn start(&mut self) {
         self.m68k.pc = self.rom.entry_point();
-        println!("{}", self.m68k);
+    }
 
+    pub fn step(&mut self) {
         let opcode = Opcode::next(&self);
+        self.m68k.pc += opcode.length;
+
         println!("{}", opcode.to_string());
-
         println!("{:#?}", opcode);
-
     }
 }

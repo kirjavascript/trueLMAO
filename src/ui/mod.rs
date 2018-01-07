@@ -1,13 +1,15 @@
 extern crate gtk;
 
-// use gio::prelude::*;
 use gtk::prelude::*;
-// use std::env::args;
 use std::process::exit;
+use gtk::Builder;
+use gtk::{Window, Button, Label};
+use console::Console;
 
 #[derive(Debug)]
 pub struct UI {
-    label: gtk::Label,
+    debug_cpu: Label,
+    pub debug_step: Button,
 }
 
 impl UI {
@@ -16,13 +18,10 @@ impl UI {
             panic!("Failed to initialize GTK.");
         }
 
-        let window = gtk::Window::new(gtk::WindowType::Toplevel);
-
-        window.set_title("trueLMAO");
-        window.set_border_width(10);
-        window.set_position(gtk::WindowPosition::Center);
-        window.set_default_size(640, 480);
-        window.set_role("trueLMAO");
+        let glade_src = include_str!("debug.glade");
+        let builder = Builder::new_from_string(glade_src);
+        let window: Window = builder.get_object("debug_window").unwrap();
+        window.show_all();
 
         window.connect_delete_event(|_, _| {
             // window.destroy();
@@ -31,27 +30,25 @@ impl UI {
             // Inhibit(false)
         });
 
-        let time = "Hello";
-        let label = gtk::Label::new(None);
-        label.set_text(&time);
+        let label = builder.get_object("label1").unwrap();
+        let step: Button = builder.get_object("debug_step").unwrap();
 
-        // gtk::events_pending();
+        // let time = "Hello";
+        // let label = gtk::Label::new(None);
+        // label.set_text(&time);
+        // window.add(&label);
 
-        window.add(&label);
 
         window.show_all();
-        let obj = UI {
-            label: label,
-        };
 
-        obj
+        UI {
+            debug_cpu: label,
+            debug_step: step,
+        }
     }
 
-    pub fn render(&mut self, i: u32) -> bool {
-        // println!("{}", i);
-        let num = format!("{}", i);
-        self.label.set_text(&num);
-
-        true
+    pub fn render(&mut self, console: &Console) {
+        let num = format!("{}", console.m68k.to_string());
+        self.debug_cpu.set_text(&num);
     }
 }
