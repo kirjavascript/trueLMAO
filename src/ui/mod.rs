@@ -13,7 +13,7 @@ pub struct UI {
 }
 
 impl UI {
-    pub fn new() -> Self {
+    pub fn new(console: &mut Console) -> Self {
         if gtk::init().is_err() {
             panic!("Failed to initialize GTK.");
         }
@@ -38,13 +38,20 @@ impl UI {
         // label.set_text(&time);
         // window.add(&label);
 
-
         window.show_all();
 
-        UI {
+        // step.connect_clicked(|_| {
+        //     println!("boo");
+        // });
+
+        let mut obj = UI {
             debug_cpu: label,
             debug_step: step,
-        }
+        };
+
+
+
+        obj
     }
 
     pub fn render(&mut self, console: &Console) {

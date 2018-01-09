@@ -17,16 +17,33 @@ use gtk::ButtonExt;
 //     console.start();
 //     console.step(); ??
 // }
+//
+macro_rules! clone {
+    (@param _) => ( _ );
+    (@param $x:ident) => ( $x );
+    ($($n:ident),+ => move || $body:expr) => (
+        {
+            $( let $n = $n.clone(); )+
+            move || $body
+        }
+    );
+    ($($n:ident),+ => move |$($p:tt),+| $body:expr) => (
+        {
+            $( let $n = $n.clone(); )+
+            move |$(clone!(@param $p),)+| $body
+        }
+    );
+}
 
 fn main() {
     let mut console = Console::new("res/test.bin").unwrap();
     console.start();
 
-    let mut ui = UI::new();
+    let mut ui = UI::new(&mut console);
 
-    // ui.debug_step.connect_clicked(move |_| {
-    //     console.step();
-    // });
+    ui.debug_step.connect_clicked(move |_| {
+        console.step();
+    });
 
     let tick = move || {
         ui.render(&console);
