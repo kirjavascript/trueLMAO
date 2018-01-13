@@ -35,18 +35,25 @@ macro_rules! clone {
     );
 }
 
-fn main() {
-    let mut console = Console::new("res/test.bin").unwrap();
-    console.start();
+use std::cell::RefCell;
+use std::rc::Rc;
 
-    let mut ui = UI::new(&mut console);
+fn main() {
+    let mut console: Rc<RefCell<Console>> = Rc::new(RefCell::new(Console::new("res/test.bin").unwrap()));
+
+    console.borrow_mut().start();
+
+    let mut ui = UI::new(&mut console.borrow_mut());
+
+    let console_clone = console.clone();
 
     ui.debug_step.connect_clicked(move |_| {
-        console.step();
+        console_clone.borrow_mut().step();
+        // console.step();
     });
 
     let tick = move || {
-        ui.render(&console);
+        ui.render(&console.borrow_mut());
 
         gtk::Continue(true)
     };
