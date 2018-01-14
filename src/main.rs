@@ -11,13 +11,6 @@ use console::Console;
 use ui::UI;
 use gtk::ButtonExt;
 
-// fn main() {
-//     let mut console = Console::new("res/s2.bin").unwrap();
-//     let mut console = Console::new("res/test.bin").unwrap();
-//     console.start();
-//     console.step(); ??
-// }
-//
 macro_rules! clone {
     (@param _) => ( _ );
     (@param $x:ident) => ( $x );
@@ -45,12 +38,10 @@ fn main() {
 
     let mut ui = UI::new(&mut console.borrow_mut());
 
-    let console_clone = console.clone();
-
-    ui.debug_step.connect_clicked(move |_| {
-        console_clone.borrow_mut().step();
-        // console.step();
-    });
+    ui.debug_step.connect_clicked(clone!(console => move |e| {
+        console.borrow_mut().step();
+        println!("{:#?}", e);
+    }));
 
     let tick = move || {
         ui.render(&console.borrow_mut());
