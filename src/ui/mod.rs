@@ -28,7 +28,7 @@ impl UI {
             // window.destroy();
             gtk::main_quit();
             exit(0);
-            Inhibit(false)
+            // Inhibit(false)
         });
 
         let label = builder.get_object("label1").unwrap();
@@ -36,26 +36,20 @@ impl UI {
         let canvas: DrawingArea = builder.get_object("canvas1").unwrap();
 
         canvas.connect_draw(|_, ctx| {
-        ctx.set_dash(&[3., 2., 1.], 1.);
-        assert_eq!(ctx.get_dash(), (vec![3., 2., 1.], 1.));
+            ctx.set_dash(&[3., 2., 1.], 1.);
+            assert_eq!(ctx.get_dash(), (vec![3., 2., 1.], 1.));
 
-        ctx.scale(500f64, 500f64);
+            ctx.scale(500f64, 500f64);
 
-        ctx.set_source_rgb(250.0/255.0, 224.0/255.0, 55.0/255.0);
-        ctx.paint();
+            ctx.set_source_rgb(250.0/255.0, 224.0/255.0, 55.0/255.0);
+            ctx.paint();
 
-        ctx.set_line_width(0.05);
+            ctx.set_line_width(0.05);
 
-        // border
-        ctx.set_source_rgb(0.3, 0.3, 0.3);
-        ctx.rectangle(0.0, 0.0, 1.0, 1.0);
-        ctx.stroke();
-
-//         ctx.set_line_width(0.03);
-
-//         // draw circle
-//         ctx.arc(0.5, 0.5, 0.4, 0.0, super::std::f64::consts::PI * 2.);
-// ctx.stroke();
+            // border
+            ctx.set_source_rgb(0.3, 0.3, 0.3);
+            ctx.rectangle(0.0, 0.0, 1.0, 1.0);
+            ctx.stroke();
 
             Inhibit(false)
         });
@@ -82,7 +76,7 @@ impl UI {
         obj
     }
 
-    pub fn render(&mut self, console: &Console) {
+    pub fn debug_render(&mut self, console: &Console) {
         let num = format!("{}", console.m68k.to_string());
         self.debug_cpu.set_text(&num);
     }

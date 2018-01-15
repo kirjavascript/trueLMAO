@@ -23,7 +23,7 @@ fn main() {
     let mut ui = UI::new(&mut console);
 
     let tick = move || {
-        ui.render(&console.borrow_mut());
+        ui.debug_render(&console.borrow_mut());
 
         gtk::Continue(true)
     };
