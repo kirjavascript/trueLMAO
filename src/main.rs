@@ -1,4 +1,6 @@
 extern crate gtk;
+extern crate gdk;
+extern crate gdk_pixbuf;
 
 mod console;
 mod m68k;
@@ -23,11 +25,10 @@ fn main() {
     let mut ui = UI::new(&mut console);
 
     let tick = move || {
-        ui.debug_render(&console.borrow_mut());
+        ui.debug_render(&console.borrow());
 
         gtk::Continue(true)
     };
-
     gtk::idle_add(tick);
     gtk::main();
 }

@@ -1,12 +1,16 @@
-extern crate gtk;
-
-use gtk::prelude::*;
-use std::process::exit;
-use gtk::Builder;
-use gtk::{Window, Button, Label, DrawingArea};
 use console::Console;
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::process::exit;
+
+use gtk;
+use gtk::prelude::*;
+use gtk::Builder;
+use gtk::{Window, Button, Label, DrawingArea};
+use gdk;
+use gdk::ContextExt;
+use gdk_pixbuf;
+use gdk_pixbuf::Pixbuf;
 
 #[derive(Debug)]
 pub struct UI {
@@ -35,29 +39,18 @@ impl UI {
         let step: Button = builder.get_object("debug_step").unwrap();
         let canvas: DrawingArea = builder.get_object("canvas1").unwrap();
 
-        canvas.connect_draw(|_, ctx| {
-            ctx.set_dash(&[3., 2., 1.], 1.);
-            assert_eq!(ctx.get_dash(), (vec![3., 2., 1.], 1.));
+        let mut pixbuf: Pixbuf = unsafe {
+            Pixbuf::new(0, false, 8, 100, 100).unwrap()
+        };
 
-            ctx.scale(500f64, 500f64);
+        pixbuf.put_pixel(10, 10, 255, 0, 0, 0);
 
-            ctx.set_source_rgb(250.0/255.0, 224.0/255.0, 55.0/255.0);
-            ctx.paint();
-
-            ctx.set_line_width(0.05);
-
-            // border
-            ctx.set_source_rgb(0.3, 0.3, 0.3);
-            ctx.rectangle(0.0, 0.0, 1.0, 1.0);
-            ctx.stroke();
-
+        canvas.connect_draw(move |_, ctx| {
+            // set_source_from_vec ?
+            ctx.set_source_pixbuf(&pixbuf, 0f64, 0f64);
+            ctx.paint();  // need to call paint() instead of stroke().
             Inhibit(false)
         });
-
-        // let time = "Hello";
-        // let label = gtk::Label::new(None);
-        // label.set_text(&time);
-        // window.add(&label);
 
         window.show_all();
 
@@ -80,21 +73,4 @@ impl UI {
         let num = format!("{}", console.m68k.to_string());
         self.debug_cpu.set_text(&num);
     }
-}
-
-macro_rules! clone {
-    (@param _) => ( _ );
-    (@param $x:ident) => ( $x );
-    ($($n:ident),+ => move || $body:expr) => (
-        {
-            $( let $n = $n.clone(); )+
-            move || $body
-        }
-    );
-    ($($n:ident),+ => move |$($p:tt),+| $body:expr) => (
-        {
-            $( let $n = $n.clone(); )+
-            move |$(clone!(@param $p),)+| $body
-        }
-    );
 }
