@@ -35,13 +35,13 @@ impl UI {
 
         debug_window.show_all();
 
-        // render window
-        let render_window: Window = builder.get_object("render_window").unwrap();
-        // render_window.show_all();
-
         // debug info
         let label = builder.get_object("debug_cpu").unwrap();
         let step: Button = builder.get_object("debug_step").unwrap();
+
+        // render window
+        // let render_window: Window = builder.get_object("render_window").unwrap();
+        // render_window.show_all();
 
         // renderer
         // let canvas: DrawingArea = builder.get_object("canvas").unwrap();

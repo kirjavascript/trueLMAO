@@ -19,7 +19,7 @@ pub struct Opcode {
 #[derive(Debug)]
 enum Code {
     Tst,
-    // Move,
+    Move,
     Nop, Rts, Illegal,
 }
 
@@ -100,6 +100,13 @@ impl Opcode {
         // ILLEGAL
         else if first_word == 0x4AFC {
             basic_opcode!(Code::Illegal)
+        }
+        // MOVE
+        else if first_word & 0xC000 == 0 {
+            let size_bits = (first_word & 0b11000000) >> 6;
+            let size = Self::get_size(size_bits);
+            println!("{:#?}", size);
+            basic_opcode!(Code::Move)
         }
         // TST
         else if first_word & 0xFF00 == 0x4A00 {
