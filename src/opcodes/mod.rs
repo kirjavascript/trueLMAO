@@ -13,9 +13,6 @@ pub struct Opcode {
     ext: Option<Ext>, // extension word
 }
 
-// parse_addr()
-// get_addr_mode(mode, register)
-
 #[derive(Debug)]
 enum Code {
     Tst,
@@ -81,6 +78,8 @@ macro_rules! basic_opcode {
     )
 }
 
+// move ext into addr
+
 impl Opcode {
     pub fn next(cn: &Console) -> Self {
         let pc = cn.m68k.pc as usize;
@@ -106,28 +105,105 @@ impl Opcode {
         else if first_word & 0xC000 == 0 {
             let code = Code::Move;
             let mut length = 2;
-            let size_bits = (first_word & 0b11000000) >> 6;
+            let size_bits = (first_word & 0b11000000000000) >> 12;
             let size = Self::get_size(size_bits);
 
             let src_mode_ea = (first_word & 0b111000) >> 3;
             let src_mode_reg = first_word & 0b111;
             let src_mode = Self::get_addr_mode(src_mode_ea, src_mode_reg);
 
+            let src_value = match src_mode.typ {
+                Mode::AbsShort => {
+                    length += 2;
+                    Some(cn.rom.read_word(pc + 2) as u32)
+                },
+                Mode::AbsLong => {
+                    length += 4;
+                    Some(cn.rom.read_long(pc + 2))
+                },
+                Mode::Immediate => {
+                    match size {
+                        Size::Byte | Size::Word => {
+                            length += 2;
+                            Some(cn.rom.read_word(pc + 2) as u32)
+                        },
+                        Size::Long => {
+                            length += 4;
+                            Some(cn.rom.read_long(pc + 2))
+                        },
+                    }
+                },
+                _ => None,
+            };
+
             let dst_mode_reg = (first_word & 0b111000000000) >> 9;
             let dst_mode_ea = (first_word & 0b111000000) >> 6;
             let dst_mode = Self::get_addr_mode(dst_mode_ea, dst_mode_reg);
 
-            println!("{}", format!("{:0>16b}", first_word));
+            // dedupe this
+            let dst_value = match dst_mode.typ {
+                Mode::AbsShort => {
+                    length += 2;
+                    Some(cn.rom.read_word(pc + 2) as u32)
+                },
+                Mode::AbsLong => {
+                    length += 4;
+                    Some(cn.rom.read_long(pc + 2))
+                },
+                Mode::Immediate => {
+                    None // not supported for TST (on 68000)
+                },
+                _ => None,
+            };
+
+            let ext = match dst_mode.typ {
+                Mode::AddrIndirectDisplace => {
+                    length += 2;
+                    Some(Ext {
+                        displace: cn.rom.read_word(pc + 2) as u32,
+                        reg_num: None,
+                        reg_type: None,
+                        reg_size: None,
+                    })
+                },
+                Mode::AddrIndirectIndexDisplace => {
+                    length += 2;
+                    let ext_word = cn.rom.read_word(pc + 2) as u32;
+                    let displace = ext_word & 0xFF;
+                    let reg_num = (ext_word >> 12) & 0b111;
+                    let reg_type = (ext_word >> 15) & 1; // 1 == a
+                    let reg_size = (ext_word >> 11) & 1;
+
+
+                    Some(Ext {
+                        displace,
+                        reg_num: Some(reg_num),
+                        reg_type: Some(if reg_type == 1 {
+                            ExtRegType::Addr
+                        } else {
+                            ExtRegType::Data
+                        }),
+                        reg_size: Some(if reg_size == 1 {
+                            Size::Long
+                        } else {
+                            Size::Word
+                        }),
+                    })
+                },
+                _ => None,
+            };
+
+            // println!("{}", format!("{:0>16b}", first_word));
 
             Opcode {
                 code,
                 length,
                 size: Some(size),
                 src_mode: Some(src_mode),
-                src_value: None,
+                src_value,
                 dst_mode: Some(dst_mode),
-                dst_value: None,
-                ext: None,
+                dst_value,
+                ext,
             }
         }
         // TST
@@ -142,13 +218,13 @@ impl Opcode {
             let dst_mode = Self::get_addr_mode(dst_mode_ea, dst_mode_reg);
 
             let dst_value = match dst_mode.typ {
-                Mode::AbsLong => {
-                    length += 4;
-                    Some(cn.rom.read_long(pc + 2))
-                },
                 Mode::AbsShort => {
                     length += 2;
                     Some(cn.rom.read_word(pc + 2) as u32)
+                },
+                Mode::AbsLong => {
+                    length += 4;
+                    Some(cn.rom.read_long(pc + 2))
                 },
                 Mode::Immediate => {
                     None // not supported for TST (on 68000)
@@ -257,7 +333,65 @@ impl Opcode {
         }
 
         // src
-        // ...
+        match self.src_mode {
+            None => {},
+            Some(ref mode) => {
+                let output = match mode.typ {
+                    Mode::AbsShort => {
+                        format!("(${:X}).w", self.src_value.unwrap())
+                    },
+                    Mode::AbsLong => {
+                        format!("(${:X}).l", self.src_value.unwrap())
+                    },
+                    Mode::Immediate => {
+                        format!("#${:X}", self.src_value.unwrap())
+                    },
+                    Mode::DataDirect => {
+                        format!("d{}", mode.reg_num.unwrap())
+                    },
+                    Mode::AddrDirect => {
+                        format!("a{}", mode.reg_num.unwrap())
+                    },
+                    Mode::AddrIndirect => {
+                        format!("(a{})", mode.reg_num.unwrap())
+                    },
+                    Mode::AddrIndirectPostInc => {
+                        format!("(a{})+", mode.reg_num.unwrap())
+                    },
+                    Mode::AddrIndirectPreInc => {
+                        format!("-(a{})", mode.reg_num.unwrap())
+                    },
+                    Mode::AddrIndirectDisplace => {
+                        let displacement = self.ext.as_ref().unwrap().displace;
+                        format!("${:X}(a{})", displacement, mode.reg_num.unwrap())
+                    },
+                    // Mode::AddrIndirectIndexDisplace => {
+                    //     let mode_reg = mode.reg_num.unwrap();
+                    //     let displacement = self.ext.as_ref().unwrap().displace;
+                    //     let ext_size = match *self.ext.as_ref().unwrap().reg_size.as_ref().unwrap() {
+                    //         Size::Long => ".l",
+                    //         Size::Word => ".w",
+                    //         _ => panic!("this should never happen"),
+                    //     };
+                    //     let ext_reg_type = match *self.ext.as_ref().unwrap().reg_type.as_ref().unwrap() {
+                    //         ExtRegType::Data => "d",
+                    //         ExtRegType::Addr => "a",
+                    //     };
+                    //     let ext_reg = self.ext.as_ref().unwrap().reg_num.as_ref().unwrap();
+                    //     format!("${:X}(a{}, {}{}{})",
+                    //         displacement,
+                    //         mode_reg,
+                    //         ext_reg_type,
+                    //         ext_reg,
+                    //         ext_size,
+                    //     )
+                    // },
+                    _ => panic!("Unknown addressing mode (to_string)"),
+                };
+
+                code.push_str(&output);
+            },
+        }
 
 
         if self.dst_mode.is_some() && self.src_mode.is_some() {
@@ -265,7 +399,7 @@ impl Opcode {
         }
 
         // dst
-        let dst = match self.dst_mode {
+        match self.dst_mode {
             None => {},
             Some(ref mode) => {
                 let output = match mode.typ {
@@ -320,7 +454,7 @@ impl Opcode {
 
                 code.push_str(&output);
             },
-        };
+        }
 
 
         code
