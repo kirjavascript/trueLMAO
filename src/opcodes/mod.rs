@@ -35,7 +35,7 @@ enum Size { Byte, Word, Long }
 #[derive(Debug)]
 struct Addr {
     typ: Mode, // EA
-    reg_num: Option<usize>,
+    reg_num: Option<u16>,
 }
 
 #[derive(Debug)]
@@ -104,9 +104,31 @@ impl Opcode {
         }
         // MOVE
         else if first_word & 0xC000 == 0 {
+            let code = Code::Move;
+            let mut length = 2;
             let size_bits = (first_word & 0b11000000) >> 6;
             let size = Self::get_size(size_bits);
-            basic_opcode!(Code::Move)
+
+            let src_mode_ea = (first_word & 0b111000) >> 3;
+            let src_mode_reg = first_word & 0b111;
+            let src_mode = Self::get_addr_mode(src_mode_ea, src_mode_reg);
+
+            let dst_mode_reg = (first_word & 0b111000000000) >> 9;
+            let dst_mode_ea = (first_word & 0b111000000) >> 6;
+            let dst_mode = Self::get_addr_mode(dst_mode_ea, dst_mode_reg);
+
+            println!("{}", format!("{:0>16b}", first_word));
+
+            Opcode {
+                code,
+                length,
+                size: Some(size),
+                src_mode: Some(src_mode),
+                src_value: None,
+                dst_mode: Some(dst_mode),
+                dst_value: None,
+                ext: None,
+            }
         }
         // TST
         else if first_word & 0xFF00 == 0x4A00 {
@@ -152,8 +174,6 @@ impl Opcode {
                     let reg_type = (ext_word >> 15) & 1; // 1 == a
                     let reg_size = (ext_word >> 11) & 1;
 
-            // println!("{}", format!("{:0>16b}", ext_word));
-            // println!("{:#?}", (displace, reg, reg_type, reg_size));
 
                     Some(Ext {
                         displace,
@@ -200,16 +220,14 @@ impl Opcode {
     }
 
     fn get_addr_mode(mode: u16, reg: u16) -> Addr {
-        let reg_num = Some((reg & 0b111) as usize);
-
         match mode {
-            0b000 => Addr { typ: Mode::DataDirect, reg_num },
-            0b001 => Addr { typ: Mode::AddrDirect, reg_num },
-            0b010 => Addr { typ: Mode::AddrIndirect, reg_num },
-            0b011 => Addr { typ: Mode::AddrIndirectPostInc, reg_num },
-            0b100 => Addr { typ: Mode::AddrIndirectPreInc, reg_num },
-            0b101 => Addr { typ: Mode::AddrIndirectDisplace, reg_num },
-            0b110 => Addr { typ: Mode::AddrIndirectIndexDisplace, reg_num },
+            0b000 => Addr { typ: Mode::DataDirect, reg_num: Some(reg) },
+            0b001 => Addr { typ: Mode::AddrDirect, reg_num: Some(reg) },
+            0b010 => Addr { typ: Mode::AddrIndirect, reg_num: Some(reg) },
+            0b011 => Addr { typ: Mode::AddrIndirectPostInc, reg_num: Some(reg) },
+            0b100 => Addr { typ: Mode::AddrIndirectPreInc, reg_num: Some(reg) },
+            0b101 => Addr { typ: Mode::AddrIndirectDisplace, reg_num: Some(reg) },
+            0b110 => Addr { typ: Mode::AddrIndirectIndexDisplace, reg_num: Some(reg) },
             0b111 => match reg {
                 0b000 => Addr { typ: Mode::AbsShort, reg_num: None },
                 0b001 => Addr { typ: Mode::AbsLong, reg_num: None },
