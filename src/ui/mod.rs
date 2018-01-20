@@ -7,9 +7,7 @@ use gtk;
 use gtk::prelude::*;
 use gtk::Builder;
 use gtk::{Window, Button, Label, DrawingArea};
-use gdk;
 use gdk::ContextExt;
-use gdk_pixbuf;
 use gdk_pixbuf::Pixbuf;
 
 #[derive(Debug)]
@@ -23,36 +21,57 @@ impl UI {
             panic!("Failed to initialize GTK.");
         }
 
-        let glade_src = include_str!("debug.glade");
-        let builder = Builder::new_from_string(glade_src);
-        let window: Window = builder.get_object("debug_window").unwrap();
-        window.show_all();
+        let builder = Builder::new_from_string(include_str!("debug.glade"));
 
-        window.connect_delete_event(|_, _| {
-            // window.destroy();
+        // debug window
+        let debug_window: Window = builder.get_object("debug_window").unwrap();
+
+        debug_window.connect_delete_event(|_, _| {
+            // debug_window.destroy();
             gtk::main_quit();
             exit(0);
             // Inhibit(false)
         });
 
-        let label = builder.get_object("label1").unwrap();
+        debug_window.show_all();
+
+        // render window
+        let render_window: Window = builder.get_object("render_window").unwrap();
+        // render_window.show_all();
+
+        // debug info
+        let label = builder.get_object("debug_cpu").unwrap();
         let step: Button = builder.get_object("debug_step").unwrap();
-        let canvas: DrawingArea = builder.get_object("canvas1").unwrap();
 
-        let mut pixbuf: Pixbuf = unsafe {
-            Pixbuf::new(0, false, 8, 100, 100).unwrap()
-        };
+        // renderer
+        // let canvas: DrawingArea = builder.get_object("canvas").unwrap();
+        // let pixbuf: Pixbuf = unsafe {
+        //     Pixbuf::new(0, false, 8, Console::RES_WIDTH, Console::RES_HEIGHT).unwrap()
+        // };
+        // pixbuf.put_pixel(0, 0, 255, 0, 0, 0);
+        // canvas.connect_draw(move |_, ctx| {
+        //     // set_source_from_vec ?
+        //     let scale = 2;
 
-        pixbuf.put_pixel(10, 10, 255, 0, 0, 0);
-
-        canvas.connect_draw(move |_, ctx| {
-            // set_source_from_vec ?
-            ctx.set_source_pixbuf(&pixbuf, 0f64, 0f64);
-            ctx.paint();  // need to call paint() instead of stroke().
-            Inhibit(false)
-        });
-
-        window.show_all();
+        //     let pixbuf_scale: Pixbuf = unsafe {
+        //         Pixbuf::new(0, false, 8, Console::RES_WIDTH*scale, Console::RES_HEIGHT*scale).unwrap()
+        //     };
+        //     pixbuf.scale(
+        //         &pixbuf_scale,
+        //         0,
+        //         0,
+        //         Console::RES_WIDTH*scale,
+        //         Console::RES_HEIGHT*scale,
+        //         0.,
+        //         0.,
+        //         scale as f64,
+        //         scale as f64,
+        //         1,
+        //     );
+        //     ctx.set_source_pixbuf(&pixbuf_scale, 0f64, 0f64);
+        //     ctx.paint();
+        //     Inhibit(false)
+        // });
 
         let console_clone = console.clone();
 

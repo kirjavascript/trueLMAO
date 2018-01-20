@@ -16,6 +16,9 @@ pub struct Console {
 }
 
 impl Console {
+    pub const RES_WIDTH: i32 = 320;
+    pub const RES_HEIGHT: i32 = 224;
+
     pub fn new(path: &str) -> Result<Self, Error> {
         Ok(Console {
             m68k: M68k::new(),
