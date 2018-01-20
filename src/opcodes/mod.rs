@@ -115,7 +115,9 @@ impl Opcode {
             let size_bits = (first_word & 0b11000000) >> 6;
             let size = Self::get_size(size_bits);
 
-            let dst_mode = Self::get_addr_mode(first_word & 0b111111);
+            let dst_mode_ea = (first_word & 0b111000) >> 3;
+            let dst_mode_reg = first_word & 0b111;
+            let dst_mode = Self::get_addr_mode(dst_mode_ea, dst_mode_reg);
 
             let dst_value = match dst_mode.typ {
                 Mode::AbsLong => {
@@ -131,7 +133,6 @@ impl Opcode {
                 },
                 _ => None,
             };
-
 
             let ext = match dst_mode.typ {
                 Mode::AddrIndirectDisplace => {
@@ -198,26 +199,24 @@ impl Opcode {
         }
     }
 
-    fn get_addr_mode(bits: u16) -> Addr {
-        match bits {
-            0b111000 => Addr { typ: Mode::AbsShort, reg_num: None },
-            0b111001 => Addr { typ: Mode::AbsLong, reg_num: None },
-            0b111100 => Addr { typ: Mode::Immediate, reg_num: None },
-            _ => {
-                let reg_num = Some((bits & 0b111) as usize);
-                let mode = bits >> 3;
+    fn get_addr_mode(mode: u16, reg: u16) -> Addr {
+        let reg_num = Some((reg & 0b111) as usize);
 
-                match mode {
-                    0b000 => Addr { typ: Mode::DataDirect, reg_num },
-                    0b001 => Addr { typ: Mode::AddrDirect, reg_num },
-                    0b010 => Addr { typ: Mode::AddrIndirect, reg_num },
-                    0b011 => Addr { typ: Mode::AddrIndirectPostInc, reg_num },
-                    0b100 => Addr { typ: Mode::AddrIndirectPreInc, reg_num },
-                    0b101 => Addr { typ: Mode::AddrIndirectDisplace, reg_num },
-                    0b110 => Addr { typ: Mode::AddrIndirectIndexDisplace, reg_num },
-                    _ => panic!("Unknown addressing mode {:b}", mode),
-                }
+        match mode {
+            0b000 => Addr { typ: Mode::DataDirect, reg_num },
+            0b001 => Addr { typ: Mode::AddrDirect, reg_num },
+            0b010 => Addr { typ: Mode::AddrIndirect, reg_num },
+            0b011 => Addr { typ: Mode::AddrIndirectPostInc, reg_num },
+            0b100 => Addr { typ: Mode::AddrIndirectPreInc, reg_num },
+            0b101 => Addr { typ: Mode::AddrIndirectDisplace, reg_num },
+            0b110 => Addr { typ: Mode::AddrIndirectIndexDisplace, reg_num },
+            0b111 => match reg {
+                0b000 => Addr { typ: Mode::AbsShort, reg_num: None },
+                0b001 => Addr { typ: Mode::AbsLong, reg_num: None },
+                0b100 => Addr { typ: Mode::Immediate, reg_num: None },
+                _ => panic!("Unknown addressing mode {:b} {:b}", mode, reg),
             },
+            _ => panic!("Unknown addressing mode {:b} {:b}", mode, reg),
         }
     }
 
@@ -237,6 +236,14 @@ impl Opcode {
 
         if self.dst_mode.is_some() || self.src_mode.is_some() {
             code.push_str("\t");
+        }
+
+        // src
+        // ...
+
+
+        if self.dst_mode.is_some() && self.src_mode.is_some() {
+            code.push_str(", ");
         }
 
         // dst
