@@ -64,8 +64,6 @@ enum ExtRegType {
     Data, Addr,
 }
 
-// move ext into addr
-
 impl Opcode {
     fn basic(code: Code) -> Opcode {
         Opcode {
@@ -112,61 +110,21 @@ impl Opcode {
             let src_mode_reg = first_word & 0b111;
             let src_mode = Self::get_addr_mode(src_mode_ea, src_mode_reg);
 
-            let src_value = match src_mode.typ {
-                Mode::AbsShort => {
-                    length += 2;
-                    Some(cn.rom.read_word(pc + length - 2) as u32)
-                },
-                Mode::AbsLong => {
-                    length += 4;
-                    Some(cn.rom.read_long(pc + length - 4))
-                },
-                Mode::Immediate => {
-                    match size {
-                        Size::Byte | Size::Word => {
-                            length += 2;
-                            Some(cn.rom.read_word(pc + length - 2) as u32)
-                        },
-                        Size::Long => {
-                            length += 4;
-                            Some(cn.rom.read_long(pc + length - 4))
-                        },
-                    }
-                },
-                _ => None,
-            };
+            let (src_value, length_inc) = Self::get_value(cn, &src_mode, pc + length, &size);
+            length += length_inc;
 
-            let src_ext = Self::get_ext_word(cn, &src_mode, pc + length);
-            length += match src_ext {
-                Some(_) => 2,
-                None => 0,
-            };
+            let (src_ext, length_inc) = Self::get_ext_word(cn, &src_mode, pc + length);
+            length += length_inc;
 
             let dst_mode_reg = (first_word & 0b111000000000) >> 9;
             let dst_mode_ea = (first_word & 0b111000000) >> 6;
             let dst_mode = Self::get_addr_mode(dst_mode_ea, dst_mode_reg);
 
-            // dedupe this stuff
-            let dst_value = match dst_mode.typ {
-                Mode::AbsShort => {
-                    length += 2;
-                    Some(cn.rom.read_word(pc + 2) as u32)
-                },
-                Mode::AbsLong => {
-                    length += 4;
-                    Some(cn.rom.read_long(pc + 2))
-                },
-                Mode::Immediate => {
-                    None // (not supported)
-                },
-                _ => None,
-            };
+            let (dst_value, length_inc) = Self::get_value(cn, &dst_mode, pc + length, &size);
+            length += length_inc;
 
-            let dst_ext = Self::get_ext_word(cn, &dst_mode, pc + length);
-            length += match dst_ext {
-                Some(_) => 2,
-                None => 0,
-            };
+            let (dst_ext, length_inc) = Self::get_ext_word(cn, &dst_mode, pc + length);
+            length += length_inc;
 
             Opcode {
                 code,
@@ -191,26 +149,11 @@ impl Opcode {
             let dst_mode_reg = first_word & 0b111;
             let dst_mode = Self::get_addr_mode(dst_mode_ea, dst_mode_reg);
 
-            let dst_value = match dst_mode.typ {
-                Mode::AbsShort => {
-                    length += 2;
-                    Some(cn.rom.read_word(pc + 2) as u32)
-                },
-                Mode::AbsLong => {
-                    length += 4;
-                    Some(cn.rom.read_long(pc + 2))
-                },
-                Mode::Immediate => {
-                    None // not supported for TST (on 68000)
-                },
-                _ => None,
-            };
+            let (dst_value, length_inc) = Self::get_value(cn, &dst_mode, pc + length, &size);
+            length += length_inc;
 
-            let dst_ext = Self::get_ext_word(cn, &dst_mode, pc + length);
-            length += match dst_ext {
-                Some(_) => 2,
-                None => 0,
-            };
+            let (dst_ext, length_inc) = Self::get_ext_word(cn, &dst_mode, pc + length);
+            length += length_inc;
 
             Opcode {
                 code,
@@ -258,9 +201,40 @@ impl Opcode {
         }
     }
 
-    fn get_ext_word(cn: &Console, mode: &Addr, pos: usize) -> Option<Ext> {
-        match mode.typ {
+    fn get_value(cn: &Console, mode: &Addr, pos: usize, size: &Size) -> (Option<u32>, usize) {
+        let mut length_inc = 0;
+        let value = match mode.typ {
+            Mode::AbsShort => {
+                length_inc += 2;
+                Some(cn.rom.read_word(pos) as u32)
+            },
+            Mode::AbsLong => {
+                length_inc += 4;
+                Some(cn.rom.read_long(pos))
+            },
+            Mode::Immediate => {
+                match *size {
+                    Size::Byte | Size::Word => {
+                        length_inc += 2;
+                        Some(cn.rom.read_word(pos) as u32)
+                    },
+                    Size::Long => {
+                        length_inc += 4;
+                        Some(cn.rom.read_long(pos))
+                    },
+                }
+            },
+            _ => None,
+        };
+
+        (value, length_inc)
+    }
+
+    fn get_ext_word(cn: &Console, mode: &Addr, pos: usize) -> (Option<Ext>, usize) {
+        let mut length_inc = 0;
+        let value = match mode.typ {
             Mode::AddrIndirectDisplace => {
+                length_inc += 2;
                 Some(Ext {
                     displace: cn.rom.read_word(pos) as u32,
                     reg_num: None,
@@ -269,6 +243,7 @@ impl Opcode {
                 })
             },
             Mode::AddrIndirectIndexDisplace => {
+                length_inc += 2;
                 let ext_word = cn.rom.read_word(pos) as u32;
                 let displace = ext_word & 0xFF;
                 let reg_num = (ext_word >> 12) & 0b111;
@@ -292,7 +267,9 @@ impl Opcode {
                 })
             },
             _ => None,
-        }
+        };
+
+        (value, length_inc)
     }
 
     // pretty printing
