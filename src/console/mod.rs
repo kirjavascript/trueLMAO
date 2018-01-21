@@ -36,6 +36,6 @@ impl Console {
         self.m68k.pc += opcode.length;
 
         println!("{}", opcode.to_string());
-        println!("{:#?}", opcode);
+        println!("{:?}", opcode);
     }
 }
