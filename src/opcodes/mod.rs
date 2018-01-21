@@ -15,10 +15,11 @@ pub struct Opcode {
 }
 
 #[derive(Debug)]
-enum Code {
-    Tst,
-    Move,
+pub enum Code {
     Nop, Rts, Illegal,
+    Tst, Clr,
+    Move,
+    // Bcc,
 }
 
 impl fmt::Display for Code {
@@ -28,16 +29,16 @@ impl fmt::Display for Code {
 }
 
 #[derive(Debug)]
-enum Size { Byte, Word, Long }
+pub enum Size { Byte, Word, Long }
 
 #[derive(Debug)]
-struct Addr {
+pub struct Addr {
     typ: Mode, // EA
     reg_num: Option<u16>,
 }
 
 #[derive(Debug)]
-enum Mode {
+pub enum Mode {
     DataDirect, // Dn
     AddrDirect, // An
     AddrIndirect, // (An)
@@ -86,6 +87,7 @@ impl Opcode {
 
     pub fn from(cn: &Console, pc: usize) -> Self {
         let first_word = cn.rom.read_word(pc);
+        let high_byte = first_word & 0xFF00;
 
         // NOP
         if first_word == 0x4E71 {
@@ -99,6 +101,10 @@ impl Opcode {
         else if first_word == 0x4AFC {
             Self::basic(Code::Illegal)
         }
+        // // Bcc
+        // else if first_word & 0xF000 == 0x6000 {
+
+        // }
         // MOVE
         else if first_word & 0xC000 == 0 {
             let code = Code::Move;
@@ -139,8 +145,37 @@ impl Opcode {
             }
         }
         // TST
-        else if first_word & 0xFF00 == 0x4A00 {
+        else if high_byte == 0x4A00 {
             let code = Code::Tst;
+            let mut length = 2usize;
+            let size_bits = (first_word & 0b11000000) >> 6;
+            let size = Self::get_size(size_bits);
+
+            let dst_mode_ea = (first_word & 0b111000) >> 3;
+            let dst_mode_reg = first_word & 0b111;
+            let dst_mode = Self::get_addr_mode(dst_mode_ea, dst_mode_reg);
+
+            let (dst_value, length_inc) = Self::get_value(cn, &dst_mode, pc + length, &size);
+            length += length_inc;
+
+            let (dst_ext, length_inc) = Self::get_ext_word(cn, &dst_mode, pc + length);
+            length += length_inc;
+
+            Opcode {
+                code,
+                length: length as u32,
+                size: Some(size),
+                src_mode: None,
+                src_value: None,
+                src_ext: None,
+                dst_mode: Some(dst_mode),
+                dst_value,
+                dst_ext,
+            }
+        }
+        // CLR
+        else if high_byte == 0x4200 {
+            let code = Code::Clr;
             let mut length = 2usize;
             let size_bits = (first_word & 0b11000000) >> 6;
             let size = Self::get_size(size_bits);

@@ -79,13 +79,9 @@ impl UI {
             console_clone.borrow_mut().step();
         });
 
-        let mut obj = UI {
+        UI {
             debug_cpu: label,
-        };
-
-
-
-        obj
+        }
     }
 
     pub fn debug_render(&mut self, console: &Console) {

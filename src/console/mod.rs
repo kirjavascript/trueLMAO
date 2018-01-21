@@ -34,6 +34,9 @@ impl Console {
     pub fn step(&mut self) {
         let opcode = Opcode::next(&self);
         self.m68k.pc += opcode.length;
+        // TODO: cycle counter
+
+
 
         println!("{}", opcode.to_string());
         println!("{:?}", opcode);
