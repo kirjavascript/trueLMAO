@@ -30,8 +30,4 @@ impl M68k {
             addr: [0; 8],
         }
     }
-
-    pub fn setZ(&mut self) {
-        self.cc = self.cc & 0b00100;
-    }
 }

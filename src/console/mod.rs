@@ -36,21 +36,20 @@ impl Console {
         self.m68k.pc += opcode.length;
         // TODO: cycle counter
 
-        // get m68k sim from jorge
         match opcode.code {
             Code::Tst => {
                 // always Some
-                match opcode.dst_mode.unwrap() {
-                    Addr { typ: Mode::AbsLong, .. } => {
-                        let value = self.ram.read(
-                            Size::Long,
-                            opcode.dst_value.unwrap(),
-                        );
-                        if value == 0 {
-                            self.m68k.setN();
-                        }
-                        else if value < 0 {
-
+                match opcode.dst_mode.as_ref().unwrap() {
+                    &Addr { typ: Mode::AbsLong, .. } => {
+                        match opcode.size {
+                            Size::Long => {
+                                let value = self.ram.readLong(
+                                    opcode.dst_value.unwrap(),
+                                );
+                                // get msb
+                            },
+                            Size::Word => {},
+                            Size::Byte => {},
                         }
                     },
                     _ => {},

@@ -33,8 +33,8 @@ pub enum Size { Byte, Word, Long }
 
 #[derive(Debug)]
 pub struct Addr {
-    typ: Mode, // EA
-    reg_num: Option<u16>,
+    pub typ: Mode, // EA
+    pub reg_num: Option<u16>,
 }
 
 #[derive(Debug)]
