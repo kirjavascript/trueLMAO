@@ -4,8 +4,8 @@ use std::fmt;
 pub struct M68k {
     pub pc: u32,    // program counter
     cc: u8,         // ________-___XNZVC & 0b11111)
-    data: [u32; 8], // data registers
-    addr: [u32; 8], // address registers
+    data: [u32; 8], // data registers (longword)
+    addr: [u32; 8], // address registers (longword)
 }
 
 // status register  - X-Extend, N-Negative, Z-Zero, V-Overlow, C-Carry
@@ -29,5 +29,9 @@ impl M68k {
             data: [0; 8],
             addr: [0; 8],
         }
+    }
+
+    pub fn setZ(&mut self) {
+        self.cc = self.cc & 0b00100;
     }
 }

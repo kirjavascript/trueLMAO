@@ -3,18 +3,18 @@ use std::fmt;
 
 #[derive(Debug)]
 pub struct Opcode {
-    code: Code,
+    pub code: Code,
     pub length: u32, // in bytes (amount to increase pc) ( change to u32 )
-    size: Option<Size>, // size of operation
-    src_mode: Option<Addr>, // effective address
-    src_value: Option<u32>,
-    src_ext: Option<Ext>, // extension word
-    dst_mode: Option<Addr>,
-    dst_value: Option<u32>,
-    dst_ext: Option<Ext>,
+    pub size: Option<Size>, // size of operation
+    pub src_mode: Option<Addr>, // effective address
+    pub src_value: Option<u32>,
+    pub src_ext: Option<Ext>, // extension word
+    pub dst_mode: Option<Addr>,
+    pub dst_value: Option<u32>,
+    pub dst_ext: Option<Ext>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Code {
     Nop, Rts, Illegal,
     Tst, Clr,
@@ -52,7 +52,7 @@ pub enum Mode {
 }
 
 #[derive(Debug)]
-struct Ext {
+pub struct Ext {
     displace: u32,
     // the following are only used in IndexDisplacement addressing
     reg_num: Option<u32>,
@@ -61,7 +61,7 @@ struct Ext {
 }
 
 #[derive(Debug)]
-enum ExtRegType {
+pub enum ExtRegType {
     Data, Addr,
 }
 
@@ -379,7 +379,6 @@ impl Opcode {
                             ext_size,
                         )
                     },
-                    _ => panic!("Unknown addressing mode (to_string)"),
                 };
 
                 code.push_str(&output);

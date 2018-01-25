@@ -1,7 +1,7 @@
 use m68k::M68k;
 use rom::Rom;
 use ram::Ram;
-use opcodes::Opcode;
+use opcodes::*;
 
 use std::io::Error;
 
@@ -36,7 +36,30 @@ impl Console {
         self.m68k.pc += opcode.length;
         // TODO: cycle counter
 
+        // get m68k sim from jorge
+        match opcode.code {
+            Code::Tst => {
+                // always Some
+                match opcode.dst_mode.unwrap() {
+                    Addr { typ: Mode::AbsLong, .. } => {
+                        let value = self.ram.read(
+                            Size::Long,
+                            opcode.dst_value.unwrap(),
+                        );
+                        if value == 0 {
+                            self.m68k.setN();
+                        }
+                        else if value < 0 {
 
+                        }
+                    },
+                    _ => {},
+                }
+            },
+            _ => {
+                println!("{:?} not implemented", opcode.code);
+            },
+        }
 
         println!("{}", opcode.to_string());
         println!("{:?}", opcode);
