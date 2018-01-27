@@ -3,9 +3,9 @@ use std::fmt;
 #[derive(Debug)]
 pub struct M68k {
     pub pc: u32,    // program counter
-    cc: u8,         // ________-___XNZVC & 0b11111)
-    data: [u32; 8], // data registers (longword)
-    addr: [u32; 8], // address registers (longword)
+    pub cc: u8,         // ________-___XNZVC & 0b11111)
+    pub data: [u32; 8], // data registers (longword)
+    pub addr: [u32; 8], // address registers (longword)
 }
 
 // status register  - X-Extend, N-Negative, Z-Zero, V-Overlow, C-Carry

@@ -19,13 +19,13 @@ impl Ram {
         //     _ => panic!("ram read overflow"),
         // }
 
-    pub fn readLong(&self, addr: u32) -> u32 {
+    pub fn read_long(&self, addr: u32) -> u32 {
         0
     }
-    pub fn readWord(&self, addr: u16) -> u16 {
+    pub fn read_word(&self, addr: u32) -> u16 {
         0
     }
-    pub fn readByte(&self, addr: u8) -> u8 {
+    pub fn read_byte(&self, addr: u32) -> u8 {
         0
     }
 }

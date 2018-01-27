@@ -41,16 +41,57 @@ impl Console {
                 // always Some
                 match opcode.dst_mode.as_ref().unwrap() {
                     &Addr { typ: Mode::AbsLong, .. } => {
-                        match opcode.size {
-                            Size::Long => {
-                                let value = self.ram.readLong(
+                        let mut new_cc = self.m68k.cc & 0b10000;
+
+                        match opcode.size.as_ref().unwrap() {
+                            &Size::Long => {
+                                let value = self.ram.read_long(
                                     opcode.dst_value.unwrap(),
                                 );
                                 // get msb
+                                let msb = value >> 31;
+                                // negative
+                                if msb == 1 {
+                                    new_cc += 0b01000;
+                                }
+                                // zero
+                                else if value == 0 {
+                                    new_cc += 0b00100;
+                                }
                             },
-                            Size::Word => {},
-                            Size::Byte => {},
+                            &Size::Word => {
+                                let value = self.ram.read_word(
+                                    opcode.dst_value.unwrap(),
+                                );
+                                // get msb
+                                let msb = value >> 15;
+                                // negative
+                                if msb == 1 {
+                                    new_cc += 0b01000;
+                                }
+                                // zero
+                                else if value == 0 {
+                                    new_cc += 0b00100;
+                                }
+                            },
+                            &Size::Byte => {
+                                let value = self.ram.read_byte(
+                                    opcode.dst_value.unwrap(),
+                                );
+                                // get msb
+                                let msb = value >> 7;
+                                // negative
+                                if msb == 1 {
+                                    new_cc += 0b01000;
+                                }
+                                // zero
+                                else if value == 0 {
+                                    new_cc += 0b00100;
+                                }
+                            },
                         }
+
+                        self.m68k.cc = new_cc;
                     },
                     _ => {},
                 }
