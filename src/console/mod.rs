@@ -96,7 +96,7 @@ impl Console {
 
                         self.m68k.cc = new_cc;
                     },
-                    _ => { panic!("addr mode"); },
+                    _ => { panic!("TST addr mode not supported"); },
                 }
             },
             Code::Bne => {
@@ -104,6 +104,7 @@ impl Console {
                     self.m68k.pc = (self.m68k.pc as i64 + opcode.dst_ext.unwrap().displace) as u32;
                 }
             },
+            Code::Nop => {},
             _ => {
                 eprintln!("{:?} not implemented", opcode.code);
             },

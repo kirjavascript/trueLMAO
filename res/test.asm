@@ -7,6 +7,8 @@
 EntryPoint:
     tst.l	($A10008).l	; test ports A and B control
     bne.s	EntryPoint	; If so, branch.
+    lea	PortA_Ok(pc),a5
+    tst.l	-4(a0) ; not complete ? (twos compliment on displacements)
     nop
     nop
     nop
