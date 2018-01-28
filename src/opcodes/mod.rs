@@ -353,8 +353,16 @@ impl Opcode {
         let value = match mode.typ {
             Mode::AddrIndirectDisplace => {
                 length_inc += 2;
+                let word = cn.rom.read_word(pos);
+                // 2s comple
+                let displace = if word >> 15 == 1 {
+                    (0x10000 - (word as i64)) * -1
+                }
+                else {
+                    word as i64
+                };
                 Some(Ext {
-                    displace: cn.rom.read_word(pos) as i64,
+                    displace,
                     reg_num: None,
                     reg_type: None,
                     reg_size: None,
@@ -363,7 +371,13 @@ impl Opcode {
             Mode::AddrIndirectIndexDisplace => {
                 length_inc += 2;
                 let ext_word = cn.rom.read_word(pos) as u32;
-                let displace = (ext_word & 0xFF) as i64;
+                let low_byte = (ext_word & 0xFF) as i64;
+                let displace = if low_byte >> 7 == 1 {
+                    (0x100 - low_byte) as i64 * -1
+                }
+                else {
+                    low_byte as i64
+                };
                 let reg_num = (ext_word >> 12) & 0b111;
                 let reg_type = (ext_word >> 15) & 1; // 1 == a
                 let reg_size = (ext_word >> 11) & 1;
@@ -385,9 +399,13 @@ impl Opcode {
             },
             Mode::PCIndirectDisplace => {
                 length_inc += 2;
-                let ext_word = cn.rom.read_word(pos) as u32;
-                let displace = (ext_word & 0xFF) as i64;
-
+                let word = cn.rom.read_word(pos);
+                let displace = if word >> 15 == 1 {
+                    (0x10000 - (word as i64)) * -1
+                }
+                else {
+                    word as i64
+                };
                 Some(Ext {
                     displace,
                     reg_num: None,

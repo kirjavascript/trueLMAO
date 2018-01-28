@@ -8,7 +8,6 @@ EntryPoint:
     tst.l	($A10008).l	; test ports A and B control
     bne.s	EntryPoint	; If so, branch.
     lea	PortA_Ok(pc),a5
-    tst.l	-4(a0) ; not complete ? (twos compliment on displacements)
     nop
     nop
     nop
@@ -16,9 +15,9 @@ EntryPoint:
 skip:
     rts
 PortA_Ok:
-    bne.s       $2
     clr.b       d0
-    move.l      4(a3, a2.l), 4(a3, a2.l)
+    move.l      -4(a3, a2.l), 4(a3, a2.l)
+    tst.l	-4(a0)
     move.l      #3, 4(a3, a2.l)
     tst.l	4(a3, a2.l)
     move.l      4(a3, a2.l), d6
