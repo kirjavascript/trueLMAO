@@ -16,8 +16,8 @@ pub struct Console {
 }
 
 impl Console {
-    pub const RES_WIDTH: u32 = 320;
-    pub const RES_HEIGHT: u32 = 224;
+    // pub const RES_WIDTH: u32 = 320;
+    // pub const RES_HEIGHT: u32 = 224;
 
     pub fn new(path: &str) -> Result<Self, Error> {
         Ok(Console {
@@ -33,8 +33,9 @@ impl Console {
 
     pub fn step(&mut self) {
         let opcode = Opcode::next(&self);
-        self.m68k.pc += opcode.length;
         // TODO: cycle counter
+
+        self.m68k.pc += opcode.length;
 
         println!("{}", opcode.to_string());
         println!("{:?}", opcode);
@@ -99,6 +100,17 @@ impl Console {
                     _ => { panic!("TST addr mode not supported"); },
                 }
             },
+            Code::Lea => {
+                let reg_num = opcode.dst_mode.unwrap().reg_num.unwrap();
+
+                match opcode.src_mode.as_ref().unwrap() {
+                    &Addr { typ: Mode::PCIndirectDisplace, .. } => {
+                        let addr = (self.m68k.pc as i64 + opcode.src_ext.unwrap().displace) as u32;
+                        self.m68k.addr[reg_num as usize] = addr -2; // for size of instruction maybe ?!
+                    },
+                    _ => { panic!("LEA addr mode not supported"); },
+                }
+            },
             Code::Bne => {
                 if !self.m68k.z_set() {
                     self.m68k.pc = (self.m68k.pc as i64 + opcode.dst_ext.unwrap().displace) as u32;
@@ -109,6 +121,7 @@ impl Console {
                 eprintln!("{:?} not implemented", opcode.code);
             },
         }
+
 
     }
 }

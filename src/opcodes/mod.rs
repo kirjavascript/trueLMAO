@@ -187,60 +187,6 @@ impl Opcode {
                 }),
             }
         }
-        // BNE
-        else if high_byte == 0x6600 {
-            let code = Code::Bne;
-            let mut length = 2usize;
-
-            // dedupe this
-            let low_byte = first_word & 0xFF;
-            let displacement = if low_byte == 0 {
-                length += 2;
-                let word = cn.rom.read_word(pc + 2);
-                // 2s compliment
-                if word >> 15 == 1 { // msb
-                    (0x10000 - (word as i64)) * -1
-                }
-                else {
-                    word as i64
-                }
-            }
-            else if low_byte == 0xFF {
-                length += 4;
-                let long = cn.rom.read_long(pc + 2);
-                if long >> 31 == 1 {
-                    (0x100000000 - (long as i64)) * -1
-                }
-                else {
-                    long as i64
-                }
-            }
-            else {
-                if low_byte >> 7 == 1 {
-                    (0x100 - low_byte) as i64 * -1
-                }
-                else {
-                    low_byte as i64
-                }
-            };
-
-            Opcode {
-                code,
-                length: length as u32,
-                size: None,
-                src_mode: None,
-                src_value: None,
-                src_ext: None,
-                dst_mode: None,
-                dst_value: None,
-                dst_ext: Some(Ext {
-                    displace: displacement,
-                    reg_num: None,
-                    reg_size: None,
-                    reg_type: None,
-                }),
-            }
-        }
         // MOVE
         else if first_word & 0xC000 == 0 {
             let code = Code::Move;
@@ -414,14 +360,13 @@ impl Opcode {
                     reg_size: None,
                 })
             },
-            Mode::AddrIndirectIndexDisplace | Mode::PCIndirectDisplace => {
+            Mode::AddrIndirectIndexDisplace => {
                 length_inc += 2;
                 let ext_word = cn.rom.read_word(pos) as u32;
                 let displace = (ext_word & 0xFF) as i64;
                 let reg_num = (ext_word >> 12) & 0b111;
                 let reg_type = (ext_word >> 15) & 1; // 1 == a
                 let reg_size = (ext_word >> 11) & 1;
-
 
                 Some(Ext {
                     displace,
@@ -436,6 +381,18 @@ impl Opcode {
                     } else {
                         Size::Word
                     }),
+                })
+            },
+            Mode::PCIndirectDisplace => {
+                length_inc += 2;
+                let ext_word = cn.rom.read_word(pos) as u32;
+                let displace = (ext_word & 0xFF) as i64;
+
+                Some(Ext {
+                    displace,
+                    reg_num: None,
+                    reg_type: None,
+                    reg_size: None,
                 })
             },
             _ => None,

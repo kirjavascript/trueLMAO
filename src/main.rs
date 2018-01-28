@@ -17,7 +17,7 @@ use std::rc::Rc;
 
 fn main() {
     let mut console: Rc<RefCell<Console>> = Rc::new(
-        RefCell::new(Console::new("res/test.bin").unwrap())
+        RefCell::new(Console::new("res/s2.bin").unwrap())
     );
 
     console.borrow_mut().start();

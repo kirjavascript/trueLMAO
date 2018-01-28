@@ -14,10 +14,17 @@ pub struct M68k {
 
 impl fmt::Display for M68k {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "PC: 0x{:x}", self.pc)?;
-        writeln!(f, "data: {:?}", self.data)?;
-        writeln!(f, "addr: {:?}", self.addr)?;
-        write!(f, "flags: 0b{:0>5b} (XNZVC)", self.cc)
+        writeln!(f, "PC: x{:X}", self.pc)?;
+        write!(f, "data: [ ")?;
+        for &data in self.data.iter() {
+            write!(f, "x{:X} ", data)?;
+        }
+        write!(f, "]\naddr: [ ")?;
+        for &addr in self.addr.iter() {
+            write!(f, "x{:X} ", addr)?;
+        }
+        writeln!(f, "]")?;
+        write!(f, "flags: b{:0>5b} (XNZVC)", self.cc)
     }
 }
 
