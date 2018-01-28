@@ -16,8 +16,8 @@ pub struct Console {
 }
 
 impl Console {
-    pub const RES_WIDTH: i32 = 320;
-    pub const RES_HEIGHT: i32 = 224;
+    pub const RES_WIDTH: u32 = 320;
+    pub const RES_HEIGHT: u32 = 224;
 
     pub fn new(path: &str) -> Result<Self, Error> {
         Ok(Console {
@@ -35,6 +35,9 @@ impl Console {
         let opcode = Opcode::next(&self);
         self.m68k.pc += opcode.length;
         // TODO: cycle counter
+
+        println!("{}", opcode.to_string());
+        println!("{:?}", opcode);
 
         match opcode.code {
             Code::Tst => {
@@ -93,15 +96,18 @@ impl Console {
 
                         self.m68k.cc = new_cc;
                     },
-                    _ => {},
+                    _ => { panic!("addr mode"); },
+                }
+            },
+            Code::Bne => {
+                if !self.m68k.z_set() {
+                    self.m68k.pc = (self.m68k.pc as i64 + opcode.dst_ext.unwrap().displace) as u32;
                 }
             },
             _ => {
-                println!("{:?} not implemented", opcode.code);
+                eprintln!("{:?} not implemented", opcode.code);
             },
         }
 
-        println!("{}", opcode.to_string());
-        println!("{:?}", opcode);
     }
 }

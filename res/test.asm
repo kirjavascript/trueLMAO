@@ -6,11 +6,13 @@
 
 EntryPoint:
     tst.l	($A10008).l	; test ports A and B control
-    bne.s	PortA_Ok	; If so, branch.
+    bne.s	EntryPoint	; If so, branch.
     nop
     nop
     nop
     nop
+skip:
+    rts
 PortA_Ok:
     bne.s       $2
     clr.b       d0

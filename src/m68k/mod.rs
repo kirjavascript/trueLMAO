@@ -30,4 +30,8 @@ impl M68k {
             addr: [0; 8],
         }
     }
+
+    pub fn z_set(&self) -> bool {
+        return self.cc & 0b100 == 0b100;
+    }
 }
