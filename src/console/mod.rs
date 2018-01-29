@@ -35,8 +35,6 @@ impl Console {
         let opcode = Opcode::next(&self);
         // TODO: cycle counter
 
-        self.m68k.pc += opcode.length;
-
         println!("{}", opcode.to_string());
         println!("{:?}", opcode);
 
@@ -106,7 +104,7 @@ impl Console {
                 match opcode.src_mode.as_ref().unwrap() {
                     &Addr { typ: Mode::PCIndirectDisplace, .. } => {
                         let addr = (self.m68k.pc as i64 + opcode.src_ext.unwrap().displace) as u32;
-                        self.m68k.addr[reg_num as usize] = addr -2; // for size of instruction maybe ?!
+                        self.m68k.addr[reg_num as usize] = addr +2; // for size of instruction maybe ?! TODO: confirm behaviour
                     },
                     _ => { panic!("LEA addr mode not supported"); },
                 }
@@ -122,6 +120,7 @@ impl Console {
             },
         }
 
+        self.m68k.pc += opcode.length;
 
     }
 }

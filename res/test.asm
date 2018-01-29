@@ -5,7 +5,12 @@
     nop
 
 EntryPoint:
+    movem.w	(a5)+,d5-d7
+    nop
+    movem.w	(a5)+,a0
     tst.l	($A10008).l	; test ports A and B control
+    bne.s	EntryPoint	; If so, branch.
+    tst.w	($A1000C).l	; test ports A and B control
     bne.s	EntryPoint	; If so, branch.
     lea	PortA_Ok(pc),a5
     nop

@@ -19,7 +19,7 @@ pub enum Code {
     Nop, Rts, Illegal,
     Lea,
     Tst, Clr,
-    Move,
+    Move, Movem,
     Bne,
 }
 
@@ -129,6 +129,43 @@ impl Opcode {
                     typ: Mode::AddrDirect,
                     reg_num: Some((first_word & 0xE00) >> 9),
                 }),
+                dst_value: None,
+                dst_ext: None,
+            }
+        }
+        // MOVEM
+        else if first_word & 0xFB80 == 0x4880 {
+            let code = Code::Movem;
+            let mut length = 2usize;
+            let size_bit = (first_word >> 6) & 0b1;
+            let size = Self::get_size(size_bit + 1);
+
+            let src_mode_ea = (first_word & 0b111000) >> 3;
+            let src_mode_reg = first_word & 0b111;
+            let src_mode = Self::get_addr_mode(src_mode_ea, src_mode_reg);
+
+            let (src_value, length_inc) = Self::get_value(cn, &src_mode, pc + length, &size);
+            length += length_inc;
+
+            let (src_ext, length_inc) = Self::get_ext_word(cn, &src_mode, pc + length);
+            length += length_inc;
+
+            let dr_bit = (first_word >> 10) & 0b1;
+            // 0 - reg to mem
+            // 1 - mem to reg
+
+            println!("{:#?}", dr_bit);
+
+            length += 2;
+
+            Opcode {
+                code,
+                length: length as u32,
+                size: Some(size),
+                src_mode: Some(src_mode),
+                src_value,
+                src_ext,
+                dst_mode: None,
                 dst_value: None,
                 dst_ext: None,
             }
