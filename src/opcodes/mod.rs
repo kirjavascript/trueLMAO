@@ -51,6 +51,8 @@ pub enum Mode {
     AbsShort, // (xxx).w
     AbsLong, // (xxx).l
     Immediate, // #<data>
+    // RegToMem(u16)
+    // MemToReg(u16)
 }
 
 #[derive(Debug)]
@@ -155,6 +157,9 @@ impl Opcode {
             // 1 - mem to reg
 
             println!("{:#?}", dr_bit);
+
+
+            println!("{:#?}", format!("{:8>b}", cn.rom.read_word(pc + length)));
 
             length += 2;
 

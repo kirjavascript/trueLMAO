@@ -6,8 +6,14 @@
 
 EntryPoint:
     movem.w	(a5)+,d5-d7
-    nop
+    movem.l	(a5)+,a0-a4
+    movem.l	d0-a6,-(sp)
     movem.w	(a5)+,a0
+    movem.l	d0-a1/a3-a5,-(sp)
+    movem.l	(sp)+,d0-a1/a3-a5
+    movem.l	(sp)+,d0-a6
+    movem.l	d0-d7,($1000).w
+    nop
     tst.l	($A10008).l	; test ports A and B control
     bne.s	EntryPoint	; If so, branch.
     tst.w	($A1000C).l	; test ports A and B control
