@@ -51,8 +51,7 @@ pub enum Mode {
     AbsShort, // (xxx).w
     AbsLong, // (xxx).l
     Immediate, // #<data>
-    // RegToMem(u16)
-    // MemToReg(u16)
+    MultiRegister(u16) // a7-d0
 }
 
 #[derive(Debug)]
@@ -155,11 +154,18 @@ impl Opcode {
             let dr_bit = (first_word >> 10) & 0b1;
             // 0 - reg to mem
             // 1 - mem to reg
+            // TODO: flip src/dst
+
+            let registers = cn.rom.read_word(pc + length);
+            // a7-d0
+            // TODO: flip order for -(Xn)
 
             println!("{:#?}", dr_bit);
 
-
-            println!("{:#?}", format!("{:8>b}", cn.rom.read_word(pc + length)));
+            let dst_mode = Some(Addr {
+                typ: Mode::MultiRegister(registers),
+                reg_num: None,
+            });
 
             length += 2;
 
@@ -170,7 +176,7 @@ impl Opcode {
                 src_mode: Some(src_mode),
                 src_value,
                 src_ext,
-                dst_mode: None,
+                dst_mode,
                 dst_value: None,
                 dst_ext: None,
             }
@@ -550,6 +556,9 @@ impl Opcode {
                             ext_size,
                         )
                     },
+                    Mode::MultiRegister(registers) => {
+                        format!("{:8>b}", registers)
+                    },
                 };
 
                 code.push_str(&output);
@@ -612,7 +621,24 @@ impl Opcode {
                             ext_size,
                         )
                     },
+                    Mode::MultiRegister(registers) => {
+                        let addr = registers >> 8;
+                        let data = registers & 0xFF;
+                        let data_str = format!("{:8>b}", data);
+                        let out = data_str.split("")
+                                .filter(|&s| s != "")
+                                .enumerate()
+                                .fold(Vec::new(), |mut a, (i, s)| {
+                                    if s == "1" {
+                                        a.push(7-i);
+                                    }
+                                    a
+                                });
+                        println!("{:#?}", out);
+                        format!("{:8>b} {:8>b}", addr, data)
+                    },
                     _ => panic!("Unknown addressing mode (to_string)"),
+
                 };
 
                 code.push_str(&output);
