@@ -142,17 +142,23 @@ impl Opcode {
             let size_bit = (first_word >> 6) & 0b1;
             let size = Self::get_size(size_bit + 1);
 
+            // direction
+            let dr_bit = (first_word >> 10) & 0b1;
+            // 0 - reg to mem
+            // 1 - mem to reg
+            let mut registers = cn.rom.read_word(pc + length);
+            length += 2;
+
             let first_mode_ea = (first_word & 0b111000) >> 3;
             let first_mode_reg = first_word & 0b111;
             let first_mode = Self::get_addr_mode(first_mode_ea, first_mode_reg);
 
-            let (first_value, length_inc) = Self::get_value(cn, &first_mode, pc + length, &size);
-            length += length_inc;
 
-            let (first_ext, length_inc) = Self::get_ext_word(cn, &first_mode, pc + length);
-            length += length_inc;
+            let (first_value, length_inc_1) = Self::get_value(cn, &first_mode, pc + length, &size);
+            length += length_inc_1;
+            let (first_ext, length_inc_2) = Self::get_ext_word(cn, &first_mode, pc + length);
+            length += length_inc_2;
 
-            let mut registers = cn.rom.read_word(pc + length);
             // a7-d0
             // flip order for -(Xn)
             if first_mode.typ == Mode::AddrIndirectPreInc {
@@ -177,12 +183,7 @@ impl Opcode {
                 reg_num: None,
             });
 
-            // direction
-            let dr_bit = (first_word >> 10) & 0b1;
-            // 0 - reg to mem
-            // 1 - mem to reg
 
-            length += 2;
 
             if dr_bit == 1 {
                 Opcode {

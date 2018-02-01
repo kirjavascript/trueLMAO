@@ -5,13 +5,13 @@
     nop
 
 EntryPoint:
+    movem.l	($A000).l,d0
     movem.l	($A000).l,d0-d7
     movem.w	(a5)+,d5-d7
     movem.l	(a5)+,a0-a4
     movem.l	d0-d3,-(sp)
     movem.l	d0-d7,-(sp)
-    move.l      ($A000).l, d0
-    movem.l	-4(a3, a2.l),d0-a6
+    movem.l	-4(a3, a2.l),d0-a7
     movem.l	d0-a6,-(sp)
     movem.w	(a5)+,a0
     movem.l	d0-a1/a3-a5,-(sp)
