@@ -38,7 +38,7 @@ pub struct Addr {
     pub reg_num: Option<u16>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Mode {
     DataDirect, // Dn
     AddrDirect, // An
@@ -51,7 +51,8 @@ pub enum Mode {
     AbsShort, // (xxx).w
     AbsLong, // (xxx).l
     Immediate, // #<data>
-    MultiRegister(u16) // a7-d0
+    // MultiRegister(u16) // a7-d0
+    MultiRegister((Vec<u8>, Vec<u8>)) // a7-d0 (addr, data)
 }
 
 #[derive(Debug)]
@@ -141,45 +142,75 @@ impl Opcode {
             let size_bit = (first_word >> 6) & 0b1;
             let size = Self::get_size(size_bit + 1);
 
-            let src_mode_ea = (first_word & 0b111000) >> 3;
-            let src_mode_reg = first_word & 0b111;
-            let src_mode = Self::get_addr_mode(src_mode_ea, src_mode_reg);
+            let first_mode_ea = (first_word & 0b111000) >> 3;
+            let first_mode_reg = first_word & 0b111;
+            let first_mode = Self::get_addr_mode(first_mode_ea, first_mode_reg);
 
-            let (src_value, length_inc) = Self::get_value(cn, &src_mode, pc + length, &size);
+            let (first_value, length_inc) = Self::get_value(cn, &first_mode, pc + length, &size);
             length += length_inc;
 
-            let (src_ext, length_inc) = Self::get_ext_word(cn, &src_mode, pc + length);
+            let (first_ext, length_inc) = Self::get_ext_word(cn, &first_mode, pc + length);
             length += length_inc;
 
-            let dr_bit = (first_word >> 10) & 0b1;
-            // 0 - reg to mem
-            // 1 - mem to reg
-            // TODO: flip src/dst
-
-            let registers = cn.rom.read_word(pc + length);
+            let mut registers = cn.rom.read_word(pc + length);
             // a7-d0
-            // TODO: flip order for -(Xn)
+            // flip order for -(Xn)
+            if first_mode.typ == Mode::AddrIndirectPreInc {
+                registers = rev16(registers);
+            }
 
-            println!("{:#?}", dr_bit);
+            let addr = registers >> 8;
+            let data = registers & 0xFF;
+            let mut data_vec = Vec::with_capacity(8);
+            let mut addr_vec = Vec::with_capacity(8);
+            for i in 0..8 {
+                if (data >> i) & 0b1 == 1 {
+                    data_vec.push(i)
+                }
+                if (addr >> i) & 0b1 == 1 {
+                    addr_vec.push(i)
+                }
+            }
 
-            let dst_mode = Some(Addr {
-                typ: Mode::MultiRegister(registers),
+            let second_mode = Some(Addr {
+                typ: Mode::MultiRegister((addr_vec, data_vec)),
                 reg_num: None,
             });
 
+            // direction
+            let dr_bit = (first_word >> 10) & 0b1;
+            // 0 - reg to mem
+            // 1 - mem to reg
+
             length += 2;
 
-            Opcode {
-                code,
-                length: length as u32,
-                size: Some(size),
-                src_mode: Some(src_mode),
-                src_value,
-                src_ext,
-                dst_mode,
-                dst_value: None,
-                dst_ext: None,
+            if dr_bit == 1 {
+                Opcode {
+                    code,
+                    length: length as u32,
+                    size: Some(size),
+                    src_mode: Some(first_mode),
+                    src_value: first_value,
+                    src_ext: first_ext,
+                    dst_mode: second_mode,
+                    dst_value: None,
+                    dst_ext: None,
+                }
             }
+            else {
+                Opcode {
+                    code,
+                    length: length as u32,
+                    size: Some(size),
+                    src_mode: second_mode,
+                    src_value: None,
+                    src_ext: None,
+                    dst_mode: Some(first_mode),
+                    dst_value: first_value,
+                    dst_ext: first_ext,
+                }
+            }
+
         }
         // BNE
         else if high_byte == 0x6600 {
@@ -556,8 +587,8 @@ impl Opcode {
                             ext_size,
                         )
                     },
-                    Mode::MultiRegister(registers) => {
-                        format!("{:8>b}", registers)
+                    Mode::MultiRegister(ref registers) => {
+                        format!("{:?}", registers)
                     },
                 };
 
@@ -621,21 +652,8 @@ impl Opcode {
                             ext_size,
                         )
                     },
-                    Mode::MultiRegister(registers) => {
-                        let addr = registers >> 8;
-                        let data = registers & 0xFF;
-                        let data_str = format!("{:8>b}", data);
-                        let out = data_str.split("")
-                                .filter(|&s| s != "")
-                                .enumerate()
-                                .fold(Vec::new(), |mut a, (i, s)| {
-                                    if s == "1" {
-                                        a.push(7-i);
-                                    }
-                                    a
-                                });
-                        println!("{:#?}", out);
-                        format!("{:8>b} {:8>b}", addr, data)
+                    Mode::MultiRegister(ref registers) => {
+                        format!("{:?}", registers)
                     },
                     _ => panic!("Unknown addressing mode (to_string)"),
 
@@ -655,4 +673,13 @@ fn format_displace(displace: i64) -> String {
         "-" } else {
         ""  };
     format!("{}${:X}", sign, displace.abs())
+}
+
+// reverse 16 bits
+pub fn rev16(x: u16) -> u16 {
+   let x = (x & 0x5555) <<  1 | (x & 0xAAAA) >>  1;
+   let x = (x & 0x3333) <<  2 | (x & 0xCCCC) >>  2;
+   let x = (x & 0x0F0F) <<  4 | (x & 0xF0F0) >>  4;
+   let x = (x & 0x00FF) <<  8 | (x & 0xFF00) >>  8;
+   x
 }
