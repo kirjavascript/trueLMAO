@@ -20,12 +20,12 @@ impl Ram {
         // }
 
     pub fn read_long(&self, addr: u32) -> u32 {
-        0
+        0xFFFFFFFF
     }
     pub fn read_word(&self, addr: u32) -> u16 {
-        0
+        0xFFFF
     }
     pub fn read_byte(&self, addr: u32) -> u8 {
-        0
+        0xFF
     }
 }

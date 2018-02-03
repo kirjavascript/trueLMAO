@@ -5,6 +5,7 @@
     nop
 
 EntryPoint:
+    movem.l	($A000).l,d0-d3/d5-d6
     movem.l	($A000).l,d0
     movem.l	($A000).l,d0-d7
     movem.w	(a5)+,d5-d7

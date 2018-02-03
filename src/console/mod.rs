@@ -29,6 +29,7 @@ impl Console {
 
     pub fn start(&mut self) {
         self.m68k.pc = self.rom.entry_point();
+        self.m68k.addr[7] = self.rom.initial_stack_pointer();
     }
 
     pub fn step(&mut self) {

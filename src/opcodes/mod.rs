@@ -51,7 +51,6 @@ pub enum Mode {
     AbsShort, // (xxx).w
     AbsLong, // (xxx).l
     Immediate, // #<data>
-    // MultiRegister(u16) // a7-d0
     MultiRegister((Vec<u8>, Vec<u8>)) // a7-d0 (addr, data)
 }
 
@@ -146,7 +145,9 @@ impl Opcode {
             let dr_bit = (first_word >> 10) & 0b1;
             // 0 - reg to mem
             // 1 - mem to reg
+
             let mut registers = cn.rom.read_word(pc + length);
+            // a7-d0
             length += 2;
 
             let first_mode_ea = (first_word & 0b111000) >> 3;
@@ -159,7 +160,6 @@ impl Opcode {
             let (first_ext, length_inc_2) = Self::get_ext_word(cn, &first_mode, pc + length);
             length += length_inc_2;
 
-            // a7-d0
             // flip order for -(Xn)
             if first_mode.typ == Mode::AddrIndirectPreInc {
                 registers = rev16(registers);
@@ -653,8 +653,8 @@ impl Opcode {
                             ext_size,
                         )
                     },
-                    Mode::MultiRegister(ref registers) => {
-                        format!("{:?}", registers)
+                    Mode::MultiRegister((ref addr, ref data)) => {
+                        format!("{:?}", (addr, data))
                     },
                     _ => panic!("Unknown addressing mode (to_string)"),
 
