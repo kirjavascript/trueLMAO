@@ -118,8 +118,7 @@ impl Console {
             },
             Code::Movem => {
                 //"In the case of a word transfer to either address or data registers, each word is sign extended to 32 bits, and the resulting long word is loaded into the associated register."
-                // write to registers in a different order when reversed?
-                // a5 = 6 1a
+                // TODO: write to registers in a different order when reversed?
 
                 // increment addr
                 let src_mode = opcode.src_mode.as_ref().unwrap();
@@ -128,18 +127,57 @@ impl Console {
                     &Addr { typ: Mode::AddrIndirectPostInc, .. } => {
                         let dst_mode = opcode.dst_mode.as_ref().unwrap();
                         if let &Mode::MultiRegister((ref addr, ref data)) = &dst_mode.typ {
-                            // TODO: get MSB
-                            let reg_num = src_mode.reg_num.unwrap();
-                            let addr_offset = self.m68k.addr[reg_num as usize];
-                            // read data
-                            // write data
 
-                            // increment register
-                            let inc = (addr.len() + data.len()) * match opcode.size.unwrap() {
+                            let reg_num = src_mode.reg_num.unwrap();
+                            let op_size = match opcode.size.unwrap() {
                                 Size::Word => 2,
                                 Size::Long => 4,
                                 _ => panic!("this should never happen"),
                             };
+
+                            let mut addr_offset = self.m68k.addr[reg_num as usize];
+                            // TODO: get MSB
+
+                            // loop over registers, consuming ram
+                            for a_x in addr {
+                                let next_long = match op_size {
+                                    2 => {
+                                        let word = self.ram.read_word(addr_offset);
+                                        if (word >> 15) & 1 == 1 {
+                                            (word as u32) + 0xFFFF0000
+                                        }
+                                        else {
+                                            word as u32
+                                        }
+                                    },
+                                    4 => self.ram.read_long(addr_offset),
+                                    _ => panic!("this should never happen"),
+                                };
+
+                                self.m68k.addr[*a_x as usize] = next_long;
+                                addr_offset += op_size;
+                            }
+                            for d_x in data {
+                                let next_long = match op_size {
+                                    2 => {
+                                        let word = self.ram.read_word(addr_offset);
+                                        if (word >> 15) & 1 == 1 {
+                                            (word as u32) + 0xFFFF0000
+                                        }
+                                        else {
+                                            word as u32
+                                        }
+                                    },
+                                    4 => self.ram.read_long(addr_offset),
+                                    _ => panic!("this should never happen"),
+                                };
+
+                                self.m68k.data[*d_x as usize] = next_long;
+                                addr_offset += op_size;
+                            }
+
+                            // increment register
+                            let inc = (addr.len() + data.len()) as u32 * op_size;
                             self.m68k.addr[reg_num as usize] += inc as u32;
                         };
                     },
