@@ -30,6 +30,7 @@ impl Console {
     pub fn start(&mut self) {
         self.m68k.pc = self.rom.entry_point();
         self.m68k.addr[7] = self.rom.initial_stack_pointer();
+        // TODO: clear RAM?
     }
 
     pub fn step(&mut self) {
@@ -113,6 +114,38 @@ impl Console {
             Code::Bne => {
                 if !self.m68k.z_set() {
                     self.m68k.pc = (self.m68k.pc as i64 + opcode.dst_ext.unwrap().displace) as u32;
+                }
+            },
+            Code::Movem => {
+                //"In the case of a word transfer to either address or data registers, each word is sign extended to 32 bits, and the resulting long word is loaded into the associated register."
+                // write to registers in a different order when reversed?
+                // a5 = 6 1a
+
+                // increment addr
+                let src_mode = opcode.src_mode.as_ref().unwrap();
+                match src_mode {
+                    // mem to reg
+                    &Addr { typ: Mode::AddrIndirectPostInc, .. } => {
+                        let dst_mode = opcode.dst_mode.as_ref().unwrap();
+                        if let &Mode::MultiRegister((ref addr, ref data)) = &dst_mode.typ {
+                            // TODO: get MSB
+                            let reg_num = src_mode.reg_num.unwrap();
+                            let addr_offset = self.m68k.addr[reg_num as usize];
+                            // read data
+                            // write data
+
+                            // increment register
+                            let inc = (addr.len() + data.len()) * match opcode.size.unwrap() {
+                                Size::Word => 2,
+                                Size::Long => 4,
+                                _ => panic!("this should never happen"),
+                            };
+                            self.m68k.addr[reg_num as usize] += inc as u32;
+                        };
+                    },
+                    // reg to mem
+                    // &Addr { typ: Mode::MultiRegister(()), .. } => {
+                    _ => { panic!("MOVEM addr mode not supported"); },
                 }
             },
             Code::Nop => {},
