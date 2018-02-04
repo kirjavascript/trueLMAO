@@ -20,7 +20,7 @@ pub enum Code {
     Lea,
     Tst, Clr,
     Move, Movem,
-    Bne,
+    Bra, Bne,
 }
 
 impl fmt::Display for Code {
@@ -134,6 +134,95 @@ impl Opcode {
                 dst_ext: None,
             }
         }
+        // BRA
+        else if high_byte == 0x6000 {
+            let code = Code::Bra;
+            let mut length = 2usize;
+
+            let (displacement, length_inc) = Self::get_branch_displacement(cn, first_word, pc + length);
+            length += length_inc;
+
+            Opcode {
+                code,
+                length: length as u32,
+                size: None,
+                src_mode: None,
+                src_value: None,
+                src_ext: None,
+                dst_mode: None,
+                dst_value: None,
+                dst_ext: Some(Ext {
+                    displace: displacement,
+                    reg_num: None,
+                    reg_size: None,
+                    reg_type: None,
+                }),
+            }
+        }
+        // BNE
+        else if high_byte == 0x6600 {
+            let code = Code::Bne;
+            let mut length = 2usize;
+
+            let (displacement, length_inc) = Self::get_branch_displacement(cn, first_word, pc + length);
+            length += length_inc;
+
+            Opcode {
+                code,
+                length: length as u32,
+                size: None,
+                src_mode: None,
+                src_value: None,
+                src_ext: None,
+                dst_mode: None,
+                dst_value: None,
+                dst_ext: Some(Ext {
+                    displace: displacement,
+                    reg_num: None,
+                    reg_size: None,
+                    reg_type: None,
+                }),
+            }
+        }
+        // MOVE
+        else if first_word & 0xC000 == 0 {
+            let code = Code::Move;
+            let mut length = 2usize;
+            let size_bits = (first_word & 0b11000000000000) >> 12;
+            let size = Self::get_size(size_bits);
+
+            let src_mode_ea = (first_word & 0b111000) >> 3;
+            let src_mode_reg = first_word & 0b111;
+            let src_mode = Self::get_addr_mode(src_mode_ea, src_mode_reg);
+
+            let (src_value, length_inc) = Self::get_value(cn, &src_mode, pc + length, &size);
+            length += length_inc;
+
+            let (src_ext, length_inc) = Self::get_ext_word(cn, &src_mode, pc + length);
+            length += length_inc;
+
+            let dst_mode_reg = (first_word & 0b111000000000) >> 9;
+            let dst_mode_ea = (first_word & 0b111000000) >> 6;
+            let dst_mode = Self::get_addr_mode(dst_mode_ea, dst_mode_reg);
+
+            let (dst_value, length_inc) = Self::get_value(cn, &dst_mode, pc + length, &size);
+            length += length_inc;
+
+            let (dst_ext, length_inc) = Self::get_ext_word(cn, &dst_mode, pc + length);
+            length += length_inc;
+
+            Opcode {
+                code,
+                length: length as u32,
+                size: Some(size),
+                src_mode: Some(src_mode),
+                src_value,
+                src_ext,
+                dst_mode: Some(dst_mode),
+                dst_value,
+                dst_ext,
+            }
+        }
         // MOVEM
         else if first_word & 0xFB80 == 0x4880 {
             let code = Code::Movem;
@@ -212,99 +301,6 @@ impl Opcode {
                 }
             }
 
-        }
-        // BNE
-        else if high_byte == 0x6600 {
-            let code = Code::Bne;
-            let mut length = 2usize;
-
-            // dedupe this
-            let low_byte = first_word & 0xFF;
-            let displacement = if low_byte == 0 {
-                length += 2;
-                let word = cn.rom.read_word(pc + 2);
-                // 2s compliment
-                if word >> 15 == 1 { // msb
-                    (0x10000 - (word as i64)) * -1
-                }
-                else {
-                    word as i64
-                }
-            }
-            else if low_byte == 0xFF {
-                length += 4;
-                let long = cn.rom.read_long(pc + 2);
-                if long >> 31 == 1 {
-                    (0x100000000 - (long as i64)) * -1
-                }
-                else {
-                    long as i64
-                }
-            }
-            else {
-                if low_byte >> 7 == 1 {
-                    (0x100 - low_byte) as i64 * -1
-                }
-                else {
-                    low_byte as i64
-                }
-            };
-
-            Opcode {
-                code,
-                length: length as u32,
-                size: None,
-                src_mode: None,
-                src_value: None,
-                src_ext: None,
-                dst_mode: None,
-                dst_value: None,
-                dst_ext: Some(Ext {
-                    displace: displacement,
-                    reg_num: None,
-                    reg_size: None,
-                    reg_type: None,
-                }),
-            }
-        }
-        // MOVE
-        else if first_word & 0xC000 == 0 {
-            let code = Code::Move;
-            let mut length = 2usize;
-            let size_bits = (first_word & 0b11000000000000) >> 12;
-            let size = Self::get_size(size_bits);
-
-            let src_mode_ea = (first_word & 0b111000) >> 3;
-            let src_mode_reg = first_word & 0b111;
-            let src_mode = Self::get_addr_mode(src_mode_ea, src_mode_reg);
-
-            let (src_value, length_inc) = Self::get_value(cn, &src_mode, pc + length, &size);
-            length += length_inc;
-
-            let (src_ext, length_inc) = Self::get_ext_word(cn, &src_mode, pc + length);
-            length += length_inc;
-
-            let dst_mode_reg = (first_word & 0b111000000000) >> 9;
-            let dst_mode_ea = (first_word & 0b111000000) >> 6;
-            let dst_mode = Self::get_addr_mode(dst_mode_ea, dst_mode_reg);
-
-            let (dst_value, length_inc) = Self::get_value(cn, &dst_mode, pc + length, &size);
-            length += length_inc;
-
-            let (dst_ext, length_inc) = Self::get_ext_word(cn, &dst_mode, pc + length);
-            length += length_inc;
-
-            Opcode {
-                code,
-                length: length as u32,
-                size: Some(size),
-                src_mode: Some(src_mode),
-                src_value,
-                src_ext,
-                dst_mode: Some(dst_mode),
-                dst_value,
-                dst_ext,
-            }
         }
         // TST
         else if high_byte == 0x4A00 {
@@ -497,6 +493,43 @@ impl Opcode {
         };
 
         (value, length_inc)
+    }
+
+    fn get_branch_displacement(cn: &Console, first_word: u16, pos: usize) -> (i64, usize) {
+        let mut length_inc = 0;
+
+        let low_byte = first_word & 0xFF;
+        let displacement = if low_byte == 0 {
+            length_inc += 2;
+            let word = cn.rom.read_word(pos);
+            // 2s compliment
+            if word >> 15 == 1 { // msb
+                (0x10000 - (word as i64)) * -1
+            }
+            else {
+                word as i64
+            }
+        }
+        else if low_byte == 0xFF {
+            length_inc += 4;
+            let long = cn.rom.read_long(pos);
+            if long >> 31 == 1 {
+                (0x100000000 - (long as i64)) * -1
+            }
+            else {
+                long as i64
+            }
+        }
+        else {
+            if low_byte >> 7 == 1 {
+                (0x100 - low_byte) as i64 * -1
+            }
+            else {
+                low_byte as i64
+            }
+        };
+
+        (displacement, length_inc)
     }
 
     // pretty printing
