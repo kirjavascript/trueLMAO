@@ -19,7 +19,7 @@ pub enum Code {
     Nop, Rts, Illegal,
     Lea,
     Tst, Clr,
-    Move, Movem,
+    Move, Movem, And,
     Bra, Bne, Beq,
 }
 

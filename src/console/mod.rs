@@ -112,16 +112,16 @@ impl Console {
                 }
             },
             Code::Bra => {
-                self.m68k.pc = (self.m68k.pc as i64 + opcode.dst_ext.unwrap().displace) as u32;
+                self.m68k.displace_pc(opcode.dst_ext.unwrap().displace);
             },
             Code::Beq => {
                 if self.m68k.z_set() {
-                    self.m68k.pc = (self.m68k.pc as i64 + opcode.dst_ext.unwrap().displace) as u32;
+                    self.m68k.displace_pc(opcode.dst_ext.unwrap().displace);
                 }
             },
             Code::Bne => {
                 if !self.m68k.z_set() {
-                    self.m68k.pc = (self.m68k.pc as i64 + opcode.dst_ext.unwrap().displace) as u32;
+                    self.m68k.displace_pc(opcode.dst_ext.unwrap().displace);
                 }
             },
             Code::Movem => {

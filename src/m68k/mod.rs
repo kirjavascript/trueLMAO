@@ -39,6 +39,13 @@ impl M68k {
     }
 
     pub fn z_set(&self) -> bool {
-        return self.cc & 0b100 == 0b100;
+        self.cc & 0b100 == 0b100
+    }
+    pub fn n_set(&self) -> bool {
+        self.cc & 0b1000 == 0b1000
+    }
+
+    pub fn displace_pc(&mut self, displacement: i64) {
+        self.pc = (self.pc as i64 + displacement) as u32;
     }
 }
