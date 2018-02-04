@@ -114,6 +114,11 @@ impl Console {
             Code::Bra => {
                 self.m68k.pc = (self.m68k.pc as i64 + opcode.dst_ext.unwrap().displace) as u32;
             },
+            Code::Beq => {
+                if self.m68k.z_set() {
+                    self.m68k.pc = (self.m68k.pc as i64 + opcode.dst_ext.unwrap().displace) as u32;
+                }
+            },
             Code::Bne => {
                 if !self.m68k.z_set() {
                     self.m68k.pc = (self.m68k.pc as i64 + opcode.dst_ext.unwrap().displace) as u32;

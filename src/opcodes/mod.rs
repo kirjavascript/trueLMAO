@@ -20,7 +20,7 @@ pub enum Code {
     Lea,
     Tst, Clr,
     Move, Movem,
-    Bra, Bne,
+    Bra, Bne, Beq,
 }
 
 impl fmt::Display for Code {
@@ -137,6 +137,31 @@ impl Opcode {
         // BRA
         else if high_byte == 0x6000 {
             let code = Code::Bra;
+            let mut length = 2usize;
+
+            let (displacement, length_inc) = Self::get_branch_displacement(cn, first_word, pc + length);
+            length += length_inc;
+
+            Opcode {
+                code,
+                length: length as u32,
+                size: None,
+                src_mode: None,
+                src_value: None,
+                src_ext: None,
+                dst_mode: None,
+                dst_value: None,
+                dst_ext: Some(Ext {
+                    displace: displacement,
+                    reg_num: None,
+                    reg_size: None,
+                    reg_type: None,
+                }),
+            }
+        }
+        // BEQ
+        else if high_byte == 0x6700 {
+            let code = Code::Beq;
             let mut length = 2usize;
 
             let (displacement, length_inc) = Self::get_branch_displacement(cn, first_word, pc + length);
