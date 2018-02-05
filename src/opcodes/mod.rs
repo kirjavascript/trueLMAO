@@ -46,8 +46,9 @@ pub enum Mode {
     AddrIndirectPostInc, // (An) +
     AddrIndirectPreInc, // - (An)
     AddrIndirectDisplace, // (d16, An)
-    AddrIndirectIndexDisplace, // (d8,An,Xn)
+    AddrIndirectIndexDisplace, // (d8, An, Xn)
     PCIndirectDisplace, // (d16, PC)
+    // PCIndirectIndexDisplace, // (d8, PC, Xn)
     AbsShort, // (xxx).w
     AbsLong, // (xxx).l
     Immediate, // #<data>
@@ -207,6 +208,45 @@ impl Opcode {
                     reg_size: None,
                     reg_type: None,
                 }),
+            }
+        }
+        // AND
+        else if first_word & 0xF000 == 0xC000 {
+            let code = Code::And;
+            let mut length = 2usize;
+            let size_bits = (first_word & 0b11000000000000) >> 12;
+            let size = Self::get_size(size_bits);
+
+            let src_mode_ea = (first_word & 0b111000) >> 3;
+            let src_mode_reg = first_word & 0b111;
+            let src_mode = Self::get_addr_mode(src_mode_ea, src_mode_reg);
+
+            let (src_value, length_inc) = Self::get_value(cn, &src_mode, pc + length, &size);
+            length += length_inc;
+
+            let (src_ext, length_inc) = Self::get_ext_word(cn, &src_mode, pc + length);
+            length += length_inc;
+
+            // let dst_mode_reg = (first_word & 0b111000000000) >> 9;
+            // let dst_mode_ea = (first_word & 0b111000000) >> 6;
+            // let dst_mode = Self::get_addr_mode(dst_mode_ea, dst_mode_reg);
+
+            // let (dst_value, length_inc) = Self::get_value(cn, &dst_mode, pc + length, &size);
+            // length += length_inc;
+
+            // let (dst_ext, length_inc) = Self::get_ext_word(cn, &dst_mode, pc + length);
+            // length += length_inc;
+
+            Opcode {
+                code,
+                length: length as u32,
+                size: Some(size),
+                src_mode: Some(src_mode),
+                src_value,
+                src_ext,
+                dst_mode: None,
+                dst_value: None,
+                dst_ext: None,
             }
         }
         // MOVE
@@ -414,6 +454,7 @@ impl Opcode {
                 0b001 => Addr { typ: Mode::AbsLong, reg_num: None },
                 0b100 => Addr { typ: Mode::Immediate, reg_num: None },
                 0b010 => Addr { typ: Mode::PCIndirectDisplace, reg_num: None },
+                // 0b011 => Addr { typ: Mode::PCIndirectIndexDisplace, reg_num: None },
                 _ => panic!("Unknown addressing mode {:b} {:b}", mode, reg),
             },
             _ => panic!("Unknown addressing mode {:b} {:b}", mode, reg),

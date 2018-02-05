@@ -5,6 +5,14 @@
     nop
 
 EntryPoint:
+    and.b	d1,$4(a0)
+    and.b	d1,d0	; does nothing now
+    and.w	PortA_Ok(pc,d7.w),d5	; only keep X lower bits
+    andi.b	#$F,d0
+    andi.w	#3,d0
+    andi.w	#6,($FFFF8080).w
+    andi.l	#$FFFFFF,d0	; 8x8 tile pointer
+
     tst.l	($A10008).l	; test ports A and B control
     beq.w       PortA_Ok
     bne.s	EntryPoint	; If so, branch.
