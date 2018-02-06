@@ -214,40 +214,53 @@ impl Opcode {
         else if first_word & 0xF000 == 0xC000 {
             let code = Code::And;
             let mut length = 2usize;
-            let size_bits = (first_word & 0b11000000000000) >> 12;
+            let size_bits = (first_word & 0b11000000) >> 6;
             let size = Self::get_size_normal(size_bits);
 
-            let src_mode_ea = (first_word & 0b111000) >> 3;
-            let src_mode_reg = first_word & 0b111;
-            let src_mode = Self::get_addr_mode(src_mode_ea, src_mode_reg);
+            let first_mode_ea = (first_word & 0b111000) >> 3;
+            let first_mode_reg = first_word & 0b111;
+            let first_mode = Self::get_addr_mode(first_mode_ea, first_mode_reg);
 
-            let (src_value, length_inc) = Self::get_value(cn, &src_mode, pc + length, &size);
+            let (first_value, length_inc) = Self::get_value(cn, &first_mode, pc + length, &size);
             length += length_inc;
 
-            let (src_ext, length_inc) = Self::get_ext_word(cn, &src_mode, pc + length);
+            let (first_ext, length_inc) = Self::get_ext_word(cn, &first_mode, pc + length);
             length += length_inc;
 
-            // let dst_mode_reg = (first_word & 0b111000000000) >> 9;
-            // let dst_mode_ea = (first_word & 0b111000000) >> 6;
-            // let dst_mode = Self::get_addr_mode(dst_mode_ea, dst_mode_reg);
+            let second_mode = Addr {
+                typ: Mode::DataDirect,
+                reg_num: Some((first_word & 0b111000000000) >> 9),
+            };
 
-            // let (dst_value, length_inc) = Self::get_value(cn, &dst_mode, pc + length, &size);
-            // length += length_inc;
+            let direction = (first_word & 0b100000000) >> 8;
 
-            // let (dst_ext, length_inc) = Self::get_ext_word(cn, &dst_mode, pc + length);
-            // length += length_inc;
-
-            Opcode {
-                code,
-                length: length as u32,
-                size: Some(size),
-                src_mode: Some(src_mode),
-                src_value,
-                src_ext,
-                dst_mode: None,
-                dst_value: None,
-                dst_ext: None,
+            if direction == 1 {
+                Opcode {
+                    code,
+                    length: length as u32,
+                    size: Some(size),
+                    src_mode: Some(second_mode),
+                    src_value: None,
+                    src_ext: None,
+                    dst_mode: Some(first_mode),
+                    dst_value: first_value,
+                    dst_ext: first_ext,
+                }
             }
+            else {
+                Opcode {
+                    code,
+                    length: length as u32,
+                    size: Some(size),
+                    src_mode: Some(first_mode),
+                    src_value: first_value,
+                    src_ext: first_ext,
+                    dst_mode: Some(second_mode),
+                    dst_value: None,
+                    dst_ext: None,
+                }
+            }
+
         }
         // MOVE
         else if first_word & 0xC000 == 0 {
@@ -436,7 +449,7 @@ impl Opcode {
             0b01 => Size::Byte,
             0b11 => Size::Word,
             0b10 => Size::Long,
-            _ => panic!("Opcode::get_size() size not covered: {}", bits),
+            _ => panic!("Opcode::get_size_move() size not covered: {}", bits),
         }
     }
 
@@ -445,7 +458,7 @@ impl Opcode {
             0b00 => Size::Byte,
             0b01 => Size::Word,
             0b10 => Size::Long,
-            _ => panic!("Opcode::get_size() size not covered: {}", bits),
+            _ => panic!("Opcode::get_size_normal() size not covered: {}", bits),
         }
     }
 

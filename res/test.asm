@@ -6,9 +6,10 @@
 
 EntryPoint:
     and.b	d1,$4(a0)
-    and.b	d1,d0	; does nothing now
+    and.w	d1,d0	; does nothing now
+    and.l	d1,d0	; does nothing now
     and.w	PortA_Ok(pc,d7.w),d5	; only keep X lower bits
-    andi.b	#$F,d0
+    andi.b	#$F,d0  ; interpreted as move (?)
     andi.w	#3,d0
     andi.w	#6,($FFFF8080).w
     andi.l	#$FFFFFF,d0	; 8x8 tile pointer
@@ -67,6 +68,12 @@ System_Stack:
     movem.l	d0-a1/a3-a5,-(sp)
     movem.l	(sp)+,d0-a1/a3-a5
     movem.l	d0-d7,($1000).w
+
+    move.w	-4(pc),d0
+    move.l	-4(a3),d0
+
+    move.l	-4(a3, a2.l),d0
+    move.l	-4(pc, d0.l),d0
     rts
 
     nop
