@@ -48,7 +48,7 @@ pub enum Mode {
     AddrIndirectDisplace, // (d16, An)
     AddrIndirectIndexDisplace, // (d8, An, Xn)
     PCIndirectDisplace, // (d16, PC)
-    // PCIndirectIndexDisplace, // (d8, PC, Xn)
+    PCIndirectIndexDisplace, // (d8, PC, Xn)
     AbsShort, // (xxx).w
     AbsLong, // (xxx).l
     Immediate, // #<data>
@@ -215,7 +215,7 @@ impl Opcode {
             let code = Code::And;
             let mut length = 2usize;
             let size_bits = (first_word & 0b11000000000000) >> 12;
-            let size = Self::get_size(size_bits);
+            let size = Self::get_size_normal(size_bits);
 
             let src_mode_ea = (first_word & 0b111000) >> 3;
             let src_mode_reg = first_word & 0b111;
@@ -254,7 +254,7 @@ impl Opcode {
             let code = Code::Move;
             let mut length = 2usize;
             let size_bits = (first_word & 0b11000000000000) >> 12;
-            let size = Self::get_size(size_bits);
+            let size = Self::get_size_move(size_bits);
 
             let src_mode_ea = (first_word & 0b111000) >> 3;
             let src_mode_reg = first_word & 0b111;
@@ -293,7 +293,7 @@ impl Opcode {
             let code = Code::Movem;
             let mut length = 2usize;
             let size_bit = (first_word >> 6) & 0b1;
-            let size = Self::get_size(size_bit + 1);
+            let size = Self::get_size_normal(size_bit + 1);
 
             // direction
             let dr_bit = (first_word >> 10) & 0b1;
@@ -372,7 +372,7 @@ impl Opcode {
             let code = Code::Tst;
             let mut length = 2usize;
             let size_bits = (first_word & 0b11000000) >> 6;
-            let size = Self::get_size(size_bits);
+            let size = Self::get_size_normal(size_bits);
 
             let dst_mode_ea = (first_word & 0b111000) >> 3;
             let dst_mode_reg = first_word & 0b111;
@@ -401,7 +401,7 @@ impl Opcode {
             let code = Code::Clr;
             let mut length = 2usize;
             let size_bits = (first_word & 0b11000000) >> 6;
-            let size = Self::get_size(size_bits);
+            let size = Self::get_size_normal(size_bits);
 
             let dst_mode_ea = (first_word & 0b111000) >> 3;
             let dst_mode_reg = first_word & 0b111;
@@ -431,7 +431,16 @@ impl Opcode {
 
     }
 
-    fn get_size(bits: u16) -> Size {
+    fn get_size_move(bits: u16) -> Size {
+        match bits {
+            0b01 => Size::Byte,
+            0b11 => Size::Word,
+            0b10 => Size::Long,
+            _ => panic!("Opcode::get_size() size not covered: {}", bits),
+        }
+    }
+
+    fn get_size_normal(bits: u16) -> Size {
         match bits {
             0b00 => Size::Byte,
             0b01 => Size::Word,
@@ -454,7 +463,7 @@ impl Opcode {
                 0b001 => Addr { typ: Mode::AbsLong, reg_num: None },
                 0b100 => Addr { typ: Mode::Immediate, reg_num: None },
                 0b010 => Addr { typ: Mode::PCIndirectDisplace, reg_num: None },
-                // 0b011 => Addr { typ: Mode::PCIndirectIndexDisplace, reg_num: None },
+                0b011 => Addr { typ: Mode::PCIndirectIndexDisplace, reg_num: None },
                 _ => panic!("Unknown addressing mode {:b} {:b}", mode, reg),
             },
             _ => panic!("Unknown addressing mode {:b} {:b}", mode, reg),
@@ -493,16 +502,20 @@ impl Opcode {
     fn get_ext_word(cn: &Console, mode: &Addr, pos: usize) -> (Option<Ext>, usize) {
         let mut length_inc = 0;
         let value = match mode.typ {
-            Mode::AddrIndirectDisplace => {
+            Mode::AddrIndirectDisplace | Mode::PCIndirectDisplace => {
                 length_inc += 2;
                 let word = cn.rom.read_word(pos);
                 // 2s comple
-                let displace = if word >> 15 == 1 {
+                let mut displace = if word >> 15 == 1 {
                     (0x10000 - (word as i64)) * -1
                 }
                 else {
                     word as i64
                 };
+                // this could also happen in the cpu instead
+                if mode.typ == Mode::PCIndirectDisplace {
+                    displace += pos as i64
+                }
                 Some(Ext {
                     displace,
                     reg_num: None,
@@ -510,16 +523,20 @@ impl Opcode {
                     reg_size: None,
                 })
             },
-            Mode::AddrIndirectIndexDisplace => {
+            Mode::AddrIndirectIndexDisplace | Mode::PCIndirectIndexDisplace => {
                 length_inc += 2;
                 let ext_word = cn.rom.read_word(pos) as u32;
                 let low_byte = (ext_word & 0xFF) as i64;
-                let displace = if low_byte >> 7 == 1 {
+                let mut displace = if low_byte >> 7 == 1 {
                     (0x100 - low_byte) as i64 * -1
                 }
                 else {
                     low_byte as i64
                 };
+                // same here
+                if mode.typ == Mode::PCIndirectIndexDisplace {
+                    displace += pos as i64
+                }
                 let reg_num = (ext_word >> 12) & 0b111;
                 let reg_type = (ext_word >> 15) & 1; // 1 == a
                 let reg_size = (ext_word >> 11) & 1;
@@ -539,24 +556,9 @@ impl Opcode {
                     }),
                 })
             },
-            Mode::PCIndirectDisplace => {
-                length_inc += 2;
-                let word = cn.rom.read_word(pos);
-                let displace = if word >> 15 == 1 {
-                    (0x10000 - (word as i64)) * -1
-                }
-                else {
-                    word as i64
-                };
-                Some(Ext {
-                    displace,
-                    reg_num: None,
-                    reg_type: None,
-                    reg_size: None,
-                })
-            },
             _ => None,
         };
+
 
         (value, length_inc)
     }
@@ -633,47 +635,7 @@ impl Opcode {
         match self.src_mode {
             None => {},
             Some(ref mode) => {
-                let output = match mode.typ {
-                    Mode::AbsShort => {
-                        format!("(${:X}).w", self.src_value.unwrap())
-                    },
-                    Mode::AbsLong => {
-                        format!("(${:X}).l", self.src_value.unwrap())
-                    },
-                    Mode::Immediate => {
-                        format!("#${:X}", self.src_value.unwrap())
-                    },
-                    Mode::DataDirect => {
-                        format!("d{}", mode.reg_num.unwrap())
-                    },
-                    Mode::AddrDirect => {
-                        format!("a{}", mode.reg_num.unwrap())
-                    },
-                    Mode::AddrIndirect => {
-                        format!("(a{})", mode.reg_num.unwrap())
-                    },
-                    Mode::AddrIndirectPostInc => {
-                        format!("(a{})+", mode.reg_num.unwrap())
-                    },
-                    Mode::AddrIndirectPreInc => {
-                        format!("-(a{})", mode.reg_num.unwrap())
-                    },
-                    Mode::AddrIndirectDisplace => {
-                        let displacement = self.src_ext.as_ref().unwrap().displace;
-                        format!("${:X}(a{})", displacement, mode.reg_num.unwrap())
-                    },
-                    Mode::PCIndirectDisplace => {
-                        let displacement = self.src_ext.as_ref().unwrap().displace;
-                        format!("{}(pc)", format_displace(displacement))
-                    },
-                    Mode::AddrIndirectIndexDisplace => {
-                        format_mode_indexdisplace(mode, &self.src_ext)
-                    },
-                    Mode::MultiRegister(ref registers) => {
-                        format!("{:?}", registers)
-                    },
-                };
-
+                let output = format_mode(mode, &self.src_value, &self.src_ext);
                 code.push_str(&output);
             },
         }
@@ -687,42 +649,7 @@ impl Opcode {
         match self.dst_mode {
             None => {},
             Some(ref mode) => {
-                let output = match mode.typ {
-                    Mode::AbsShort => {
-                        format!("(${:X}).w", self.dst_value.unwrap())
-                    },
-                    Mode::AbsLong => {
-                        format!("(${:X}).l", self.dst_value.unwrap())
-                    },
-                    Mode::DataDirect => {
-                        format!("d{}", mode.reg_num.unwrap())
-                    },
-                    Mode::AddrDirect => {
-                        format!("a{}", mode.reg_num.unwrap())
-                    },
-                    Mode::AddrIndirect => {
-                        format!("(a{})", mode.reg_num.unwrap())
-                    },
-                    Mode::AddrIndirectPostInc => {
-                        format!("(a{})+", mode.reg_num.unwrap())
-                    },
-                    Mode::AddrIndirectPreInc => {
-                        format!("-(a{})", mode.reg_num.unwrap())
-                    },
-                    Mode::AddrIndirectDisplace => {
-                        let displacement = self.dst_ext.as_ref().unwrap().displace;
-                        format!("{}(a{})", format_displace(displacement), mode.reg_num.unwrap())
-                    },
-                    Mode::AddrIndirectIndexDisplace => {
-                        format_mode_indexdisplace(mode, &self.dst_ext)
-                    },
-                    Mode::MultiRegister((ref addr, ref data)) => {
-                        format!("{:?}", (addr, data))
-                    },
-                    _ => panic!("Unknown addressing mode (to_string)"),
-
-                };
-
+                let output = format_mode(mode, &self.dst_value, &self.dst_ext);
                 code.push_str(&output);
             },
         }
@@ -739,8 +666,57 @@ fn format_displace(displace: i64) -> String {
     format!("{}${:X}", sign, displace.abs())
 }
 
+fn format_mode(mode: &Addr, value: &Option<u32>, ext: &Option<Ext>) -> String {
+    match mode.typ {
+        Mode::AbsShort => {
+            format!("(${:X}).w", value.unwrap())
+        },
+        Mode::AbsLong => {
+            format!("(${:X}).l", value.unwrap())
+        },
+        Mode::Immediate => {
+            format!("#${:X}", value.unwrap())
+        },
+        Mode::DataDirect => {
+            format!("d{}", mode.reg_num.unwrap())
+        },
+        Mode::AddrDirect => {
+            format!("a{}", mode.reg_num.unwrap())
+        },
+        Mode::AddrIndirect => {
+            format!("(a{})", mode.reg_num.unwrap())
+        },
+        Mode::AddrIndirectPostInc => {
+            format!("(a{})+", mode.reg_num.unwrap())
+        },
+        Mode::AddrIndirectPreInc => {
+            format!("-(a{})", mode.reg_num.unwrap())
+        },
+        Mode::AddrIndirectDisplace => {
+            let displacement = ext.as_ref().unwrap().displace;
+            format!("{}(a{})", format_displace(displacement), mode.reg_num.unwrap())
+        },
+        Mode::PCIndirectDisplace => {
+            let displacement = ext.as_ref().unwrap().displace;
+            format!("{}(pc)", format_displace(displacement))
+        },
+        Mode::AddrIndirectIndexDisplace => {
+            format_mode_indexdisplace(mode, &ext)
+        },
+        Mode::PCIndirectIndexDisplace => {
+            format_mode_indexdisplace(mode, &ext)
+        },
+        Mode::MultiRegister(ref registers) => {
+            format!("{:?}", registers)
+        },
+    }
+}
+
 fn format_mode_indexdisplace(mode: &Addr, ext: &Option<Ext>) -> String {
-    let mode_reg = mode.reg_num.unwrap();
+    let base_reg = match mode.reg_num {
+        Some(mode_reg) => format!("a{}", mode_reg),
+        None => String::from("pc"),
+    };
     let displacement = ext.as_ref().unwrap().displace;
     let ext_size = match *ext.as_ref().unwrap().reg_size.as_ref().unwrap() {
         Size::Long => ".l",
@@ -752,9 +728,9 @@ fn format_mode_indexdisplace(mode: &Addr, ext: &Option<Ext>) -> String {
         ExtRegType::Addr => "a",
     };
     let ext_reg = ext.as_ref().unwrap().reg_num.as_ref().unwrap();
-    format!("{}(a{}, {}{}{})",
+    format!("{}({}, {}{}{})",
         format_displace(displacement),
-        mode_reg,
+        base_reg,
         ext_reg_type,
         ext_reg,
         ext_size,

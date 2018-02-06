@@ -5,12 +5,8 @@
     nop
 
 EntryPoint:
-
     and.b	d1,$4(a0)
     and.b	d1,d0	; does nothing now
-
-    move.l	-4(a3, a2.l),d0
-    move.l	d0,-4(a3, a2.l)
     and.w	PortA_Ok(pc,d7.w),d5	; only keep X lower bits
     andi.b	#$F,d0
     andi.w	#3,d0
@@ -33,6 +29,8 @@ PortA_Ok:
 skip:
 System_Stack:
 
+    move.l	-4(a3, a2.l),d0
+    move.l	d0,-4(a3, a2.l)
     clr.b       d0
     move.l      -4(a3, a2.l), 4(a3, a2.l)
     move.l      #3, 4(a3, a2.l)
@@ -40,11 +38,20 @@ System_Stack:
     move.b      ($A000).l, d0
     move.l      #3, d0
     tst.b       ($A10008).l
-
+    move.l	-4(a3, a2.l),d0
+    move.l	d0,-4(a3, a2.l)
+    clr.b       d0
+    move.l      -4(a3, a2.l), 4(a3, a2.l)
+    move.l      #3, 4(a3, a2.l)
+    move.l      4(a3, a2.l), d6
+    move.b      ($A000).l, d0
+    move.l      #3, d0
+    tst.b       ($A10008).l
     bra.w       PortA_Ok
     tst.l	(a4, a7.w)
     tst.l	4(a3, a2.l)
     tst.l	4(a0)
+    move.l	d0,-4(a3, a2.l)
     tst.l	4(a3, a2.l)
     tst.l	-4(a0)
     movem.l	($A000).l,d0-d3/d5-d6
