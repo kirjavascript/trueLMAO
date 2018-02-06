@@ -667,25 +667,7 @@ impl Opcode {
                         format!("{}(pc)", format_displace(displacement))
                     },
                     Mode::AddrIndirectIndexDisplace => {
-                        let mode_reg = mode.reg_num.unwrap();
-                        let displacement = self.src_ext.as_ref().unwrap().displace;
-                        let ext_size = match *self.src_ext.as_ref().unwrap().reg_size.as_ref().unwrap() {
-                            Size::Long => ".l",
-                            Size::Word => ".w",
-                            _ => panic!("this should never happen"),
-                        };
-                        let ext_reg_type = match *self.src_ext.as_ref().unwrap().reg_type.as_ref().unwrap() {
-                            ExtRegType::Data => "d",
-                            ExtRegType::Addr => "a",
-                        };
-                        let ext_reg = self.src_ext.as_ref().unwrap().reg_num.as_ref().unwrap();
-                        format!("{}(a{}, {}{}{})",
-                            format_displace(displacement),
-                            mode_reg,
-                            ext_reg_type,
-                            ext_reg,
-                            ext_size,
-                        )
+                        format_mode_indexdisplace(mode, &self.src_ext)
                     },
                     Mode::MultiRegister(ref registers) => {
                         format!("{:?}", registers)
@@ -732,25 +714,7 @@ impl Opcode {
                         format!("{}(a{})", format_displace(displacement), mode.reg_num.unwrap())
                     },
                     Mode::AddrIndirectIndexDisplace => {
-                        let mode_reg = mode.reg_num.unwrap();
-                        let displacement = self.dst_ext.as_ref().unwrap().displace;
-                        let ext_size = match *self.dst_ext.as_ref().unwrap().reg_size.as_ref().unwrap() {
-                            Size::Long => ".l",
-                            Size::Word => ".w",
-                            _ => panic!("this should never happen"),
-                        };
-                        let ext_reg_type = match *self.dst_ext.as_ref().unwrap().reg_type.as_ref().unwrap() {
-                            ExtRegType::Data => "d",
-                            ExtRegType::Addr => "a",
-                        };
-                        let ext_reg = self.dst_ext.as_ref().unwrap().reg_num.as_ref().unwrap();
-                        format!("{}(a{}, {}{}{})",
-                            format_displace(displacement),
-                            mode_reg,
-                            ext_reg_type,
-                            ext_reg,
-                            ext_size,
-                        )
+                        format_mode_indexdisplace(mode, &self.dst_ext)
                     },
                     Mode::MultiRegister((ref addr, ref data)) => {
                         format!("{:?}", (addr, data))
@@ -773,6 +737,28 @@ fn format_displace(displace: i64) -> String {
         "-" } else {
         ""  };
     format!("{}${:X}", sign, displace.abs())
+}
+
+fn format_mode_indexdisplace(mode: &Addr, ext: &Option<Ext>) -> String {
+    let mode_reg = mode.reg_num.unwrap();
+    let displacement = ext.as_ref().unwrap().displace;
+    let ext_size = match *ext.as_ref().unwrap().reg_size.as_ref().unwrap() {
+        Size::Long => ".l",
+        Size::Word => ".w",
+        _ => panic!("this should never happen"),
+    };
+    let ext_reg_type = match *ext.as_ref().unwrap().reg_type.as_ref().unwrap() {
+        ExtRegType::Data => "d",
+        ExtRegType::Addr => "a",
+    };
+    let ext_reg = ext.as_ref().unwrap().reg_num.as_ref().unwrap();
+    format!("{}(a{}, {}{}{})",
+        format_displace(displacement),
+        mode_reg,
+        ext_reg_type,
+        ext_reg,
+        ext_size,
+    )
 }
 
 // reverse 16 bits
