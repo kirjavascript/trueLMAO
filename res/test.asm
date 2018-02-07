@@ -5,6 +5,26 @@
     nop
 
 EntryPoint:
+    tst.l	($A10008).l	; test ports A and B control
+    beq.w       EntryPoint
+    bne.w	EntryPoint	; If so, branch.
+    tst.w	($A1000C).l	; test ports A and B control
+    bne.w	EntryPoint	; If so, branch.
+    ; bhi.s   -2
+    ; bls.s   -2
+    ; bcc.s   -2
+    ; bhi.s   -2
+    ; bcs.s   -2
+    ; blo.s   -2
+    ; bvc.s   -2
+    ; bvs.s   -2
+    ; bpl.s   -2
+    ; bmi.s   -2
+    ; bge.s   -2
+    ; blt.s   -2
+    ; bgt.s   -2
+    ; ble.s   -2
+
     and.b	d1,$4(a0)
     and.w	d1,d0	; does nothing now
     and.l	d1,d0	; does nothing now
@@ -73,7 +93,6 @@ System_Stack:
     move.l	-4(a3),d0
 
     move.l	-4(a3, a2.l),d0
-    move.l	-4(pc, d0.l),d0
     rts
 
     nop

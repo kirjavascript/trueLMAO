@@ -70,7 +70,7 @@ pub enum ExtRegType {
 }
 
 impl Opcode {
-    fn basic(code: Code) -> Opcode {
+    fn new_basic(code: Code) -> Opcode {
         Opcode {
             code,
             length: 2,
@@ -81,6 +81,32 @@ impl Opcode {
             dst_mode: None,
             dst_value: None,
             dst_ext: None,
+        }
+    }
+
+    fn new_branch(code: Code, cn: &Console, first_word: u16, pos: usize) -> Opcode {
+        let mut length = 2usize;
+
+        let (displacement, length_inc) = Self::get_branch_displacement(cn, first_word, pos);
+        length += length_inc;
+
+        // TODO: fix branch displacement
+
+        Opcode {
+            code,
+            length: length as u32,
+            size: None,
+            src_mode: None,
+            src_value: None,
+            src_ext: None,
+            dst_mode: None,
+            dst_value: None,
+            dst_ext: Some(Ext {
+                displace: displacement,
+                reg_num: None,
+                reg_size: None,
+                reg_type: None,
+            }),
         }
     }
 
@@ -95,15 +121,28 @@ impl Opcode {
 
         // NOP
         if first_word == 0x4E71 {
-            Self::basic(Code::Nop)
+            Self::new_basic(Code::Nop)
         }
         // RTS
         else if first_word == 0x4E75 {
-            Self::basic(Code::Rts)
+            Self::new_basic(Code::Rts)
         }
         // ILLEGAL
         else if first_word == 0x4AFC {
-            Self::basic(Code::Illegal)
+            Self::new_basic(Code::Illegal)
+        }
+        // BRA
+        else if high_byte == 0x6000 {
+            println!("{:X}", first_word);
+            Self::new_branch(Code::Bra, cn, first_word, pc + 2)
+        }
+        // BEQ
+        else if high_byte == 0x6700 {
+            Self::new_branch(Code::Beq, cn, first_word, pc + 2)
+        }
+        // BNE
+        else if high_byte == 0x6600 {
+            Self::new_branch(Code::Bne, cn, first_word, pc + 2)
         }
         // LEA
         else if first_word & 0xF1C0 == 0x41C0 {
@@ -133,81 +172,6 @@ impl Opcode {
                 }),
                 dst_value: None,
                 dst_ext: None,
-            }
-        }
-        // BRA
-        else if high_byte == 0x6000 {
-            let code = Code::Bra;
-            let mut length = 2usize;
-
-            let (displacement, length_inc) = Self::get_branch_displacement(cn, first_word, pc + length);
-            length += length_inc;
-
-            Opcode {
-                code,
-                length: length as u32,
-                size: None,
-                src_mode: None,
-                src_value: None,
-                src_ext: None,
-                dst_mode: None,
-                dst_value: None,
-                dst_ext: Some(Ext {
-                    displace: displacement,
-                    reg_num: None,
-                    reg_size: None,
-                    reg_type: None,
-                }),
-            }
-        }
-        // BEQ
-        else if high_byte == 0x6700 {
-            let code = Code::Beq;
-            let mut length = 2usize;
-
-            let (displacement, length_inc) = Self::get_branch_displacement(cn, first_word, pc + length);
-            length += length_inc;
-
-            Opcode {
-                code,
-                length: length as u32,
-                size: None,
-                src_mode: None,
-                src_value: None,
-                src_ext: None,
-                dst_mode: None,
-                dst_value: None,
-                dst_ext: Some(Ext {
-                    displace: displacement,
-                    reg_num: None,
-                    reg_size: None,
-                    reg_type: None,
-                }),
-            }
-        }
-        // BNE
-        else if high_byte == 0x6600 {
-            let code = Code::Bne;
-            let mut length = 2usize;
-
-            let (displacement, length_inc) = Self::get_branch_displacement(cn, first_word, pc + length);
-            length += length_inc;
-
-            Opcode {
-                code,
-                length: length as u32,
-                size: None,
-                src_mode: None,
-                src_value: None,
-                src_ext: None,
-                dst_mode: None,
-                dst_value: None,
-                dst_ext: Some(Ext {
-                    displace: displacement,
-                    reg_num: None,
-                    reg_size: None,
-                    reg_type: None,
-                }),
             }
         }
         // AND
