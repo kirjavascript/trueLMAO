@@ -5,6 +5,7 @@
     nop
 
 EntryPoint:
+    nop
     tst.l	($A10008).l	; test ports A and B control
     beq.w       EntryPoint
     bne.w	EntryPoint	; If so, branch.
