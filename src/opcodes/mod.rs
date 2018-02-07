@@ -20,7 +20,7 @@ pub enum Code {
     Lea,
     Tst, Clr,
     Move, Movem, And,
-    Bra, Bne, Beq,
+    Bra, Bhi, Bls, Bcc, Bcs, Bne, Beq, Bvc, Bvs, Bpl, Bmi, Bge, Blt, Bgt, Ble,
 }
 
 impl fmt::Display for Code {
@@ -133,14 +133,63 @@ impl Opcode {
         else if high_byte == 0x6000 {
             Self::new_branch(Code::Bra, cn, first_word, pc + 2)
         }
-        // BEQ
-        else if high_byte == 0x6700 {
-            Self::new_branch(Code::Beq, cn, first_word, pc + 2)
+        // BHI
+        else if high_byte == 0x6200 {
+            Self::new_branch(Code::Bhi, cn, first_word, pc + 2)
+        }
+        // BLS
+        else if high_byte == 0x6300 {
+            Self::new_branch(Code::Bls, cn, first_word, pc + 2)
+        }
+        // BCC
+        else if high_byte == 0x6400 {
+            Self::new_branch(Code::Bcc, cn, first_word, pc + 2)
+        }
+        // BCS
+        else if high_byte == 0x6500 {
+            Self::new_branch(Code::Bcs, cn, first_word, pc + 2)
         }
         // BNE
         else if high_byte == 0x6600 {
             Self::new_branch(Code::Bne, cn, first_word, pc + 2)
         }
+        // BEQ
+        else if high_byte == 0x6700 {
+            Self::new_branch(Code::Beq, cn, first_word, pc + 2)
+        }
+        // BVC
+        else if high_byte == 0x6800 {
+            Self::new_branch(Code::Bvc, cn, first_word, pc + 2)
+        }
+        // BVS
+        else if high_byte == 0x6900 {
+            Self::new_branch(Code::Bvs, cn, first_word, pc + 2)
+        }
+        // BPL
+        else if high_byte == 0x6A00 {
+            Self::new_branch(Code::Bpl, cn, first_word, pc + 2)
+        }
+        // BMI
+        else if high_byte == 0x6B00 {
+            Self::new_branch(Code::Bmi, cn, first_word, pc + 2)
+        }
+        // BGE
+        else if high_byte == 0x6C00 {
+            Self::new_branch(Code::Bge, cn, first_word, pc + 2)
+        }
+        // BLT
+        else if high_byte == 0x6D00 {
+            Self::new_branch(Code::Blt, cn, first_word, pc + 2)
+        }
+        // BGT
+        else if high_byte == 0x6E00 {
+            Self::new_branch(Code::Bgt, cn, first_word, pc + 2)
+        }
+        // BLE
+        else if high_byte == 0x6F00 {
+            Self::new_branch(Code::Ble, cn, first_word, pc + 2)
+        }
+
         // LEA
         else if first_word & 0xF1C0 == 0x41C0 {
             let code = Code::Lea;
