@@ -90,8 +90,6 @@ impl Opcode {
         let (displacement, length_inc) = Self::get_branch_displacement(cn, first_word, pos);
         length += length_inc;
 
-        // TODO: fix branch displacement
-
         Opcode {
             code,
             length: length as u32,
@@ -133,7 +131,6 @@ impl Opcode {
         }
         // BRA
         else if high_byte == 0x6000 {
-            println!("{:X}", first_word);
             Self::new_branch(Code::Bra, cn, first_word, pc + 2)
         }
         // BEQ

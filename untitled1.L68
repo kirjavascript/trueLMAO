@@ -1,0 +1,33 @@
+00001008 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.15.04
+Created On: 07/02/2018 00:31:05
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      :
+00000000                             3  * Written by :
+00000000                             4  * Date       :
+00000000                             5  * Description:
+00000000                             6  *-----------------------------------------------------------
+00001000                             7      ORG    $1000
+00001000  4E71                       8      nop
+00001002  4E71                       9      nop
+00001004  4E71                      10      nop
+00001006  4E71                      11      nop
+00001008                            12  START:                  ; first instruction of program
+00001008  60FE                      13     bra.s START
+0000100A                            14  * Put program code here
+0000100A                            15  
+0000100A  FFFF FFFF                 16      SIMHALT             ; halt simulator
+0000100E                            17  
+0000100E                            18  * Put variables and constants here
+0000100E                            19  
+0000100E                            20      END    START        ; last line of source
+
+No errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+START               1008

@@ -99,6 +99,8 @@ impl Console {
                     },
                     _ => { panic!("TST addr mode not supported"); },
                 }
+
+                self.m68k.pc += opcode.length;
             },
             Code::Lea => {
                 let reg_num = opcode.dst_mode.unwrap().reg_num.unwrap();
@@ -110,18 +112,26 @@ impl Console {
                     },
                     _ => { panic!("LEA addr mode not supported"); },
                 }
+
+                self.m68k.pc += opcode.length;
             },
             Code::Bra => {
-                self.m68k.displace_pc(opcode.dst_ext.unwrap().displace);
+                self.m68k.displace_pc(opcode.dst_ext.unwrap().displace + 2);
             },
             Code::Beq => {
                 if self.m68k.z_set() {
-                    self.m68k.displace_pc(opcode.dst_ext.unwrap().displace);
+                    self.m68k.displace_pc(opcode.dst_ext.unwrap().displace + 2);
+                }
+                else {
+                    self.m68k.pc += opcode.length;
                 }
             },
             Code::Bne => {
                 if !self.m68k.z_set() {
-                    self.m68k.displace_pc(opcode.dst_ext.unwrap().displace);
+                    self.m68k.displace_pc(opcode.dst_ext.unwrap().displace + 2);
+                }
+                else {
+                    self.m68k.pc += opcode.length;
                 }
             },
             Code::Movem => {
@@ -193,14 +203,19 @@ impl Console {
                     // &Addr { typ: Mode::MultiRegister(()), .. } => {
                     _ => { panic!("MOVEM addr mode not supported"); },
                 }
+
+                self.m68k.pc += opcode.length;
             },
-            Code::Nop => {},
+            Code::Nop => {
+                self.m68k.pc += opcode.length;
+            },
             _ => {
                 eprintln!("{:?} not implemented", opcode.code);
+
+                self.m68k.pc += opcode.length;
             },
         }
 
-        self.m68k.pc += opcode.length;
 
     }
 }
