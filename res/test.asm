@@ -5,8 +5,11 @@
     nop
 
 EntryPoint:
-    bra.s -2
-    bra.s -2
+    bra.s *-2
+    bra.s *-4
+    bra.s EntryPoint
+    bra.s *-8
+    bra.s *-$14
 
     tst.l	($A10008).l	; test ports A and B control
     beq.w       EntryPoint
