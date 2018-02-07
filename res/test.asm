@@ -5,25 +5,20 @@
     nop
 
 EntryPoint:
-    tst.l	($A10008).l	; test ports A and B control
-    beq.w       EntryPoint
-    bne.w	asd	; If so, branch.
-    tst.w	($A1000C).l	; test ports A and B control
-    bne.w	EntryPoint	; If so, branch.
-    ; bhi.s   -2
-    ; bls.s   -2
-    ; bcc.s   -2
-    ; bhi.s   -2
-    ; bcs.s   -2
-    ; blo.s   -2
-    ; bvc.s   -2
-    ; bvs.s   -2
-    ; bpl.s   -2
-    ; bmi.s   -2
-    ; bge.s   -2
-    ; blt.s   -2
-    ; bgt.s   -2
-    ; ble.s   -2
+    bhi.s   EntryPoint
+    bls.s   EntryPoint
+    bcc.s   EntryPoint
+    bhi.s   EntryPoint
+    bcs.s   EntryPoint
+    blo.s   EntryPoint
+    bvc.w   EntryPoint
+    bvs.w   EntryPoint
+    bpl.w   EntryPoint
+    bmi.w   EntryPoint
+    bge.w   EntryPoint
+    blt.w   EntryPoint
+    bgt.w   EntryPoint
+    ble.w   EntryPoint
 
     and.b	d1,$4(a0)
     and.w	d1,d0	; does nothing now
@@ -51,9 +46,9 @@ skip:
 System_Stack:
 
     bra.s *-$0
-    bra.s EntryPoint
+    bra.w EntryPoint
     bra.s *-$4
-    bra.s EntryPoint
+    bra.w EntryPoint
     bra.s *-$A
     bra.s *-$14
 
