@@ -18,8 +18,9 @@ pub struct Opcode {
 pub enum Code {
     Nop, Rts, Illegal,
     Lea,
-    Tst, Clr, Jmp,
-    Move, Movem, And,
+    Tst, Clr, Jmp, Jsr, Neg,
+    Move, Movem,
+    And, Sub,
     Bra, Bsr, Bhi, Bls, Bcc, Bcs, Bne, Beq, Bvc, Bvs, Bpl, Bmi, Bge, Blt, Bgt, Ble,
 }
 
@@ -125,6 +126,7 @@ impl Opcode {
     pub fn from(cn: &Console, pc: usize) -> Self {
         let first_word = cn.rom.read_word(pc);
         let high_byte = first_word & 0xFF00;
+        let high_nybble = first_word & 0xF000;
 
         // NOP
         if first_word == 0x4E71 {
@@ -142,6 +144,7 @@ impl Opcode {
         else if high_byte == 0x6000 {
             Self::new_branch(Code::Bra, cn, first_word, pc + 2)
         }
+        // BSR
         else if high_byte == 0x6100 {
             Self::new_branch(Code::Bsr, cn, first_word, pc + 2)
         }
@@ -233,8 +236,60 @@ impl Opcode {
             }
         }
         // AND
-        else if first_word & 0xF000 == 0xC000 {
+        else if high_nybble == 0xC000 {
             let code = Code::And;
+            let mut length = 2usize;
+            let size_bits = (first_word & 0b11000000) >> 6;
+            let size = Self::get_size_normal(size_bits);
+
+            let first_mode_ea = (first_word & 0b111000) >> 3;
+            let first_mode_reg = first_word & 0b111;
+            let first_mode = Self::get_addr_mode(first_mode_ea, first_mode_reg);
+
+            let (first_value, length_inc) = Self::get_value(cn, &first_mode, pc + length, &size);
+            length += length_inc;
+
+            let (first_ext, length_inc) = Self::get_ext_word(cn, &first_mode, pc + length);
+            length += length_inc;
+
+            let second_mode = Addr {
+                typ: Mode::DataDirect,
+                reg_num: Some((first_word & 0b111000000000) >> 9),
+            };
+
+            let direction = (first_word & 0b100000000) >> 8;
+
+            if direction == 1 {
+                Opcode {
+                    code,
+                    length: length as u32,
+                    size: Some(size),
+                    src_mode: Some(second_mode),
+                    src_value: None,
+                    src_ext: None,
+                    dst_mode: Some(first_mode),
+                    dst_value: first_value,
+                    dst_ext: first_ext,
+                }
+            }
+            else {
+                Opcode {
+                    code,
+                    length: length as u32,
+                    size: Some(size),
+                    src_mode: Some(first_mode),
+                    src_value: first_value,
+                    src_ext: first_ext,
+                    dst_mode: Some(second_mode),
+                    dst_value: None,
+                    dst_ext: None,
+                }
+            }
+
+        }
+        // SUB
+        else if high_nybble == 0x9000 {
+            let code = Code::Sub;
             let mut length = 2usize;
             let size_bits = (first_word & 0b11000000) >> 6;
             let size = Self::get_size_normal(size_bits);
@@ -402,6 +457,35 @@ impl Opcode {
             }
 
         }
+        // NEG
+        else if high_byte == 0x4400 {
+            let code = Code::Neg;
+            let mut length = 2usize;
+            let size_bits = (first_word & 0b11000000) >> 6;
+            let size = Self::get_size_normal(size_bits);
+
+            let dst_mode_ea = (first_word & 0b111000) >> 3;
+            let dst_mode_reg = first_word & 0b111;
+            let dst_mode = Self::get_addr_mode(dst_mode_ea, dst_mode_reg);
+
+            let (dst_value, length_inc) = Self::get_value(cn, &dst_mode, pc + length, &size);
+            length += length_inc;
+
+            let (dst_ext, length_inc) = Self::get_ext_word(cn, &dst_mode, pc + length);
+            length += length_inc;
+
+            Opcode {
+                code,
+                length: length as u32,
+                size: Some(size),
+                src_mode: None,
+                src_value: None,
+                src_ext: None,
+                dst_mode: Some(dst_mode),
+                dst_value,
+                dst_ext,
+            }
+        }
         // TST
         else if high_byte == 0x4A00 {
             let code = Code::Tst;
@@ -434,6 +518,33 @@ impl Opcode {
         // JMP
         else if first_word & 0xFFC0 == 0x4EC0 {
             let code = Code::Jmp;
+            let mut length = 2usize;
+
+            let dst_mode_ea = (first_word & 0b111000) >> 3;
+            let dst_mode_reg = first_word & 0b111;
+            let dst_mode = Self::get_addr_mode(dst_mode_ea, dst_mode_reg);
+
+            let (dst_value, length_inc) = Self::get_value(cn, &dst_mode, pc + length, &Size::Long); // size can be anything... >_>
+            length += length_inc;
+
+            let (dst_ext, length_inc) = Self::get_ext_word(cn, &dst_mode, pc + length);
+            length += length_inc;
+
+            Opcode {
+                code,
+                length: length as u32,
+                size: None,
+                src_mode: None,
+                src_value: None,
+                src_ext: None,
+                dst_mode: Some(dst_mode),
+                dst_value,
+                dst_ext,
+            }
+        }
+        // JSR
+        else if first_word & 0xFFC0 == 0x4E80 {
+            let code = Code::Jsr;
             let mut length = 2usize;
 
             let dst_mode_ea = (first_word & 0b111000) >> 3;

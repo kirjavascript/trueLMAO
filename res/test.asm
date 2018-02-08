@@ -6,8 +6,8 @@
 
 EntryPoint:
     jmp         EntryPoint
+    jsr         EntryPoint
     bsr.w	EntryPoint
-    jmp	        $4(a0)
 
     and.b	d1,$4(a0)
     and.w	d1,d0	; does nothing now
@@ -42,6 +42,8 @@ System_Stack:
     bra.s *-$14
 
 asd:
+    sub.w       (a0), d0
+    neg.w        $4(a0)
     move.l	-4(a3, a2.l),d0
     move.l	d0,-4(a3, a2.l)
     clr.b       d0
