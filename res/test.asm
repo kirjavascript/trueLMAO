@@ -5,20 +5,9 @@
     nop
 
 EntryPoint:
-    bhi.s   EntryPoint
-    bls.s   EntryPoint
-    bcc.s   EntryPoint
-    bhi.s   EntryPoint
-    bcs.s   EntryPoint
-    blo.s   EntryPoint
-    bvc.w   EntryPoint
-    bvs.w   EntryPoint
-    bpl.w   EntryPoint
-    bmi.w   EntryPoint
-    bge.w   EntryPoint
-    blt.w   EntryPoint
-    bgt.w   EntryPoint
-    ble.w   EntryPoint
+    jmp         EntryPoint
+    bsr.w	EntryPoint
+    jmp	        $4(a0)
 
     and.b	d1,$4(a0)
     and.w	d1,d0	; does nothing now
@@ -92,6 +81,19 @@ asd:
     movem.l	(sp)+,d0-a1/a3-a5
     movem.l	d0-d7,($1000).w
 
+    bhi.w   EntryPoint
+    bls.w   EntryPoint
+    bcc.w   EntryPoint
+    bcs.w   EntryPoint
+    blo.w   EntryPoint
+    bvc.w   EntryPoint
+    bvs.w   EntryPoint
+    bpl.w   EntryPoint
+    bmi.w   EntryPoint
+    bge.w   EntryPoint
+    blt.w   EntryPoint
+    bgt.w   EntryPoint
+    ble.w   EntryPoint
     move.w	-4(pc),d0
     move.l	-4(a3),d0
 

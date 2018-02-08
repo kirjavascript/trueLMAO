@@ -18,14 +18,23 @@ pub struct Opcode {
 pub enum Code {
     Nop, Rts, Illegal,
     Lea,
-    Tst, Clr,
+    Tst, Clr, Jmp,
     Move, Movem, And,
-    Bra, Bhi, Bls, Bcc, Bcs, Bne, Beq, Bvc, Bvs, Bpl, Bmi, Bge, Blt, Bgt, Ble,
+    Bra, Bsr, Bhi, Bls, Bcc, Bcs, Bne, Beq, Bvc, Bvs, Bpl, Bmi, Bge, Blt, Bgt, Ble,
 }
 
 impl fmt::Display for Code {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self)
+    }
+}
+
+impl Code {
+    fn is_branch(code: &Code) -> bool {
+        match code {
+            &Code::Bra | &Code::Bsr | &Code::Bhi | &Code::Bls | &Code::Bcc | &Code::Bcs | &Code::Bne | &Code::Beq | &Code::Bvc | &Code::Bvs | &Code::Bpl | &Code::Bmi | &Code::Bge | &Code::Blt | &Code::Bgt | &Code::Ble => true,
+            _ => false,
+        }
     }
 }
 
@@ -132,6 +141,9 @@ impl Opcode {
         // BRA
         else if high_byte == 0x6000 {
             Self::new_branch(Code::Bra, cn, first_word, pc + 2)
+        }
+        else if high_byte == 0x6100 {
+            Self::new_branch(Code::Bsr, cn, first_word, pc + 2)
         }
         // BHI
         else if high_byte == 0x6200 {
@@ -419,6 +431,33 @@ impl Opcode {
                 dst_ext,
             }
         }
+        // JMP
+        else if first_word & 0xFFC0 == 0x4EC0 {
+            let code = Code::Jmp;
+            let mut length = 2usize;
+
+            let dst_mode_ea = (first_word & 0b111000) >> 3;
+            let dst_mode_reg = first_word & 0b111;
+            let dst_mode = Self::get_addr_mode(dst_mode_ea, dst_mode_reg);
+
+            let (dst_value, length_inc) = Self::get_value(cn, &dst_mode, pc + length, &Size::Long); // size can be anything... >_>
+            length += length_inc;
+
+            let (dst_ext, length_inc) = Self::get_ext_word(cn, &dst_mode, pc + length);
+            length += length_inc;
+
+            Opcode {
+                code,
+                length: length as u32,
+                size: None,
+                src_mode: None,
+                src_value: None,
+                src_ext: None,
+                dst_mode: Some(dst_mode),
+                dst_value,
+                dst_ext,
+            }
+        }
         // CLR
         else if high_byte == 0x4200 {
             let code = Code::Clr;
@@ -637,8 +676,8 @@ impl Opcode {
             None => {},
         }
 
-        // check branches
-        if self.size.is_none() && self.dst_ext.is_some() {
+        // check branches (better method needed)
+        if Code::is_branch(&self.code) {
             code.push_str(match self.length {
                 2 => ".s",
                 4 => ".w",
