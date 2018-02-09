@@ -5,6 +5,8 @@
     nop
 
 EntryPoint:
+    cmp.b       ($F0000000).l, d0
+    add.l       4(pc, a2.l), d6
     jmp         EntryPoint
     jsr         EntryPoint
     bsr.w	EntryPoint
