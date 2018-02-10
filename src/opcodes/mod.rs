@@ -20,7 +20,7 @@ pub enum Code {
     Lea,
     Tst, Clr, Jmp, Jsr, Neg,
     Move, Movem,
-    And, Sub, Add,
+    And, Andi, Sub, Add,
     Cmp,
     Bra, Bsr, Bhi, Bls, Bcc, Bcs, Bne, Beq, Bvc, Bvs, Bpl, Bmi, Bge, Blt, Bgt, Ble,
 }
@@ -205,7 +205,6 @@ impl Opcode {
         else if high_byte == 0x6F00 {
             Self::new_branch(Code::Ble, cn, first_word, pc + 2)
         }
-
         // LEA
         else if first_word & 0xF1C0 == 0x41C0 {
             let code = Code::Lea;
@@ -288,7 +287,46 @@ impl Opcode {
             }
 
         }
-        // Cmp
+        // ANDI
+        else if high_byte == 0x0200 {
+            let code = Code::Andi;
+            let mut length = 2usize;
+            let size_bits = (first_word & 0b11000000) >> 6;
+            let size = Self::get_size_normal(size_bits);
+
+            let src_mode = Addr {
+                typ: Mode::Immediate,
+                reg_num: None,
+            };
+
+            let (src_value, length_inc) = Self::get_value(cn, &src_mode, pc + length, &size);
+            length += length_inc;
+
+            let dst_mode_ea = (first_word & 0b111000) >> 3;
+            let dst_mode_reg = first_word & 0b111;
+            let dst_mode = Self::get_addr_mode(dst_mode_ea, dst_mode_reg);
+
+            let (dst_value, length_inc) = Self::get_value(cn, &dst_mode, pc + length, &size);
+            length += length_inc;
+
+            let (dst_ext, length_inc) = Self::get_ext_word(cn, &dst_mode, pc + length);
+            length += length_inc;
+
+
+            Opcode {
+                code,
+                length: length as u32,
+                size: Some(size),
+                src_mode: Some(src_mode),
+                src_value: src_value,
+                src_ext: None,
+                dst_mode: Some(dst_mode),
+                dst_value,
+                dst_ext,
+            }
+
+        }
+        // CMP
         else if high_nybble == 0xB000 {
             let code = Code::Cmp;
             let mut length = 2usize;

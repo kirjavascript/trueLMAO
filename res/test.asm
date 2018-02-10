@@ -5,11 +5,6 @@
     nop
 
 EntryPoint:
-    cmp.b       ($F0000000).l, d0
-    add.l       4(pc, a2.l), d6
-    jmp         EntryPoint
-    jsr         EntryPoint
-    bsr.w	EntryPoint
 
     and.b	d1,$4(a0)
     and.w	d1,d0	; does nothing now
@@ -44,6 +39,11 @@ System_Stack:
     bra.s *-$14
 
 asd:
+    cmp.b       ($F0000000).l, d0
+    add.l       4(pc, a2.l), d6
+    jmp         EntryPoint
+    jsr         EntryPoint
+    bsr.w	EntryPoint
     sub.w       (a0), d0
     neg.w        $4(a0)
     move.l	-4(a3, a2.l),d0
