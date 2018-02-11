@@ -5,15 +5,8 @@
     nop
 
 EntryPoint:
-
-    and.b	d1,$4(a0)
-    and.w	d1,d0	; does nothing now
-    and.l	d1,d0	; does nothing now
-    and.w	PortA_Ok(pc,d7.w),d5	; only keep X lower bits
-    andi.b	#$F,d0  ; interpreted as move (?)
-    andi.w	#3,d0
-    andi.w	#6,($FFFF8080).w
-    andi.l	#$FFFFFF,d0	; 8x8 tile pointer
+    moveq       #$A, d5
+    moveq       #$FF, d0
 
     tst.l	($A10008).l	; test ports A and B control
     beq.w       PortA_Ok
@@ -39,8 +32,16 @@ System_Stack:
     bra.s *-$14
 
 asd:
+    and.b	d1,$4(a0)
+    and.w	d1,d0	; does nothing now
+    and.l	d1,d0	; does nothing now
+    and.w	PortA_Ok(pc,d7.w),d5	; only keep X lower bits
+    andi.b	#$F,d0
+    andi.w	#3,d0
+    andi.w	#6,($FFFF8080).w
+    andi.l	#$FFFFFF,d0	; 8x8 tile pointer
+    ; add.l       (pc, a2.l), d6
     cmp.b       ($F0000000).l, d0
-    add.l       4(pc, a2.l), d6
     jmp         EntryPoint
     jsr         EntryPoint
     bsr.w	EntryPoint

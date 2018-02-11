@@ -19,7 +19,7 @@ pub enum Code {
     Nop, Rts, Illegal,
     Lea,
     Tst, Clr, Jmp, Jsr, Neg,
-    Move, Movem,
+    Move, Movem, Moveq,
     And, Andi, Sub, Add,
     Cmp,
     Bra, Bsr, Bhi, Bls, Bcc, Bcs, Bne, Beq, Bvc, Bvs, Bpl, Bmi, Bge, Blt, Bgt, Ble,
@@ -235,6 +235,36 @@ impl Opcode {
                 dst_ext: None,
             }
         }
+        // MOVEQ
+        else if high_nybble == 0x7000 {
+            let code = Code::Moveq;
+            let mut length = 2usize;
+
+            let src_mode = Addr {
+                typ: Mode::Immediate,
+                reg_num: None,
+            };
+
+            let src_value = Some((first_word & 0xFF) as u32);
+
+            let dst_mode = Addr {
+                typ: Mode::DataDirect,
+                reg_num: Some((first_word & 0b111000000000) >> 9),
+            };
+
+            Opcode {
+                code,
+                length: length as u32,
+                size: None,
+                src_mode: Some(src_mode),
+                src_value,
+                src_ext: None,
+                dst_mode: Some(dst_mode),
+                dst_value: None,
+                dst_ext: None,
+            }
+
+        }
         // AND
         else if high_nybble == 0xC000 {
             let code = Code::And;
@@ -287,7 +317,7 @@ impl Opcode {
             }
 
         }
-        // ANDI
+        // ANDI (must come before move)
         else if high_byte == 0x0200 {
             let code = Code::Andi;
             let mut length = 2usize;
