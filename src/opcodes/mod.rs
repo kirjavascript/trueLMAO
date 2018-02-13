@@ -18,7 +18,7 @@ pub struct Opcode {
 pub enum Code {
     Nop, Rts, Illegal,
     Lea,
-    Tst, Clr, Jmp, Jsr, Neg,
+    Tst, Clr, Jmp, Jsr, Neg, Ext,
     Move, Movem, Moveq,
     And, Andi, Sub, Add,
     Cmp,
@@ -204,6 +204,30 @@ impl Opcode {
         // BLE
         else if high_byte == 0x6F00 {
             Self::new_branch(Code::Ble, cn, first_word, pc + 2)
+        }
+        // EXT (must appear before movem?)
+        else if first_word & 0xFE38 == 0x4800 {
+            let code = Code::Ext;
+            let size = match (first_word >> 6) & 0b111 {
+                2 => Size::Word,
+                3 => Size::Long,
+                _ => panic!("this should never happen"),
+            };
+
+            Opcode {
+                code,
+                length: 2u32,
+                size: Some(size),
+                src_mode: None,
+                src_value: None,
+                src_ext: None,
+                dst_mode: Some(Addr {
+                    typ: Mode::DataDirect,
+                    reg_num: Some(first_word & 0b111),
+                }),
+                dst_value: None,
+                dst_ext: None,
+            }
         }
         // LEA
         else if first_word & 0xF1C0 == 0x41C0 {

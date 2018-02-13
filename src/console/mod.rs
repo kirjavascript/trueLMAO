@@ -27,6 +27,8 @@ impl Console {
         })
     }
 
+    // TODO: move read_word to Console?
+
     pub fn start(&mut self) {
         self.m68k.pc = self.rom.entry_point();
         self.m68k.addr[7] = self.rom.initial_stack_pointer();
@@ -97,7 +99,7 @@ impl Console {
 
                         self.m68k.cc = new_cc;
                     },
-                    _ => { panic!("TST addr mode not supported"); },
+                    _ => { eprintln!("TST addr mode not supported"); },
                 }
 
                 self.m68k.pc += opcode.length;
@@ -110,7 +112,7 @@ impl Console {
                         let addr = (self.m68k.pc as i64 + opcode.src_ext.unwrap().displace) as u32;
                         self.m68k.addr[reg_num as usize] = addr +2; // for size of instruction maybe ?! TODO: confirm behaviour
                     },
-                    _ => { panic!("LEA addr mode not supported"); },
+                    _ => { eprintln!("LEA addr mode not supported"); },
                 }
 
                 self.m68k.pc += opcode.length;
@@ -155,6 +157,7 @@ impl Console {
 
                             let mut addr_offset = self.m68k.addr[reg_num as usize];
                             // TODO: get MSB
+                            // TODO: check loop order
 
                             // loop over registers, consuming ram
                             for a_x in addr {
@@ -201,7 +204,7 @@ impl Console {
                     },
                     // reg to mem
                     // &Addr { typ: Mode::MultiRegister(()), .. } => {
-                    _ => { panic!("MOVEM addr mode not supported"); },
+                    _ => { eprintln!("MOVEM addr mode not supported"); },
                 }
 
                 self.m68k.pc += opcode.length;

@@ -5,8 +5,10 @@
     nop
 
 EntryPoint:
-    moveq       #$A, d5
-    moveq       #$FF, d0
+
+    ext.w       d5
+    ext.l       d3
+
 
     tst.l	($A10008).l	; test ports A and B control
     beq.w       PortA_Ok
@@ -32,6 +34,22 @@ System_Stack:
     bra.s *-$14
 
 asd:
+
+    movem.l	($A000).l,d0-d3/d5-d6
+    movem.l	($A000).l,d0
+    movem.l	($A000).l,d0-d7
+    movem.w	(a5)+,d5-d7
+    movem.l	(a5)+,a0-a4
+    movem.l	d0-d3,-(sp)
+    movem.l	d0-d7,-(sp)
+    movem.l	-4(a3, a2.l),d0-a7
+    movem.l	d0-a6,-(sp)
+    movem.w	(a5)+,a0
+    movem.l	d0-a1/a3-a5,-(sp)
+    movem.l	(sp)+,d0-a1/a3-a5
+    movem.l	d0-d7,($1000).w
+    moveq       #$A, d5
+    moveq       #$FF, d0
     and.b	d1,$4(a0)
     and.w	d1,d0	; does nothing now
     and.l	d1,d0	; does nothing now
@@ -72,19 +90,6 @@ asd:
     move.l	d0,-4(a3, a2.l)
     tst.l	4(a3, a2.l)
     tst.l	-4(a0)
-    movem.l	($A000).l,d0-d3/d5-d6
-    movem.l	($A000).l,d0
-    movem.l	($A000).l,d0-d7
-    movem.w	(a5)+,d5-d7
-    movem.l	(a5)+,a0-a4
-    movem.l	d0-d3,-(sp)
-    movem.l	d0-d7,-(sp)
-    movem.l	-4(a3, a2.l),d0-a7
-    movem.l	d0-a6,-(sp)
-    movem.w	(a5)+,a0
-    movem.l	d0-a1/a3-a5,-(sp)
-    movem.l	(sp)+,d0-a1/a3-a5
-    movem.l	d0-d7,($1000).w
 
     bhi.w   EntryPoint
     bls.w   EntryPoint
