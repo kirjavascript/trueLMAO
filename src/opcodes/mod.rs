@@ -4,7 +4,7 @@ use std::fmt;
 #[derive(Debug)]
 pub struct Opcode {
     pub code: Code,
-    pub length: u32, // in bytes (amount to increase pc) ( change to u32 )
+    pub length: u32, // in bytes (amount to increase pc)
     pub size: Option<Size>, // size of operation
     pub src_mode: Option<Addr>, // effective address
     pub src_value: Option<u32>,
@@ -20,10 +20,12 @@ pub enum Code {
     Lea,
     Tst, Clr, Jmp, Jsr, Neg, Ext,
     Move, Movem, Moveq,
-    And, Andi, Sub, Add,
+    And, Andi, Sub, Add, Or, Ori,
     Cmp,
     Bra, Bsr, Bhi, Bls, Bcc, Bcs, Bne, Beq, Bvc, Bvs, Bpl, Bmi, Bge, Blt, Bgt, Ble,
 }
+
+// TODO: (s2) movea dbf btst cmpi addq subq addi eori subi lsr lsl sub swap adda asl bchg bset bclr st muls asr
 
 impl fmt::Display for Code {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -205,28 +207,91 @@ impl Opcode {
         else if high_byte == 0x6F00 {
             Self::new_branch(Code::Ble, cn, first_word, pc + 2)
         }
-        // EXT (must appear before movem?)
-        else if first_word & 0xFE38 == 0x4800 {
-            let code = Code::Ext;
-            let size = match (first_word >> 6) & 0b111 {
-                2 => Size::Word,
-                3 => Size::Long,
-                _ => panic!("this should never happen"),
-            };
+        // NEG
+        else if high_byte == 0x4400 {
+            let code = Code::Neg;
+            let mut length = 2usize;
+            let size_bits = (first_word & 0b11000000) >> 6;
+            let size = Self::get_size_normal(size_bits);
+
+            let dst_mode_ea = (first_word & 0b111000) >> 3;
+            let dst_mode_reg = first_word & 0b111;
+            let dst_mode = Self::get_addr_mode(dst_mode_ea, dst_mode_reg);
+
+            let (dst_value, length_inc) = Self::get_value(cn, &dst_mode, pc + length, &size);
+            length += length_inc;
+
+            let (dst_ext, length_inc) = Self::get_ext_word(cn, &dst_mode, pc + length);
+            length += length_inc;
 
             Opcode {
                 code,
-                length: 2u32,
+                length: length as u32,
                 size: Some(size),
                 src_mode: None,
                 src_value: None,
                 src_ext: None,
-                dst_mode: Some(Addr {
-                    typ: Mode::DataDirect,
-                    reg_num: Some(first_word & 0b111),
-                }),
-                dst_value: None,
-                dst_ext: None,
+                dst_mode: Some(dst_mode),
+                dst_value,
+                dst_ext,
+            }
+        }
+        // TST
+        else if high_byte == 0x4A00 {
+            let code = Code::Tst;
+            let mut length = 2usize;
+            let size_bits = (first_word & 0b11000000) >> 6;
+            let size = Self::get_size_normal(size_bits);
+
+            let dst_mode_ea = (first_word & 0b111000) >> 3;
+            let dst_mode_reg = first_word & 0b111;
+            let dst_mode = Self::get_addr_mode(dst_mode_ea, dst_mode_reg);
+
+            let (dst_value, length_inc) = Self::get_value(cn, &dst_mode, pc + length, &size);
+            length += length_inc;
+
+            let (dst_ext, length_inc) = Self::get_ext_word(cn, &dst_mode, pc + length);
+            length += length_inc;
+
+            Opcode {
+                code,
+                length: length as u32,
+                size: Some(size),
+                src_mode: None,
+                src_value: None,
+                src_ext: None,
+                dst_mode: Some(dst_mode),
+                dst_value,
+                dst_ext,
+            }
+        }
+        // CLR
+        else if high_byte == 0x4200 {
+            let code = Code::Clr;
+            let mut length = 2usize;
+            let size_bits = (first_word & 0b11000000) >> 6;
+            let size = Self::get_size_normal(size_bits);
+
+            let dst_mode_ea = (first_word & 0b111000) >> 3;
+            let dst_mode_reg = first_word & 0b111;
+            let dst_mode = Self::get_addr_mode(dst_mode_ea, dst_mode_reg);
+
+            let (dst_value, length_inc) = Self::get_value(cn, &dst_mode, pc + length, &size);
+            length += length_inc;
+
+            let (dst_ext, length_inc) = Self::get_ext_word(cn, &dst_mode, pc + length);
+            length += length_inc;
+
+            Opcode {
+                code,
+                length: length as u32,
+                size: Some(size),
+                src_mode: None,
+                src_value: None,
+                src_ext: None,
+                dst_mode: Some(dst_mode),
+                dst_value,
+                dst_ext,
             }
         }
         // LEA
@@ -286,6 +351,97 @@ impl Opcode {
                 dst_mode: Some(dst_mode),
                 dst_value: None,
                 dst_ext: None,
+            }
+
+        }
+        // OR
+        else if high_nybble == 0xC000 {
+            let code = Code::Or;
+            let mut length = 2usize;
+            let size_bits = (first_word & 0b11000000) >> 6;
+            let size = Self::get_size_normal(size_bits);
+
+            let first_mode_ea = (first_word & 0b111000) >> 3;
+            let first_mode_reg = first_word & 0b111;
+            let first_mode = Self::get_addr_mode(first_mode_ea, first_mode_reg);
+
+            let (first_value, length_inc) = Self::get_value(cn, &first_mode, pc + length, &size);
+            length += length_inc;
+
+            let (first_ext, length_inc) = Self::get_ext_word(cn, &first_mode, pc + length);
+            length += length_inc;
+
+            let second_mode = Addr {
+                typ: Mode::DataDirect,
+                reg_num: Some((first_word & 0b111000000000) >> 9),
+            };
+
+            let direction = (first_word & 0b100000000) >> 8;
+
+            if direction == 1 {
+                Opcode {
+                    code,
+                    length: length as u32,
+                    size: Some(size),
+                    src_mode: Some(second_mode),
+                    src_value: None,
+                    src_ext: None,
+                    dst_mode: Some(first_mode),
+                    dst_value: first_value,
+                    dst_ext: first_ext,
+                }
+            }
+            else {
+                Opcode {
+                    code,
+                    length: length as u32,
+                    size: Some(size),
+                    src_mode: Some(first_mode),
+                    src_value: first_value,
+                    src_ext: first_ext,
+                    dst_mode: Some(second_mode),
+                    dst_value: None,
+                    dst_ext: None,
+                }
+            }
+
+        }
+        // ORI (must come before move)
+        else if high_byte == 0x0000 {
+            let code = Code::Ori;
+            let mut length = 2usize;
+            let size_bits = (first_word & 0b11000000) >> 6;
+            let size = Self::get_size_normal(size_bits);
+
+            let src_mode = Addr {
+                typ: Mode::Immediate,
+                reg_num: None,
+            };
+
+            let (src_value, length_inc) = Self::get_value(cn, &src_mode, pc + length, &size);
+            length += length_inc;
+
+            let dst_mode_ea = (first_word & 0b111000) >> 3;
+            let dst_mode_reg = first_word & 0b111;
+            let dst_mode = Self::get_addr_mode(dst_mode_ea, dst_mode_reg);
+
+            let (dst_value, length_inc) = Self::get_value(cn, &dst_mode, pc + length, &size);
+            length += length_inc;
+
+            let (dst_ext, length_inc) = Self::get_ext_word(cn, &dst_mode, pc + length);
+            length += length_inc;
+
+
+            Opcode {
+                code,
+                length: length as u32,
+                size: Some(size),
+                src_mode: Some(src_mode),
+                src_value: src_value,
+                src_ext: None,
+                dst_mode: Some(dst_mode),
+                dst_value,
+                dst_ext,
             }
 
         }
@@ -558,6 +714,30 @@ impl Opcode {
                 dst_ext,
             }
         }
+        // EXT (must appear before movem?)
+        else if first_word & 0xFE38 == 0x4800 {
+            let code = Code::Ext;
+            let size = match (first_word >> 6) & 0b111 {
+                2 => Size::Word,
+                3 => Size::Long,
+                _ => panic!("this should never happen"),
+            };
+
+            Opcode {
+                code,
+                length: 2u32,
+                size: Some(size),
+                src_mode: None,
+                src_value: None,
+                src_ext: None,
+                dst_mode: Some(Addr {
+                    typ: Mode::DataDirect,
+                    reg_num: Some(first_word & 0b111),
+                }),
+                dst_value: None,
+                dst_ext: None,
+            }
+        }
         // MOVEM
         else if first_word & 0xFB80 == 0x4880 {
             let code = Code::Movem;
@@ -637,64 +817,6 @@ impl Opcode {
             }
 
         }
-        // NEG
-        else if high_byte == 0x4400 {
-            let code = Code::Neg;
-            let mut length = 2usize;
-            let size_bits = (first_word & 0b11000000) >> 6;
-            let size = Self::get_size_normal(size_bits);
-
-            let dst_mode_ea = (first_word & 0b111000) >> 3;
-            let dst_mode_reg = first_word & 0b111;
-            let dst_mode = Self::get_addr_mode(dst_mode_ea, dst_mode_reg);
-
-            let (dst_value, length_inc) = Self::get_value(cn, &dst_mode, pc + length, &size);
-            length += length_inc;
-
-            let (dst_ext, length_inc) = Self::get_ext_word(cn, &dst_mode, pc + length);
-            length += length_inc;
-
-            Opcode {
-                code,
-                length: length as u32,
-                size: Some(size),
-                src_mode: None,
-                src_value: None,
-                src_ext: None,
-                dst_mode: Some(dst_mode),
-                dst_value,
-                dst_ext,
-            }
-        }
-        // TST
-        else if high_byte == 0x4A00 {
-            let code = Code::Tst;
-            let mut length = 2usize;
-            let size_bits = (first_word & 0b11000000) >> 6;
-            let size = Self::get_size_normal(size_bits);
-
-            let dst_mode_ea = (first_word & 0b111000) >> 3;
-            let dst_mode_reg = first_word & 0b111;
-            let dst_mode = Self::get_addr_mode(dst_mode_ea, dst_mode_reg);
-
-            let (dst_value, length_inc) = Self::get_value(cn, &dst_mode, pc + length, &size);
-            length += length_inc;
-
-            let (dst_ext, length_inc) = Self::get_ext_word(cn, &dst_mode, pc + length);
-            length += length_inc;
-
-            Opcode {
-                code,
-                length: length as u32,
-                size: Some(size),
-                src_mode: None,
-                src_value: None,
-                src_ext: None,
-                dst_mode: Some(dst_mode),
-                dst_value,
-                dst_ext,
-            }
-        }
         // JMP
         else if first_word & 0xFFC0 == 0x4EC0 {
             let code = Code::Jmp;
@@ -741,35 +863,6 @@ impl Opcode {
                 code,
                 length: length as u32,
                 size: None,
-                src_mode: None,
-                src_value: None,
-                src_ext: None,
-                dst_mode: Some(dst_mode),
-                dst_value,
-                dst_ext,
-            }
-        }
-        // CLR
-        else if high_byte == 0x4200 {
-            let code = Code::Clr;
-            let mut length = 2usize;
-            let size_bits = (first_word & 0b11000000) >> 6;
-            let size = Self::get_size_normal(size_bits);
-
-            let dst_mode_ea = (first_word & 0b111000) >> 3;
-            let dst_mode_reg = first_word & 0b111;
-            let dst_mode = Self::get_addr_mode(dst_mode_ea, dst_mode_reg);
-
-            let (dst_value, length_inc) = Self::get_value(cn, &dst_mode, pc + length, &size);
-            length += length_inc;
-
-            let (dst_ext, length_inc) = Self::get_ext_word(cn, &dst_mode, pc + length);
-            length += length_inc;
-
-            Opcode {
-                code,
-                length: length as u32,
-                size: Some(size),
                 src_mode: None,
                 src_value: None,
                 src_ext: None,
@@ -967,7 +1060,7 @@ impl Opcode {
             None => {},
         }
 
-        // check branches (better method needed)
+        // check branches
         if Code::is_branch(&self.code) {
             code.push_str(match self.length {
                 2 => ".s",
@@ -992,7 +1085,6 @@ impl Opcode {
                 code.push_str(&output);
             },
         }
-
 
         if self.dst_mode.is_some() && self.src_mode.is_some() {
             code.push_str(", ");

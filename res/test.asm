@@ -5,9 +5,15 @@
     nop
 
 EntryPoint:
+    ori.b	#$F,d0
+    ori.w	#3,d0
+    ori.w	#6,($FFFF8080).w
+    ori.l	#$FFFFFF,d0	; 8x8 tile pointer
 
-    ext.w       d5
-    ext.l       d3
+    or.b	d1,$4(a0)
+    or.w	d1,d0	; does nothing now
+    or.l	d1,d0	; does nothing now
+    or.w	PortA_Ok(pc,d7.w),d5	; only keep X lower bits
 
 
     tst.l	($A10008).l	; test ports A and B control
@@ -35,6 +41,8 @@ System_Stack:
 
 asd:
 
+    ext.w       d5
+    ext.l       d3
     movem.l	($A000).l,d0-d3/d5-d6
     movem.l	($A000).l,d0
     movem.l	($A000).l,d0-d7
