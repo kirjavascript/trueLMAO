@@ -1,2 +1,10 @@
-target
-notes
+/target
+**/*.rs.bk
+
+node_modules
+npm-debug.log
+package-lock.json
+yarn-error.log
+
+static/*
+!static/index.html

@@ -1,12 +1,6 @@
-[package]
-name = "truelmao"
-version = "0.1.0"
-authors = ["kirjavascript <snkenjoi@gmail.com>"]
+[workspace]
 
-[dependencies]
-gtk = "^0"
-gdk = "^0"
-gdk-pixbuf = "^0"
-
-[features]
-default = ["gtk/v3_10"] # in case your version is 3.10
+members = [
+    "emu",
+    "web",
+]
