@@ -1,0 +1,8 @@
+[package]
+name = "emu"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+r68k-emu = { git = "https://github.com/marhel/r68k.git" }
+r68k-tools = { git = "https://github.com/marhel/r68k.git" }

@@ -1,0 +1,33 @@
+<HTML>
+<HEAD>
+
+<!-- By Fonzie Voltonov From FVRING.COM -->
+<TITLE>Pic c - Sprites are made of tiles!</TITLE>
+
+</HEAD>
+<BODY bgcolor="white" alink="red" vlink="gray" link="black">
+<FONT face="verdana" size="2" color="black">
+<A href="index.html"><IMG src="pics/title.gif" border="0" align="right" alt="Go home"></A><BR><BR><BR><BR><BR><BR><BR>
+<BR><CENTER>
+<B><U>Pic c - Sprites are made of tiles!</U></B><BR><BR>
+</CENTER>
+When you set a sprite, you only define:<BR>
+1-Posy.<BR>
+2-Size (from 1*1 to 4*4 tiles).<BR>
+3-Priority (HP or LP).<BR>
+4-Palette (0-3).<BR>
+5-Flip (V,H,HV).<BR>
+<Font color="red">6-Id of the starting tile (0-2047).</FONT><BR>
+7-Posx.<BR>
+
+If you understood the upper things, you may notice that <B>you can't control the ordering of the other tiles (exept the Starting tile)</B>.<BR>
+So, if the sprite is 2*2 and if the starting tile is the number 2 (2nd in the vram), the next tile will be the 3rd and the next one will be the 4th...<BR>
+The next tiles organisation are up/down > left/right.
+<FOnt color="green">Basicaly, if you set the organisation in left/right > up/down, the displayed sprite will be a real mess.</font><BR>
+<BR><BR><CENTER>
+<IMG src="pics/pic_c.gif">
+
+</CENTER>
+</FONT>
+</BODY>
+</HTML>
