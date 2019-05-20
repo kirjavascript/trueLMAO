@@ -1,6 +1,10 @@
 import React, { Fragment, useEffect } from 'react';
 import { render } from 'react-dom';
-import { default as init, get_string } from '#wasm'; // eslint-disable-line
+import {
+    default as init,
+    step,
+    disasm_stuff,
+} from '#wasm'; // eslint-disable-line
 
 function App(props) {
     return (
@@ -15,8 +19,10 @@ if (typeof WebAssembly !== 'object') {
 } else {
     delete WebAssembly.instantiateStreaming;
     init('/emu.wasm')
-        .then(obj => {
-            console.log(get_string());
+        .then((obj) => {
+            console.log(disasm_stuff());
+            console.log(step());
+            console.log(disasm_stuff());
 
             render((
                 <App />
