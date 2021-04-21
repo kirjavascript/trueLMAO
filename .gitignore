@@ -1,5 +1,6 @@
 /target
 **/*.rs.bk
+notes
 
 node_modules
 npm-debug.log

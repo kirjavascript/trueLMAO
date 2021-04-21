@@ -1,5 +1,4 @@
 const webpack = require('webpack');
-const StyleLintPlugin = require('stylelint-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = (env={}, args={}) => {
@@ -28,9 +27,6 @@ module.exports = (env={}, args={}) => {
                                     '@babel/preset-env',
                                     '@babel/preset-react',
                                 ],
-                                plugins: [
-                                    '@babel/plugin-proposal-do-expressions',
-                                ],
                             }
                         }
                     ],
@@ -49,10 +45,6 @@ module.exports = (env={}, args={}) => {
             new webpack.DefinePlugin({
                 __DEV__: env.dev
             }),
-            new StyleLintPlugin({
-                configFile: '.stylelintrc',
-                syntax: 'scss',
-            }),
             new MiniCssExtractPlugin({
                 filename: "[name].css",
             }),
@@ -65,23 +57,6 @@ module.exports = (env={}, args={}) => {
         },
         devtool: env.dev && 'source-map',
     };
-
-    if (env.dev) {
-        // add linting
-        config.module.rules.push({
-            test: /\.js$/,
-            enforce: 'pre',
-            loader: 'eslint-loader',
-            exclude: /node_modules|pkg/,
-            options: {
-                configFile: '.eslintrc',
-                failOnWarning: false,
-                failOnError: false,
-                emitError: false,
-                fix: true
-            }
-        });
-    }
 
     return config;
 };

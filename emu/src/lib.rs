@@ -6,6 +6,8 @@ use r68k_tools::PC;
 use r68k_tools::memory::MemoryVec;
 use r68k_tools::disassembler::disassemble;
 
+mod rom;
+
 pub struct Emulator {
     cpu: ConfiguredCore<AutoInterruptController, PagedMem>,
 }
@@ -16,6 +18,9 @@ impl Emulator {
     // ram
     // vdp
     pub fn new() -> Self {
+
+        // orbtk for proto ui
+        // use a listing file
 
     // let mut buf: Vec<u8> = Vec::new();
     // File::open("./res/s1.bin").unwrap().read_to_end(&mut buf);
@@ -28,6 +33,7 @@ impl Emulator {
             mem.write_u8(i as u32, *data as u32);
         }
         let mut r68k = ConfiguredCore::new_with(0x206, int_ctrl, mem);
+
 
     //// r68k.pc = 0x206;
     //// r68k.resume_normal_processing();
@@ -54,6 +60,6 @@ impl Emulator {
 
     pub fn disasm_stuff(&self) -> String {
 
-        "".to_string()
+        "test".to_string()
     }
 }
