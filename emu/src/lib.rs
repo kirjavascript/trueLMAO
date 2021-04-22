@@ -6,6 +6,7 @@ use r68k_tools::PC;
 use r68k_tools::memory::MemoryVec;
 use r68k_tools::disassembler::disassemble;
 
+mod mem;
 mod rom;
 
 pub struct Emulator {
@@ -19,13 +20,18 @@ impl Emulator {
     // vdp
     pub fn new() -> Self {
 
+        let buf: Vec<u8> = include_bytes!("../../notes/res/s1.bin").to_vec();
+
+        let rom = rom::Rom::from_vec(buf);
+        let mem = mem::Mem::new(&rom);
+
         // orbtk for proto ui
         // use a listing file
 
     // let mut buf: Vec<u8> = Vec::new();
     // File::open("./res/s1.bin").unwrap().read_to_end(&mut buf);
 
-        let buf: Vec<u8> = include_bytes!("../../res/s1.bin").to_vec();
+        let buf: Vec<u8> = include_bytes!("../../notes/res/s1.bin").to_vec();
 
         let int_ctrl = AutoInterruptController::new();
         let mut mem = PagedMem::new(0);
