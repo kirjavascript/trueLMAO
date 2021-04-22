@@ -6,11 +6,21 @@ use r68k_tools::PC;
 use r68k_tools::memory::MemoryVec;
 use r68k_tools::disassembler::disassemble;
 
+use std::cell::RefCell;
+use std::rc::Rc;
+
+type IORef = Rc<RefCell<IO>>;
+
 mod mem;
 mod rom;
 
 pub struct Emulator {
-    cpu: ConfiguredCore<AutoInterruptController, PagedMem>,
+    cpu: ConfiguredCore<AutoInterruptController, mem::Mem>,
+    io: IORef,
+}
+
+struct IO {
+    rom: rom::Rom,
 }
 
 impl Emulator {
@@ -23,7 +33,10 @@ impl Emulator {
         let buf: Vec<u8> = include_bytes!("../../notes/res/s1.bin").to_vec();
 
         let rom = rom::Rom::from_vec(buf);
-        let mem = mem::Mem::new(&rom);
+        let io = Rc::new(RefCell::new(IO {
+            rom,
+        }));
+        let mut mem = mem::Mem::new(io.clone());
 
         // orbtk for proto ui
         // use a listing file
@@ -31,13 +44,13 @@ impl Emulator {
     // let mut buf: Vec<u8> = Vec::new();
     // File::open("./res/s1.bin").unwrap().read_to_end(&mut buf);
 
-        let buf: Vec<u8> = include_bytes!("../../notes/res/s1.bin").to_vec();
+        // let buf: Vec<u8> = include_bytes!("../../notes/res/s1.bin").to_vec();
 
         let int_ctrl = AutoInterruptController::new();
-        let mut mem = PagedMem::new(0);
-        for (i, data) in buf.iter().enumerate() {
-            mem.write_u8(i as u32, *data as u32);
-        }
+        // let mut mem = PagedMem::new(0);
+        // for (i, data) in buf.iter().enumerate() {
+        //     mem.write_u8(i as u32, *data as u32);
+        // }
         let mut r68k = ConfiguredCore::new_with(0x206, int_ctrl, mem);
 
 
@@ -56,6 +69,7 @@ impl Emulator {
 
         Emulator {
             cpu: r68k,
+            rom: &rom,
         }
     }
 

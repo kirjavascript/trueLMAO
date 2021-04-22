@@ -1,22 +1,24 @@
 use r68k_emu::ram::AddressBus;
 use r68k_emu::ram::AddressSpace;
 use crate::rom::Rom;
+use crate::IORef;
+
+use std::cell::RefCell;
+use std::rc::Rc;
 
 // file:///home/cake/dev/trueLMAO/target/doc/src/r68k_emu/ram/pagedmem.rs.html#102-140
 
-pub struct Mem<'a> {
-    rom: &'a Rom
+pub struct Mem {
+    io: Rc<RefCell<IO>>,
 }
 
-impl<'a> Mem<'a> {
-    pub fn new(rom: &'a Rom) -> Self {
-        Mem {
-            rom,
-        }
+impl Mem {
+    pub fn new(io: IORef) -> Self {
+        Mem { io }
     }
 }
 
-impl AddressBus for Mem<'_> {
+impl AddressBus for Mem {
     fn copy_from(&mut self, other: &Self) {
 
     }
