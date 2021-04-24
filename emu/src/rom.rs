@@ -13,11 +13,11 @@ impl Rom {
     }
 
     pub fn read_word(&self, addr: u32) -> u16 {
-        ((self.read_byte(addr) as u16) << 8) + self.read_byte(addr + 1) as u16
+        ((self.read_byte(addr) as u16) << 8) | self.read_byte(addr + 1) as u16
     }
 
     pub fn read_long(&self, addr: u32) -> u32 {
-        ((self.read_word(addr) as u32) << 16) + self.read_word(addr + 2) as u32
+        ((self.read_word(addr) as u32) << 16) | self.read_word(addr + 2) as u32
     }
 
     pub fn read_string(&self, range: std::ops::Range<usize>) -> String {

@@ -25,10 +25,7 @@ impl Emulator {
 
         let buf: Vec<u8> = include_bytes!("../../notes/res/s1.bin").to_vec();
 
-        let mem = mem::Mem {
-            rom: rom::Rom::from_vec(buf),
-        };
-
+        let mem = mem::Mem::new(rom::Rom::from_vec(buf));
 
         let int_ctrl = AutoInterruptController::new();
         let mut core = ConfiguredCore::new_with(0x206, int_ctrl, mem);
