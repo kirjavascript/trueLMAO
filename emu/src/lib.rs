@@ -6,21 +6,11 @@ use r68k_tools::PC;
 use r68k_tools::memory::MemoryVec;
 use r68k_tools::disassembler::disassemble;
 
-use std::cell::RefCell;
-use std::rc::Rc;
-
-type IORef = Rc<RefCell<IO>>;
-
 mod mem;
 mod rom;
 
 pub struct Emulator {
-    cpu: ConfiguredCore<AutoInterruptController, mem::Mem>,
-    io: IORef,
-}
-
-struct IO {
-    rom: rom::Rom,
+    core: ConfiguredCore<AutoInterruptController, mem::Mem>,
 }
 
 impl Emulator {
@@ -33,10 +23,7 @@ impl Emulator {
         let buf: Vec<u8> = include_bytes!("../../notes/res/s1.bin").to_vec();
 
         let rom = rom::Rom::from_vec(buf);
-        let io = Rc::new(RefCell::new(IO {
-            rom,
-        }));
-        let mut mem = mem::Mem::new(io.clone());
+        let mem = mem::Mem::new(rom);
 
         // orbtk for proto ui
         // use a listing file
@@ -51,7 +38,9 @@ impl Emulator {
         // for (i, data) in buf.iter().enumerate() {
         //     mem.write_u8(i as u32, *data as u32);
         // }
-        let mut r68k = ConfiguredCore::new_with(0x206, int_ctrl, mem);
+        let mut core = ConfiguredCore::new_with(0x206, int_ctrl, mem);
+
+        core.pc = core.mem.rom.entry_point();
 
 
     //// r68k.pc = 0x206;
@@ -68,14 +57,13 @@ impl Emulator {
     //println!("{}", res.unwrap().1);
 
         Emulator {
-            cpu: r68k,
-            rom: &rom,
+            core,
         }
     }
 
     pub fn step1(&mut self) {
-        self.cpu.pc = 0x206;
-        self.cpu.execute1();
+        self.core.pc = 0x206;
+        self.core.execute1();
     }
 
     pub fn disasm_stuff(&self) -> String {
