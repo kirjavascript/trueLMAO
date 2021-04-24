@@ -37,10 +37,15 @@ impl Rom {
         vtrs
     }
 
-    pub fn entry_point(&self) -> u32 {
-        self.read_long(0x4)
-    }
+    pub fn stack_pointer(&self) -> u32 { self.read_long(0x0) }
+    pub fn entry_point(&self) -> u32 { self.read_long(0x4) }
 
     pub fn system_type(&self) -> String { self.read_string(0x100..0x110) }
+    pub fn copyright(&self) -> String { self.read_string(0x110..0x120) }
+    pub fn domestic_name(&self) -> String { self.read_string(0x120..0x150) }
+    pub fn overseas_name(&self) -> String { self.read_string(0x150..0x180) }
+    pub fn serial_number(&self) -> String { self.read_string(0x180..0x18E) }
+    pub fn checksum(&self) -> u16 { self.read_word(0x18E) }
+    pub fn device_support(&self) -> String { self.read_string(0x190..0x1A0) }
 
 }
