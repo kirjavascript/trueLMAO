@@ -17,6 +17,7 @@ impl Emulator {
     // rom
     // ram
     // vdp
+    // z80
     pub fn new() -> Self {
 
         // orbtk/iced for proto ui
