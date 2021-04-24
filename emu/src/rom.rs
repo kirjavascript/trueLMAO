@@ -8,16 +8,16 @@ impl Rom {
         Rom { bytes }
     }
 
-    pub fn read(&self, addr: usize) -> u8 {
-        *self.bytes.get(addr).unwrap_or(&0)
+    pub fn read_byte(&self, addr: u32) -> u8 {
+        *self.bytes.get(addr as usize).unwrap_or(&0)
     }
 
-    pub fn read_word(&self, addr: usize) -> u16 {
-        ((self.read(addr) as u16) << 8) + self.read(addr + 1) as u16
+    pub fn read_word(&self, addr: u32) -> u16 {
+        ((self.read_byte(addr) as u16) << 8) + self.read_byte(addr + 1) as u16
     }
 
-    pub fn read_long(&self, addr: usize) -> u32 {
-        ((self.read(addr) as u32) << 16) + self.read(addr + 1) as u32
+    pub fn read_long(&self, addr: u32) -> u32 {
+        ((self.read_word(addr) as u32) << 16) + self.read_word(addr + 2) as u32
     }
 
     pub fn read_string(&self, range: std::ops::Range<usize>) -> String {
@@ -41,8 +41,6 @@ impl Rom {
         self.read_long(0x4)
     }
 
-    pub fn system_type(&self) -> String {
-        self.read_string(0x100..0x110)
-    }
+    pub fn system_type(&self) -> String { self.read_string(0x100..0x110) }
 
 }

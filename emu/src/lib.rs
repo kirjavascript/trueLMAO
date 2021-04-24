@@ -22,16 +22,12 @@ impl Emulator {
 
         let buf: Vec<u8> = include_bytes!("../../notes/res/s1.bin").to_vec();
 
-        let rom = rom::Rom::from_vec(buf);
-        let mem = mem::Mem::new(rom);
+        let mem = mem::Mem {
+            rom: rom::Rom::from_vec(buf),
+        };
 
-        // orbtk for proto ui
+        // orbtk/iced for proto ui
         // use a listing file
-
-    // let mut buf: Vec<u8> = Vec::new();
-    // File::open("./res/s1.bin").unwrap().read_to_end(&mut buf);
-
-        // let buf: Vec<u8> = include_bytes!("../../notes/res/s1.bin").to_vec();
 
         let int_ctrl = AutoInterruptController::new();
         // let mut mem = PagedMem::new(0);
