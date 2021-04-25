@@ -37,6 +37,11 @@ fn main() {
         s.send(Update::Render);
     });
 
+    let name = emu.core.mem.rom.domestic_name()
+        .split_whitespace().collect::<Vec<&str>>().join(" ");
+
+    wind.set_label(&format!("trueLMAO - {}", name));
+
     while app.wait() {
         while let Some(msg) = r.recv() {
             match msg {
@@ -45,22 +50,22 @@ fn main() {
                 },
                 Update::Render => {
                     let mut debug = String::new();
-                    debug.push_str(&format!("PC: {:x}\n\n", emu.core.pc));
+                    debug.push_str(&format!("PC: {:X}\n\n", emu.core.pc));
                     debug.push_str(&format!("D "));
                     for i in 0..=7 {
-                        debug.push_str(&format!("{:x} ", emu.core.dar[i]));
+                        debug.push_str(&format!("{:X} ", emu.core.dar[i]));
                     }
                     debug.push_str(&format!("\n"));
 
                     debug.push_str(&format!("A "));
                     for i in 0..=7 {
-                        debug.push_str(&format!("{:x} ", emu.core.dar[i + 7]));
+                        debug.push_str(&format!("{:X} ", emu.core.dar[i + 7]));
                     }
                     debug.push_str(&format!("\n"));
                     debug.push_str(&format!("\n"));
 
                     for (pc, opcode) in emu.disasm() {
-                        debug.push_str(&format!("0x{:x}\t{}\n", pc, opcode));
+                        debug.push_str(&format!("0x{:X}\t{}\n", pc, opcode));
                     }
                     buffer.set_text(&debug);
 
