@@ -22,14 +22,14 @@ impl Emulator {
 
         // IO trait for binding
 
+        // use test rom
         let buf: Vec<u8> = include_bytes!("../../notes/res/s1.bin").to_vec();
 
-        let mem = mem::Mem::new(rom::Rom::from_vec(buf));
+        let mem = mem::Mem::new(buf.into());
 
         let int_ctrl = AutoInterruptController::new();
         let mut core = ConfiguredCore::new_with(mem.rom.entry_point(), int_ctrl, mem);
 
-        core.pc = core.mem.rom.entry_point();
         core.dar[STACK_POINTER_REG] = core.mem.rom.stack_pointer();
 
         Emulator {

@@ -2,13 +2,14 @@ pub struct Rom {
     bytes: Vec<u8>,
 }
 
-#[allow(dead_code)]
-impl Rom {
-    // TODO: implement From instead
-    pub fn from_vec(bytes: Vec<u8>) -> Self {
+impl From<Vec<u8>> for Rom {
+    fn from(bytes: Vec<u8>) -> Self {
         Rom { bytes }
     }
+}
 
+#[allow(dead_code)]
+impl Rom {
     pub fn to_vec(&self) -> Vec<u8> {
         self.bytes.clone()
     }
