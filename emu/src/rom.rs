@@ -4,8 +4,13 @@ pub struct Rom {
 
 #[allow(dead_code)]
 impl Rom {
+    // TODO: implement From instead
     pub fn from_vec(bytes: Vec<u8>) -> Self {
         Rom { bytes }
+    }
+
+    pub fn to_vec(&self) -> Vec<u8> {
+        self.bytes.clone()
     }
 
     pub fn read_byte(&self, addr: u32) -> u8 {

@@ -63,17 +63,17 @@ impl AddressBus for Mem {
             0..=0x3FFFFF => {},
             0xFF0000..=0xFFFFFE => {
                 self.write_byte(address_space, address, value >> 8);
-                self.write_byte(address_space, address + 1, value && 0xFF);
+                self.write_byte(address_space, address + 1, value & 0xFF);
             },
             _ => todo!(),
         }
     }
-    fn write_long(&mut self, _address_space: AddressSpace, address: u32, value: u32) {
+    fn write_long(&mut self, address_space: AddressSpace, address: u32, value: u32) {
         match address {
             0..=0x3FFFFF => {},
             0xFF0000..=0xFFFFFC => {
                 self.write_word(address_space, address, value >> 16);
-                self.write_work(address_space, address + 2, value && 0xFFFF);
+                self.write_word(address_space, address + 2, value & 0xFFFF);
             },
             _ => todo!(),
         }

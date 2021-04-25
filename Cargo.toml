@@ -3,4 +3,5 @@
 members = [
     "emu",
     "web",
+    "desktop",
 ]

@@ -9,7 +9,7 @@ mod mem;
 mod rom;
 
 pub struct Emulator {
-    core: ConfiguredCore<AutoInterruptController, mem::Mem>,
+    pub core: ConfiguredCore<AutoInterruptController, mem::Mem>,
 }
 
 impl Emulator {
@@ -20,15 +20,14 @@ impl Emulator {
     // z80
     pub fn new() -> Self {
 
-        // orbtk/iced for proto ui
-        // use a listing file
+        // IO trait for binding
 
         let buf: Vec<u8> = include_bytes!("../../notes/res/s1.bin").to_vec();
 
         let mem = mem::Mem::new(rom::Rom::from_vec(buf));
 
         let int_ctrl = AutoInterruptController::new();
-        let mut core = ConfiguredCore::new_with(0x206, int_ctrl, mem);
+        let mut core = ConfiguredCore::new_with(mem.rom.entry_point(), int_ctrl, mem);
 
         core.pc = core.mem.rom.entry_point();
         core.dar[STACK_POINTER_REG] = core.mem.rom.stack_pointer();
@@ -42,8 +41,12 @@ impl Emulator {
         self.core.execute1();
     }
 
-    pub fn disasm_stuff(&self) -> String {
+    pub fn disasm(&self, pc: u32) -> (r68k_tools::PC, String) {
+        use r68k_tools::PC;
+        let m = r68k_tools::memory::MemoryVec::new8(PC(0), self.core.mem.rom.to_vec());
+        let d = r68k_tools::disassembler::disassemble(PC(pc), &m);
+        let (pc, opcode) = d.unwrap();
 
-        "test".to_string()
+        (pc, opcode.to_string())
     }
 }
