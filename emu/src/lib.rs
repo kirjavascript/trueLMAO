@@ -3,6 +3,7 @@ use r68k_emu::interrupts::AutoInterruptController;
 
 mod mem;
 mod rom;
+mod vdp;
 
 pub struct Emulator {
     pub core: ConfiguredCore<AutoInterruptController, mem::Mem>,
@@ -18,8 +19,7 @@ impl Emulator {
 
         // IO trait for binding
 
-        // TODO: use test rom
-        let buf: Vec<u8> = include_bytes!("../../notes/res/s1.bin").to_vec();
+        let buf: Vec<u8> = include_bytes!("./test.bin").to_vec();
 
         let mem = mem::Mem::new(buf.into());
 
