@@ -26,7 +26,8 @@ impl AddressBus for Mem {
         match address {
             0..=0x3FFFFF => self.rom.read_byte(address) as _,
             0xFF0000..=0xFFFFFF => self.work_ram[address as usize - 0xFF0000] as _,
-            _ => todo!(),
+            _ => 0,
+            // _ => todo!(),
         }
     }
     fn read_word(&self, address_space: AddressSpace, address: u32) -> u32 {
@@ -36,7 +37,8 @@ impl AddressBus for Mem {
                 self.read_byte(address_space, address) << 8
                 | self.read_byte(address_space, address + 1)
             },
-            _ => todo!(),
+            _ => 0,
+            // _ => todo!(),
         }
     }
     fn read_long(&self, address_space: AddressSpace, address: u32) -> u32 {
@@ -46,7 +48,8 @@ impl AddressBus for Mem {
                 self.read_word(address_space, address) << 16
                 | self.read_word(address_space, address + 2)
             },
-            _ => todo!(),
+            _ => 0,
+            // _ => todo!(),
         }
     }
     fn write_byte(&mut self, _address_space: AddressSpace, address: u32, value: u32) {
@@ -55,7 +58,8 @@ impl AddressBus for Mem {
             0xFF0000..=0xFFFFFF => {
                 self.work_ram[address as usize - 0xFF0000] = value as u8;
             },
-            _ => todo!(),
+            _ => {},
+            // _ => todo!(),
         }
     }
     fn write_word(&mut self, address_space: AddressSpace, address: u32, value: u32) {
@@ -65,7 +69,8 @@ impl AddressBus for Mem {
                 self.write_byte(address_space, address, value >> 8);
                 self.write_byte(address_space, address + 1, value & 0xFF);
             },
-            _ => todo!(),
+            _ => {},
+            // _ => todo!(),
         }
     }
     fn write_long(&mut self, address_space: AddressSpace, address: u32, value: u32) {
@@ -75,7 +80,8 @@ impl AddressBus for Mem {
                 self.write_word(address_space, address, value >> 16);
                 self.write_word(address_space, address + 2, value & 0xFFFF);
             },
-            _ => todo!(),
+            _ => {},
+            // _ => todo!(),
         }
     }
 }

@@ -1,9 +1,5 @@
 use r68k_emu::cpu::{STACK_POINTER_REG, ConfiguredCore};
 use r68k_emu::interrupts::AutoInterruptController;
-// use r68k_emu::ram::pagedmem::PagedMem;
-// use r68k_tools::PC;
-// use r68k_tools::memory::MemoryVec;
-// use r68k_tools::disassembler::disassemble;
 
 mod mem;
 mod rom;
@@ -22,7 +18,7 @@ impl Emulator {
 
         // IO trait for binding
 
-        // use test rom
+        // TODO: use test rom
         let buf: Vec<u8> = include_bytes!("../../notes/res/s1.bin").to_vec();
 
         let mem = mem::Mem::new(buf.into());
@@ -41,12 +37,24 @@ impl Emulator {
         self.core.execute1();
     }
 
-    pub fn disasm(&self, pc: u32) -> (r68k_tools::PC, String) {
+    pub fn disasm(&self) -> Vec<(u32, String)> {
         use r68k_tools::PC;
-        let m = r68k_tools::memory::MemoryVec::new8(PC(0), self.core.mem.rom.to_vec());
-        let d = r68k_tools::disassembler::disassemble(PC(pc), &m);
-        let (pc, opcode) = d.unwrap();
+        let mut buffer = Vec::new();
+        let mut opcodes = Vec::new();
+        // longest opcode is 16 bytes
+        for i in 0..(16 * 10) {
+            buffer.push(self.core.mem.rom.read_byte(self.core.pc + i));
+        }
+        let mvec = r68k_tools::memory::MemoryVec::new8(PC(0), buffer);
+        let mut cursor = PC(0);
+        for _ in 0..10 {
+            let disasm = r68k_tools::disassembler::disassemble(cursor, &mvec);
+            if let Ok((pc, opcode)) = disasm {
+                opcodes.push((cursor.0 + self.core.pc, opcode.to_string().to_lowercase()));
+                cursor = pc;
+            }
+        }
 
-        (pc, opcode.to_string())
+        opcodes
     }
 }

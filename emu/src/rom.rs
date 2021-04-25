@@ -10,10 +10,6 @@ impl From<Vec<u8>> for Rom {
 
 #[allow(dead_code)]
 impl Rom {
-    pub fn to_vec(&self) -> Vec<u8> {
-        self.bytes.clone()
-    }
-
     pub fn read_byte(&self, addr: u32) -> u8 {
         *self.bytes.get(addr as usize).unwrap_or(&0)
     }
