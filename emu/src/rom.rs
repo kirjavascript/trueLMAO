@@ -29,15 +29,15 @@ impl ROM {
         String::from_utf8_lossy(&self.bytes[range]).to_string()
     }
 
-    pub fn vectors(&self) -> Vec<u32> {
-        let mut i = 0;
-        let mut vtrs = Vec::new();
-        while i < 0x100 {
-            vtrs.push(self.read_long(i));
-            i += 4;
-        }
-        vtrs
-    }
+    // pub fn vectors(&self) -> Vec<u32> {
+    //     let mut i = 0;
+    //     let mut vtrs = Vec::new();
+    //     while i < 0x100 {
+    //         vtrs.push(self.read_long(i));
+    //         i += 4;
+    //     }
+    //     vtrs
+    // }
 
     pub fn stack_pointer(&self) -> u32 { self.read_long(0x0) }
     pub fn entry_point(&self) -> u32 { self.read_long(0x4) }
