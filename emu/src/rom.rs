@@ -1,15 +1,15 @@
-pub struct Rom {
+pub struct ROM {
     bytes: Vec<u8>,
 }
 
-impl From<Vec<u8>> for Rom {
+impl From<Vec<u8>> for ROM {
     fn from(bytes: Vec<u8>) -> Self {
-        Rom { bytes }
+        ROM { bytes }
     }
 }
 
 #[allow(dead_code)]
-impl Rom {
+impl ROM {
     pub fn read_byte(&self, addr: u32) -> u8 {
         *self.bytes.get(addr as usize).unwrap_or(&0)
     }

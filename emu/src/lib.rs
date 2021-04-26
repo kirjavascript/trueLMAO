@@ -1,6 +1,7 @@
 use r68k_emu::cpu::{STACK_POINTER_REG, ConfiguredCore};
 use r68k_emu::interrupts::AutoInterruptController;
 
+mod io;
 mod mem;
 mod rom;
 mod vdp;

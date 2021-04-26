@@ -1,24 +1,27 @@
 use r68k_emu::ram::AddressBus;
 use r68k_emu::ram::AddressSpace;
-use crate::rom::Rom;
-use crate::vdp::Vdp;
+use crate::rom::ROM;
+use crate::io::IO;
+use crate::vdp::VDP;
 
 // file:///home/cake/dev/trueLMAO/target/doc/src/r68k_emu/ram/pagedmem.rs.html#102-140
 
 pub struct Mem {
-    pub rom: Rom,
+    pub rom: ROM,
     pub work_ram: [u8; 0x10000],
     pub z80_ram: [u8; 0x2000],
-    pub vdp: Vdp,
+    pub vdp: VDP,
+    pub io: IO,
 }
 
 impl Mem {
-    pub fn new(rom: Rom) -> Self {
+    pub fn new(rom: ROM) -> Self {
         Mem {
             rom,
             work_ram: [0; 0x10000],
             z80_ram: [0; 0x2000],
-            vdp: Vdp {}
+            vdp: VDP {},
+            io: IO::new(),
         }
     }
 }
@@ -30,16 +33,19 @@ impl AddressBus for Mem {
     fn read_byte(&self, _address_space: AddressSpace, address: u32) -> u32 {
         match address {
             0..=0x3FFFFF => self.rom.read_byte(address) as _,
-            0xA00000..=0xA01FFF => self.z80_ram[address as usize & 0x1FFF] as _,
-            0xA02000..=0xA0FFFF => 0,
-            0xA10000..=0xA10001 => {
-                // version http://www.hacking-cult.org/?r/18/23
-                0xE0
-            },
-            0xA10008..=0xA1000D => {
-                // controller control
-                0
-            },
+            0xA00000..=0xA03FFF => self.z80_ram[address as usize & 0x1FFF] as _,
+            0xA04000..=0xA0FFFF => 0,
+            // 0xA10000..=0xA10001 => {
+            //     // version http://www.hacking-cult.org/?r/18/23
+            //     0xE0
+            // },
+            // 0xA10008..=0xA1000D => {
+            //     // controller control
+            //     0
+            // },
+            0xA10000..=0xA1001F => self.io.read_byte(address) as _,
+            // z80 ctrl
+            // vdp
             0xFF0000..=0xFFFFFF => self.work_ram[address as usize & 0xFFFF] as _,
             _ => todo!("read byte {:X}", address),
         }
@@ -65,10 +71,12 @@ impl AddressBus for Mem {
     fn write_byte(&mut self, _address_space: AddressSpace, address: u32, value: u32) {
         match address {
             0..=0x3FFFFF => {},
-            0xA00000..=0xA01FFF => self.z80_ram[address as usize & 0x1FFF] = value as u8,
-            0xA02000..=0xA0FFFF => {},
+            0xA00000..=0xA03FFF => {
+                self.z80_ram[address as usize & 0x1FFF] = value as u8,
+            },
+            0xA04000..=0xA0FFFF => {},
             0xFF0000..=0xFFFFFF => {
-                self.work_ram[address as usize & 0xFFDD] = value as u8;
+                self.work_ram[address as usize & 0xFFFF] = value as u8;
             },
             _ => todo!("write byte {:X} {:X}", address, value),
         }

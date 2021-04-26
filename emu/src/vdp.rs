@@ -1,7 +1,7 @@
 
-pub struct Vdp {
+pub struct VDP {
 }
 
-impl Vdp {
+impl VDP {
 
 }
