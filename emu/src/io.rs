@@ -12,7 +12,7 @@ impl IO {
         }
     }
 
-    pub fn read_byte(&self, address: u32) -> u8 {
+    pub fn read_byte(&self, mut address: u32) -> u8 {
         address >>= 1;
 
         if (1u32..=3).contains(&address) {
@@ -23,7 +23,7 @@ impl IO {
         }
     }
 
-    pub fn write_byte(&self, address: u32, value: u32) {
+    pub fn write_byte(&mut self, mut address: u32, value: u32) {
         address >>= 1;
 
         if (1u32..=6).contains(&address) {

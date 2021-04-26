@@ -4,8 +4,6 @@ use crate::rom::ROM;
 use crate::io::IO;
 use crate::vdp::VDP;
 
-// file:///home/cake/dev/trueLMAO/target/doc/src/r68k_emu/ram/pagedmem.rs.html#102-140
-
 pub struct Mem {
     pub rom: ROM,
     pub work_ram: [u8; 0x10000],
@@ -72,7 +70,7 @@ impl AddressBus for Mem {
         match address {
             0..=0x3FFFFF => {},
             0xA00000..=0xA03FFF => {
-                self.z80_ram[address as usize & 0x1FFF] = value as u8,
+                self.z80_ram[address as usize & 0x1FFF] = value as u8;
             },
             0xA04000..=0xA0FFFF => {},
             0xA10000..=0xA1001F => self.io.write_byte(address, value),
