@@ -6,6 +6,7 @@ use fltk::{
     window::Window,
     table::Table,
     text::{TextBuffer, TextDisplay},
+    dialog,
 };
 
 use emu::Emulator;
