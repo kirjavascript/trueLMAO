@@ -1,4 +1,3 @@
-
 pub struct IO {
     registers: [u8; 16],
 }

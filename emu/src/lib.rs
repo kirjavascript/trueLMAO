@@ -5,21 +5,14 @@ mod io;
 mod mem;
 mod rom;
 mod vdp;
+mod z80;
 
 pub struct Emulator {
     pub core: ConfiguredCore<AutoInterruptController, mem::Mem>,
 }
 
 impl Emulator {
-    // cpu
-    // rom
-    // ram
-    // vdp
-    // z80
     pub fn new() -> Self {
-
-        // IO trait for binding
-
         let buf: Vec<u8> = include_bytes!("./test.bin").to_vec();
 
         let mem = mem::Mem::new(buf.into());
