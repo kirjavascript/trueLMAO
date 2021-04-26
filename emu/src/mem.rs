@@ -75,6 +75,7 @@ impl AddressBus for Mem {
                 self.z80_ram[address as usize & 0x1FFF] = value as u8,
             },
             0xA04000..=0xA0FFFF => {},
+            0xA10000..=0xA1001F => self.io.write_byte(address, value),
             0xFF0000..=0xFFFFFF => {
                 self.work_ram[address as usize & 0xFFFF] = value as u8;
             },

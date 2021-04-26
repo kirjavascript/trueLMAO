@@ -15,11 +15,19 @@ impl IO {
     pub fn read_byte(&self, address: u32) -> u8 {
         address >>= 1;
 
-        if (0u32..4).contains(&address) {
+        if (1u32..=3).contains(&address) {
             // TODO: gamepad
             0
         } else {
             self.registers[address as usize & 0xF]
+        }
+    }
+
+    pub fn write_byte(&self, address: u32, value: u32) {
+        address >>= 1;
+
+        if (1u32..=6).contains(&address) {
+            self.registers[address as usize & 0xF] = value as _;
         }
     }
 }
