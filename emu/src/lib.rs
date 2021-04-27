@@ -28,7 +28,7 @@ impl Emulator {
     }
 
     pub fn step1(&mut self) {
-        for _ in 0..100 {
+        for _ in 0..1000 {
 
         self.core.execute1();
         }

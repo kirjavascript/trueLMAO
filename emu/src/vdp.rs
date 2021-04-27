@@ -87,7 +87,7 @@ impl VDP {
 
         if self.dma_pending {
             self.dma_pending = false;
-            let length = self.registers[19] | (self.registers[20] << 8);
+            let length = self.registers[19] as u32 | ((self.registers[20] as u32) << 8);
             for _ in 0..length {
                 self.VRAM[self.control_address as usize] = (value >> 8) as _;
                 self.control_address += self.registers[15] as u32;
@@ -97,6 +97,21 @@ impl VDP {
     }
 
     pub fn write_control_port(&mut self, value: u32) {
+        if self.control_pending {
+        } else {
+            if value & 0xc000 == 0x8000 {
+                let (register, value) = ((value >> 8) & 0x1F, value & 0xFF);
+                // set VDP register
+                if self.registers[1] & 4 > 0 || register <= 10 {
+                    self.registers[register as usize] = value as u8;
+                }
+                self.control_code = 0;
+            } else {
 
+                self.control_code = (self.control_code & 0x3c) | ((value >> 14) & 3);
+                self.control_address = (self.control_address & 0xc000) | (value & 0x3fff);
+                self.control_pending = true;
+            }
+        }
     }
 }
