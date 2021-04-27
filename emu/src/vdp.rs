@@ -41,6 +41,10 @@ impl VDP {
         }
     }
 
+    fn dma_length(&self) -> u32 {
+        self.registers[19] as u32 | ((self.registers[20] as u32) << 8)
+    }
+
     pub fn read(&self, mut address: u32) -> u32 {
         address &= 0x1F;
 
@@ -78,7 +82,7 @@ impl VDP {
         }
     }
 
-    pub fn write_data_port(&mut self, value: u32) {
+    fn write_data_port(&mut self, value: u32) {
         if self.control_code & 1 == 1 {
             self.write_data(VDPType::from(self.control_code & 0xE), value);
         }
@@ -87,8 +91,7 @@ impl VDP {
 
         if self.dma_pending {
             self.dma_pending = false;
-            let length = self.registers[19] as u32 | ((self.registers[20] as u32) << 8);
-            for _ in 0..length {
+            for _ in 0..self.dma_length() {
                 self.VRAM[self.control_address as usize] = (value >> 8) as _;
                 self.control_address += self.registers[15] as u32;
                 self.control_address &= 0xFFFF;
@@ -96,18 +99,42 @@ impl VDP {
         }
     }
 
-    pub fn write_control_port(&mut self, value: u32) {
+    fn write_control_port(&mut self, value: u32) {
         if self.control_pending {
+            self.control_code = (self.control_code & 3) | ((value >> 2) & 0x3c);
+            self.control_address = (self.control_address & 0x3fff) | ((value & 3) << 14);
+            self.control_pending = false;
+
+            if self.control_code & 0x20 > 0 && self.registers[1] & 0x10 > 0 {
+                if (self.registers[23] >> 6) == 2 && (self.control_code & 7) == 1 {
+                    self.dma_pending = true;
+                } else if (self.registers[23] >> 6) == 3 {
+                   todo!("DMA copy");
+                } else {
+
+                    let source =
+                        (self.registers[21] << 1)
+                        | (self.registers[22] << 9)
+                        | (self.registers[23] << 17);
+
+                    for _ in 0..self.dma_length() {
+                        // let word = mem.read_word(source)
+                        source += 2;
+                        self.write_data(VDPType::from(self.control_code & 0x7), word);
+                        self.control_address += self.registers[15] as _;
+                        self.control_address &= 0xffff;
+                    }
+
+                }
+            }
         } else {
             if value & 0xc000 == 0x8000 {
                 let (register, value) = ((value >> 8) & 0x1F, value & 0xFF);
-                // set VDP register
                 if self.registers[1] & 4 > 0 || register <= 10 {
                     self.registers[register as usize] = value as u8;
                 }
                 self.control_code = 0;
             } else {
-
                 self.control_code = (self.control_code & 0x3c) | ((value >> 14) & 3);
                 self.control_address = (self.control_address & 0xc000) | (value & 0x3fff);
                 self.control_pending = true;
