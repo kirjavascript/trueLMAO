@@ -28,7 +28,10 @@ impl Emulator {
     }
 
     pub fn step1(&mut self) {
+        for _ in 0..100 {
+
         self.core.execute1();
+        }
     }
 
     pub fn disasm(&self) -> Vec<(u32, String)> {
