@@ -108,21 +108,22 @@ impl VDP {
             if self.control_code & 0x20 > 0 && self.registers[1] & 0x10 > 0 {
                 if (self.registers[23] >> 6) == 2 && (self.control_code & 7) == 1 {
                     self.dma_pending = true;
-                } else if (self.registers[23] >> 6) == 3 {
+                } else if (self.registers[23] as u32 >> 6) == 3 {
                    todo!("DMA copy");
                 } else {
 
                     let source =
-                        (self.registers[21] << 1)
-                        | (self.registers[22] << 9)
-                        | (self.registers[23] << 17);
+                        ((self.registers[21] as u32) << 1)
+                        | ((self.registers[22] as u32) << 9)
+                        | ((self.registers[23] as u32) << 17);
 
                     for _ in 0..self.dma_length() {
                         // let word = mem.read_word(source)
-                        source += 2;
-                        self.write_data(VDPType::from(self.control_code & 0x7), word);
-                        self.control_address += self.registers[15] as _;
-                        self.control_address &= 0xffff;
+                        // source += 2;
+                        // self.write_data(VDPType::from(self.control_code & 0x7), word);
+                        // self.control_address += self.registers[15] as _;
+                        // self.control_address &= 0xffff;
+                        println!("DMA write {}", source);
                     }
 
                 }
