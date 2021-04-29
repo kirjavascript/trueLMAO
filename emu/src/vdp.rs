@@ -1,8 +1,8 @@
 #[allow(non_snake_case)]
 pub struct VDP {
-    VRAM: [u8; 0x10000],
-    CRAM: [u16; 0x40],
-    VSRAM: [u16; 0x40],
+    pub VRAM: [u8; 0x10000],
+    pub CRAM: [u16; 0x40],
+    pub VSRAM: [u16; 0x40],
     registers: [u8; 0x20],
     status: u32,
     control_code: u32,
