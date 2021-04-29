@@ -45,6 +45,21 @@ impl VDP {
         self.registers[19] as u32 | ((self.registers[20] as u32) << 8)
     }
 
+    pub fn cram_rgb(&self) -> [(u8, u8, u8); 64] {
+        let mut rgb = [(0, 0, 0); 64];
+
+        let dupe = |x| (x << 4) | x;
+
+        for (i, color) in self.CRAM.iter().enumerate() {
+            let red = color & 0xf;
+            let green = (color & 0xf0) >> 4;
+            let blue = (color & 0xf00) >> 8;
+            rgb[i] = (dupe(red as u8), dupe(green as u8), dupe(blue as u8));
+        }
+
+        rgb
+    }
+
     pub fn read(&self, mut address: u32) -> u32 {
         address &= 0x1F;
 

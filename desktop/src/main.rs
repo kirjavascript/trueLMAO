@@ -20,50 +20,21 @@ fn main() {
     let mut emu = Emulator::new();
 
     let mut wind = Window::new(100, 100, 800, 600, "trueLMAO");
-    let mut but = Button::new(450, 350, 80, 40, "step1001");
+    let mut but = Button::new(550, 350, 80, 40, "step1001");
     let mut info = TextDisplay::new(0, 0, 600, 300, "asm");
 
     let mut frame = Frame::new(0, 300, 16, 4, "");
     let mut framebuf: Vec<u8> = vec![0xFF; (16 * 4 * 4) as usize];
 
-    // for (i, pixel) in framebuf.chunks_exact_mut(4).enumerate() {
-    //     pixel.copy_from_slice(& [0x26, 0x00, 0x33, 0xff]);
-    // }
-    //
-
-
-    framebuf[0] = 0;
-    framebuf[1] = 0;
-    framebuf[2] = 0;
+    let mut vram = Frame::new(160, 300, 80, 300, "");
+    let mut vrambuf: Vec<u8> = vec![0xFF; (80 * 300 * 4) as usize];
 
     wind.end();
     wind.show();
 
     unsafe {
-        // draw::draw_rgba_nocopy(&mut frame, &framebuf);
-
-        use fltk::enums::*;
-        use fltk::image::RgbImage;
-
-        let ptr = framebuf.as_ptr();
-        let len = framebuf.len();
-        let width = frame.width();
-        let height = frame.height();
-        frame.draw(move |s| {
-            let x = s.x();
-            let y = s.y();
-            let w = s.width();
-            let h = s.height();
-            if let Ok(mut img) = RgbImage::from_data(
-                std::slice::from_raw_parts(ptr, len),
-                width,
-                height,
-                ColorDepth::Rgba8,
-            ) {
-                img.scale(w, h, false, true);
-                img.draw(x, y, w, h);
-            }
-        });
+        draw::draw_rgba_nocopy(&mut frame, &framebuf);
+        draw::draw_rgba_nocopy(&mut vram, &vrambuf);
     }
 
     frame.set_size(160,40);
@@ -91,21 +62,13 @@ fn main() {
                 Update::Step => {
                     emu.step1();
 
-                    let cram_rgb = emu.core.mem.vdp.cram_rgb();
-
-                    for (i, (red, green, blue)) in cram_rgb.iter().enumerate() {
-                        let index = i * 4;
-                        framebuf[index] = *red;
-                        framebuf[index+1] = *green;
-                        framebuf[index+2] = *blue;
-                    }
 
                 },
                 Update::Render => {
                     let mut debug = String::new();
                     debug.push_str(&format!("PC: {:X}\n\n", emu.core.pc));
-                    let v = emu.core.mem.vdp.CRAM[0..64].iter().map(|x|format!("{:X}", x)).collect::<Vec<String>>().join(" ");
-                    debug.push_str(&format!("CRAM: {}\n\n", v));
+                    let v = emu.core.mem.vdp.VRAM.iter().map(|x|format!("{:X}", x)).collect::<Vec<String>>().join(" ");
+                    debug.push_str(&format!("VRAM: {}\n\n", v));
                     debug.push_str(&format!("D "));
                     for i in 0..=7 {
                         debug.push_str(&format!("{:X} ", emu.core.dar[i]));
@@ -124,7 +87,61 @@ fn main() {
                     }
                     buffer.set_text(&debug);
 
+                    // render CRAM
 
+                    let cram_rgb = emu.core.mem.vdp.cram_rgb();
+
+                    for (i, (red, green, blue)) in cram_rgb.iter().enumerate() {
+                        let index = i * 4;
+                        framebuf[index] = *red;
+                        framebuf[index+1] = *green;
+                        framebuf[index+2] = *blue;
+                    }
+
+                    // render VRAM
+
+
+                    for (i, duxels) in emu.core.mem.vdp.VRAM.chunks_exact_mut(32).enumerate() {
+                        let index = i * 4;
+                        let x_base = (i % 10) * 4 * 8;
+                        let y_base = (i / 10) * 4 * 80 * 8;
+                        let mut x = 0;
+                        let mut y = 0;
+
+//                         let pos = |i| {
+
+//                             (i % 8)
+//                         };
+
+
+                        let mut tile = vec![];
+                        for duxel in duxels {
+                            let first = (*duxel & 0xF0) >> 4;
+                            let second = *duxel & 0xF;
+                            tile.push(first);
+                            tile.push(second);
+                        }
+
+                        for pixel in tile {
+                            let (r, g, b) = cram_rgb[pixel as usize];
+                            let base = x_base + y_base + x + y;
+
+                            if base+2 > vrambuf.len() {
+                                break;
+                            }
+
+                            vrambuf[base] = r;
+                            vrambuf[base+1] = g;
+                            vrambuf[base+2] = b;
+                            x += 4;
+                            if x >= (8 * 4) {
+                                x = 0;
+                                y += 80 * 4;
+                            }
+                        }
+
+                        // break;
+                    }
 
 
                     wind.redraw();
