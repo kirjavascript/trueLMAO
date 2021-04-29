@@ -6,8 +6,6 @@ use fltk::{
     prelude::*,
     window::Window,
     text::{TextBuffer, TextDisplay},
-    image,
-    enums,
 };
 
 use emu::Emulator;
@@ -42,7 +40,30 @@ fn main() {
     wind.show();
 
     unsafe {
-        draw::draw_rgba_nocopy(&mut frame, &framebuf);
+        // draw::draw_rgba_nocopy(&mut frame, &framebuf);
+
+        use fltk::enums::*;
+        use fltk::image::RgbImage;
+
+        let ptr = framebuf.as_ptr();
+        let len = framebuf.len();
+        let width = frame.width();
+        let height = frame.height();
+        frame.draw(move |s| {
+            let x = s.x();
+            let y = s.y();
+            let w = s.width();
+            let h = s.height();
+            if let Ok(mut img) = RgbImage::from_data(
+                std::slice::from_raw_parts(ptr, len),
+                width,
+                height,
+                ColorDepth::Rgba8,
+            ) {
+                img.scale(w, h, false, true);
+                img.draw(x, y, w, h);
+            }
+        });
     }
 
     frame.set_size(160,40);
@@ -70,17 +91,15 @@ fn main() {
                 Update::Step => {
                     emu.step1();
 
-                    let c = |x| (x << 4) | x;
+                    let cram_rgb = emu.core.mem.vdp.cram_rgb();
 
-                    for (i, color) in emu.core.mem.vdp.CRAM.iter().enumerate() {
+                    for (i, (red, green, blue)) in cram_rgb.iter().enumerate() {
                         let index = i * 4;
-                        let red = color & 0xF;
-                        let green = (color & 0xF0) >> 4;
-                        let blue = (color & 0xF00) >> 8;
-                        framebuf[index] = c(red as u8);
-                        framebuf[index+1] = c(green as u8);
-                        framebuf[index+2] = c(blue as u8);
+                        framebuf[index] = *red;
+                        framebuf[index+1] = *green;
+                        framebuf[index+2] = *blue;
                     }
+
                 },
                 Update::Render => {
                     let mut debug = String::new();
