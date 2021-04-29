@@ -1,3 +1,5 @@
+use crate::mem::Mem;
+
 #[allow(non_snake_case)]
 pub struct VDP {
     pub VRAM: [u8; 0x10000],
@@ -71,73 +73,74 @@ impl VDP {
         0
     }
 
-    pub fn write(&mut self, mut address: u32, value: u32) {
+
+    pub fn write(mem: &mut Mem, mut address: u32, value: u32) {
         address &= 0x1F;
         if address < 0x4 {
-            self.write_data_port(value);
+            VDP::write_data_port(mem, value);
         } else if address < 0x8 {
-            self.write_control_port(value);
+            VDP::write_control_port(mem, value);
         } else {
             todo!("vdp write {:X} {:X}", address, value);
         }
     }
 
-    pub fn write_data(&mut self, target: VDPType, value: u32) {
+    pub fn write_data(mem: &mut Mem, target: VDPType, value: u32) {
+        let Mem { vdp, .. } = mem;
         match target {
             VDPType::VRAM => {
-                self.VRAM[self.control_address as usize] = ((value >> 8) & 0xff) as _;
-                self.VRAM[self.control_address as usize + 1] = (value & 0xff) as _;
+                vdp.VRAM[vdp.control_address as usize] = ((value >> 8) & 0xff) as _;
+                vdp.VRAM[vdp.control_address as usize + 1] = (value & 0xff) as _;
             },
             VDPType::CRAM => {
-                self.CRAM[((self.control_address & 0x7f) >> 1) as usize] = value as _;
+                vdp.CRAM[((vdp.control_address & 0x7f) >> 1) as usize] = value as _;
             },
             VDPType::VSRAM => {
-                self.VSRAM[((self.control_address & 0x7f) >> 1) as usize] = value as _;
+                vdp.VSRAM[((vdp.control_address & 0x7f) >> 1) as usize] = value as _;
             },
         }
     }
 
-    fn write_data_port(&mut self, value: u32) {
-        if self.control_code & 1 == 1 {
-            self.write_data(VDPType::from(self.control_code & 0xE), value);
+    fn write_data_port(mem: &mut Mem, value: u32) {
+        if mem.vdp.control_code & 1 == 1 {
+            VDP::write_data(mem, VDPType::from(mem.vdp.control_code & 0xE), value);
         }
-        self.control_address = (self.control_address + self.registers[15] as u32) & 0xffff;
-        self.control_pending = false;
+        mem.vdp.control_address = (mem.vdp.control_address + mem.vdp.registers[15] as u32) & 0xffff;
+        mem.vdp.control_pending = false;
 
-        if self.dma_pending {
-            self.dma_pending = false;
-            for _ in 0..self.dma_length() {
-                self.VRAM[self.control_address as usize] = (value >> 8) as _;
-                self.control_address += self.registers[15] as u32;
-                self.control_address &= 0xFFFF;
+        if mem.vdp.dma_pending {
+            mem.vdp.dma_pending = false;
+            for _ in 0..mem.vdp.dma_length() {
+                mem.vdp.VRAM[mem.vdp.control_address as usize] = (value >> 8) as _;
+                mem.vdp.control_address += mem.vdp.registers[15] as u32;
+                mem.vdp.control_address &= 0xFFFF;
             }
         }
     }
 
-    fn write_control_port(&mut self, value: u32) {
-        if self.control_pending {
-            self.control_code = (self.control_code & 3) | ((value >> 2) & 0x3c);
-            self.control_address = (self.control_address & 0x3fff) | ((value & 3) << 14);
-            self.control_pending = false;
+    fn write_control_port(mem: &mut Mem, value: u32) {
+        if mem.vdp.control_pending {
+            mem.vdp.control_code = (mem.vdp.control_code & 3) | ((value >> 2) & 0x3c);
+            mem.vdp.control_address = (mem.vdp.control_address & 0x3fff) | ((value & 3) << 14);
+            mem.vdp.control_pending = false;
 
-            if self.control_code & 0x20 > 0 && self.registers[1] & 0x10 > 0 {
-                if (self.registers[23] >> 6) == 2 && (self.control_code & 7) == 1 {
-                    self.dma_pending = true;
-                } else if (self.registers[23] as u32 >> 6) == 3 {
+            if mem.vdp.control_code & 0x20 > 0 && mem.vdp.registers[1] & 0x10 > 0 {
+                if (mem.vdp.registers[23] >> 6) == 2 && (mem.vdp.control_code & 7) == 1 {
+                    mem.vdp.dma_pending = true;
+                } else if (mem.vdp.registers[23] as u32 >> 6) == 3 {
                    todo!("DMA copy");
                 } else {
+                    let mut source =
+                        ((mem.vdp.registers[21] as u32) << 1)
+                        | ((mem.vdp.registers[22] as u32) << 9)
+                        | ((mem.vdp.registers[23] as u32) << 17);
 
-                    let source =
-                        ((self.registers[21] as u32) << 1)
-                        | ((self.registers[22] as u32) << 9)
-                        | ((self.registers[23] as u32) << 17);
-
-                    for _ in 0..self.dma_length() {
-                        // let word = mem.read_word(source)
-                        // source += 2;
-                        // self.write_data(VDPType::from(self.control_code & 0x7), word);
-                        // self.control_address += self.registers[15] as _;
-                        // self.control_address &= 0xffff;
+                    for _ in 0..mem.vdp.dma_length() {
+                        let word = mem.read_u16(source);
+                        source += 2;
+                        VDP::write_data(mem, VDPType::from(mem.vdp.control_code & 0x7), word);
+                        mem.vdp.control_address += mem.vdp.registers[15] as u32;
+                        mem.vdp.control_address &= 0xffff;
                         println!("DMA write {}", source);
                     }
 
@@ -146,15 +149,16 @@ impl VDP {
         } else {
             if value & 0xc000 == 0x8000 {
                 let (register, value) = ((value >> 8) & 0x1F, value & 0xFF);
-                if self.registers[1] & 4 > 0 || register <= 10 {
-                    self.registers[register as usize] = value as u8;
+                if mem.vdp.registers[1] & 4 > 0 || register <= 10 {
+                    mem.vdp.registers[register as usize] = value as u8;
                 }
-                self.control_code = 0;
+                mem.vdp.control_code = 0;
             } else {
-                self.control_code = (self.control_code & 0x3c) | ((value >> 14) & 3);
-                self.control_address = (self.control_address & 0xc000) | (value & 0x3fff);
-                self.control_pending = true;
+                mem.vdp.control_code = (mem.vdp.control_code & 0x3c) | ((value >> 14) & 3);
+                mem.vdp.control_address = (mem.vdp.control_address & 0xc000) | (value & 0x3fff);
+                mem.vdp.control_pending = true;
             }
         }
     }
+
 }

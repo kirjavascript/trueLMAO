@@ -25,11 +25,8 @@ impl Mem {
     }
 }
 
-impl AddressBus for Mem {
-    fn copy_from(&mut self, _other: &Self) {
-        todo!("copy from");
-    }
-    fn read_byte(&self, _address_space: AddressSpace, address: u32) -> u32 {
+impl Mem {
+    pub fn read_u8(&self, address: u32) -> u32 {
         match address & 0xFFFFFF {
             0..=0x3FFFFF => self.rom.read_byte(address) as _,
             0xA00000..=0xA03FFF => self.z80.read_byte(address) as _,
@@ -41,18 +38,18 @@ impl AddressBus for Mem {
             _ => todo!("read byte {:X}", address),
         }
     }
-    fn read_word(&self, address_space: AddressSpace, address: u32) -> u32 {
+    pub fn read_u16(&self, address: u32) -> u32 {
         if (0xC00000..=0xDFFFFF).contains(&(address & 0xFFFFFF)) {
             return self.vdp.read(address);
         }
-        self.read_byte(address_space, address) << 8
-        | self.read_byte(address_space, address + 1)
+        self.read_u8(address) << 8
+        | self.read_u8(address + 1)
     }
-    fn read_long(&self, address_space: AddressSpace, address: u32) -> u32 {
-        self.read_word(address_space, address) << 16
-            | self.read_word(address_space, address + 2)
+    pub fn read_u32(&self, address: u32) -> u32 {
+        self.read_u16(address) << 16
+            | self.read_u16(address + 2)
     }
-    fn write_byte(&mut self, _address_space: AddressSpace, address: u32, value: u32) {
+    pub fn write_u8(&mut self, address: u32, value: u32) {
         match address & 0xFFFFFF {
             0..=0x3FFFFF => {},
             0xA00000..=0xA03FFF => self.z80.write_byte(address, value),
@@ -66,15 +63,39 @@ impl AddressBus for Mem {
             _ => todo!("write byte {:X} {:X}", address, value),
         }
     }
-    fn write_word(&mut self, address_space: AddressSpace, address: u32, value: u32) {
+    pub fn write_u16(&mut self, address: u32, value: u32) {
         if (0xC00000..=0xDFFFFF).contains(&(address & 0xFFFFFF)) {
-            return self.vdp.write(address, value);
+            return VDP::write(self, address, value);
         }
-        self.write_byte(address_space, address, value >> 8);
-        self.write_byte(address_space, address + 1, value & 0xFF);
+        self.write_u8(address, value >> 8);
+        self.write_u8(address + 1, value & 0xFF);
     }
-    fn write_long(&mut self, address_space: AddressSpace, address: u32, value: u32) {
-        self.write_word(address_space, address, value >> 16);
-        self.write_word(address_space, address + 2, value & 0xFFFF);
+    pub fn write_u32(&mut self, address: u32, value: u32) {
+        self.write_u16(address, value >> 16);
+        self.write_u16(address + 2, value & 0xFFFF);
+    }
+}
+
+impl AddressBus for Mem {
+    fn copy_from(&mut self, _other: &Self) {
+        todo!("copy from");
+    }
+    fn read_byte(&self, _address_space: AddressSpace, address: u32) -> u32 {
+        self.read_u8(address)
+    }
+    fn read_word(&self, _address_space: AddressSpace, address: u32) -> u32 {
+        self.read_u16(address)
+    }
+    fn read_long(&self, _address_space: AddressSpace, address: u32) -> u32 {
+        self.read_u32(address)
+    }
+    fn write_byte(&mut self, _address_space: AddressSpace, address: u32, value: u32) {
+        self.write_u8(address, value)
+    }
+    fn write_word(&mut self, _address_space: AddressSpace, address: u32, value: u32) {
+        self.write_u16(address, value)
+    }
+    fn write_long(&mut self, _address_space: AddressSpace, address: u32, value: u32) {
+        self.write_u32(address, value)
     }
 }
