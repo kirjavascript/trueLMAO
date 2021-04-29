@@ -102,17 +102,10 @@ fn main() {
 
 
                     for (i, duxels) in emu.core.mem.vdp.VRAM.chunks_exact_mut(32).enumerate() {
-                        let index = i * 4;
                         let x_base = (i % 10) * 4 * 8;
                         let y_base = (i / 10) * 4 * 80 * 8;
                         let mut x = 0;
                         let mut y = 0;
-
-//                         let pos = |i| {
-
-//                             (i % 8)
-//                         };
-
 
                         let mut tile = vec![];
                         for duxel in duxels {
