@@ -25,10 +25,6 @@ impl Megadrive {
         }
     }
 
-    pub fn cycles(&mut self, cycles: i32) {
-        self.core.execute(cycles);
-    }
-
     pub fn step_n(&mut self, amount: usize) {
         for _ in 0..amount {
             self.core.execute1();
@@ -60,7 +56,7 @@ impl Megadrive {
                 hint_counter = self.core.mem.vdp.registers[10] as isize;
 
                 if self.core.mem.vdp.registers[0] & 0x10 > 0 {
-                    self.core.irq_level = 4;
+                    self.core.int_ctrl.request_interrupt(4);
                 }
 
             }
@@ -83,7 +79,7 @@ impl Megadrive {
         self.core.execute(200);
 
         if self.core.mem.vdp.registers[1] & 0x20 > 0 {
-            self.core.irq_level = 6;
+            self.core.int_ctrl.request_interrupt(6);
         }
 
         self.core.execute(3420-788);

@@ -32,8 +32,8 @@ fn main() {
     let mut frame = Frame::new(0, 300, 16, 4, "");
     let mut framebuf: Vec<u8> = vec![0xFF; (16 * 4 * 4) as usize];
 
-    let mut vram = Frame::new(600, 0, 80, 500, "");
-    let mut vrambuf: Vec<u8> = vec![0xFF; (80 * 500 * 4) as usize];
+    let mut vram = Frame::new(600, 0, 80, 600, "");
+    let mut vrambuf: Vec<u8> = vec![0xFF; (80 * 600 * 4) as usize];
 
     wind.end();
     wind.show();
@@ -67,16 +67,19 @@ fn main() {
 
     wind.set_label(&format!("trueLMAO - {}", name));
 
+
     while app.wait() {
-        while let Some(msg) = r.recv() {
-            match msg {
-                Update::Step => {
-                    emu.step_n(stepby.value().parse::<usize>().unwrap_or(1));
-                },
-                Update::Frame => {
+        // while let Some(msg) = r.recv() {
+        //     match msg {
+        //         Update::Step => {
+        //             emu.step_n(stepby.value().parse::<usize>().unwrap_or(1));
+        //         },
+        //         Update::Frame => {
+        //             emu.frame();
+        //         },
+        //         Update::Render => {
+
                     emu.frame();
-                },
-                Update::Render => {
                     let mut debug = String::new();
                     debug.push_str(&format!("PC: {:X}\n\n", emu.core.pc));
                     // let v = emu.core.mem.vdp.VRAM.iter().map(|x|format!("{:X}", x)).collect::<Vec<String>>().join(" ");
@@ -147,8 +150,10 @@ fn main() {
 
 
                     wind.redraw();
-                },
-            }
-        }
+
+                    app::sleep(0.016);
+                // },
+            // }
+        // }
     }
 }
