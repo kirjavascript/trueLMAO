@@ -23,17 +23,17 @@ fn main() {
     let mut emu = Megadrive::new(buf);
 
     let mut wind = Window::new(100, 100, 800, 600, "trueLMAO");
-    let mut but = Button::new(500, 350, 80, 40, "frame");
-    let mut step = Button::new(500, 400, 80, 40, "step");
-    let mut stepby = IntInput::new(500, 450, 80, 40, "step by");
-    let mut info = TextDisplay::new(0, 0, 600, 300, "asm");
+    let mut but = Button::new(400, 350, 80, 40, "frame");
+    let mut step = Button::new(400, 400, 80, 40, "step");
+    let mut stepby = IntInput::new(400, 450, 80, 40, "step by");
+    let mut info = TextDisplay::new(0, 0, 500, 300, "asm");
     stepby.set_value("1");
 
     let mut frame = Frame::new(0, 300, 16, 4, "");
     let mut framebuf: Vec<u8> = vec![0xFF; (16 * 4 * 4) as usize];
 
-    let mut vram = Frame::new(600, 0, 80, 600, "");
-    let mut vrambuf: Vec<u8> = vec![0xFF; (80 * 600 * 4) as usize];
+    let mut vram = Frame::new(500, 0, 256, 513, "");
+    let mut vrambuf: Vec<u8> = vec![0xFF; (256 * 513 * 4) as usize];
 
     wind.end();
     wind.show();
@@ -116,8 +116,8 @@ fn main() {
                     // render VRAM
 
                     for (i, duxels) in emu.core.mem.vdp.VRAM.chunks(32).enumerate() {
-                        let x_base = (i % 10) * 4 * 8;
-                        let y_base = (i / 10) * 4 * 8 * 80;
+                        let x_base = (i % 32) * 4 * 8;
+                        let y_base = (i / 32) * 4 * 8 * 256;
                         let mut x = 0;
                         let mut y = 0;
 
@@ -143,7 +143,7 @@ fn main() {
                             x += 4;
                             if x >= (8 * 4) {
                                 x = 0;
-                                y += 80 * 4;
+                                y += 256 * 4;
                             }
                         }
                     }
