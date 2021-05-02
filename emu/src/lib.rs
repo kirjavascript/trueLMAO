@@ -7,14 +7,12 @@ mod rom;
 mod vdp;
 mod z80;
 
-pub struct Emulator {
+pub struct Megadrive {
     pub core: ConfiguredCore<AutoInterruptController, mem::Mem>,
 }
 
-impl Emulator {
-    pub fn new() -> Self {
-        let buf: Vec<u8> = include_bytes!("./test.bin").to_vec();
-
+impl Megadrive {
+    pub fn new(buf: Vec<u8>) -> Self {
         let mem = mem::Mem::new(buf.into());
 
         let int_ctrl = AutoInterruptController::new();
@@ -22,15 +20,76 @@ impl Emulator {
 
         core.dar[STACK_POINTER_REG] = core.mem.rom.stack_pointer();
 
-        Emulator {
+        Megadrive {
             core,
         }
     }
 
-    pub fn step1(&mut self) {
-        for _ in 0..10001 {
+    pub fn cycles(&mut self, cycles: i32) {
+        self.core.execute(cycles);
+    }
 
-        self.core.execute1();
+    pub fn step_n(&mut self, amount: usize) {
+        for _ in 0..amount {
+            self.core.execute1();
+        }
+    }
+
+    pub fn frame(&mut self) {
+        // https://segaretro.org/Sega_Mega_Drive/Technical_specifications#Graphics
+
+        let screen_width = if self.core.mem.vdp.registers[12] & 0x01 > 0 {
+            320
+        } else {
+            256
+        };
+        let screen_height = if self.core.mem.vdp.registers[1] & 0x08 > 0 {
+            240
+        } else {
+            224
+        };
+
+        self.core.mem.vdp.status &= !8; // clear vblank
+
+        let mut hint_counter = self.core.mem.vdp.registers[10] as isize;
+        for line in 0..screen_height {
+            self.core.execute(2680);
+
+            hint_counter -= 1;
+            if hint_counter < 0 {
+                hint_counter = self.core.mem.vdp.registers[10] as isize;
+
+                if self.core.mem.vdp.registers[0] & 0x10 > 0 {
+                    self.core.irq_level = 4;
+                }
+
+            }
+
+            self.core.mem.vdp.status |= 4;
+            self.core.execute(636);
+            self.core.mem.vdp.status &= !4;
+
+            self.core.execute(104);
+
+            // render
+        }
+
+        self.core.mem.vdp.status |= 4;
+
+        self.core.execute(588);
+
+        self.core.mem.vdp.status |= 0x80;
+
+        self.core.execute(200);
+
+        if self.core.mem.vdp.registers[1] & 0x20 > 0 {
+            self.core.irq_level = 6;
+        }
+
+        self.core.execute(3420-788);
+
+        for _ in screen_height..262 {
+            self.core.execute(3420);
         }
     }
 

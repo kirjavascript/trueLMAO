@@ -3,31 +3,37 @@ use fltk::{
     draw,
     button::Button,
     frame::Frame,
+    input::IntInput,
     prelude::*,
     window::Window,
     text::{TextBuffer, TextDisplay},
 };
 
-use emu::Emulator;
+use emu::Megadrive;
 
 #[derive(Debug, Copy, Clone)]
 pub enum Update {
-    Render, Step,
+    Render, Step, Frame
 }
 
 fn main() {
     let app = app::App::default();
-    let mut emu = Emulator::new();
+    let buf: Vec<u8> = include_bytes!("./s1.bin").to_vec();
+
+    let mut emu = Megadrive::new(buf);
 
     let mut wind = Window::new(100, 100, 800, 600, "trueLMAO");
-    let mut but = Button::new(550, 350, 80, 40, "step1001");
+    let mut but = Button::new(500, 350, 80, 40, "frame");
+    let mut step = Button::new(500, 400, 80, 40, "step");
+    let mut stepby = IntInput::new(500, 450, 80, 40, "step by");
     let mut info = TextDisplay::new(0, 0, 600, 300, "asm");
+    stepby.set_value("1");
 
     let mut frame = Frame::new(0, 300, 16, 4, "");
     let mut framebuf: Vec<u8> = vec![0xFF; (16 * 4 * 4) as usize];
 
-    let mut vram = Frame::new(160, 300, 80, 300, "");
-    let mut vrambuf: Vec<u8> = vec![0xFF; (80 * 300 * 4) as usize];
+    let mut vram = Frame::new(600, 0, 80, 500, "");
+    let mut vrambuf: Vec<u8> = vec![0xFF; (80 * 500 * 4) as usize];
 
     wind.end();
     wind.show();
@@ -47,6 +53,11 @@ fn main() {
     s.send(Update::Render);
 
     but.set_callback(move |_| {
+        s.send(Update::Frame);
+        s.send(Update::Render);
+    });
+
+    step.set_callback(move |_| {
         s.send(Update::Step);
         s.send(Update::Render);
     });
@@ -60,15 +71,16 @@ fn main() {
         while let Some(msg) = r.recv() {
             match msg {
                 Update::Step => {
-                    emu.step1();
-
-
+                    emu.step_n(stepby.value().parse::<usize>().unwrap_or(1));
+                },
+                Update::Frame => {
+                    emu.frame();
                 },
                 Update::Render => {
                     let mut debug = String::new();
                     debug.push_str(&format!("PC: {:X}\n\n", emu.core.pc));
-                    let v = emu.core.mem.vdp.VRAM.iter().map(|x|format!("{:X}", x)).collect::<Vec<String>>().join(" ");
-                    debug.push_str(&format!("VRAM: {}\n\n", v));
+                    // let v = emu.core.mem.vdp.VRAM.iter().map(|x|format!("{:X}", x)).collect::<Vec<String>>().join(" ");
+                    // debug.push_str(&format!("VRAM: {}\n\n", v));
                     debug.push_str(&format!("D "));
                     for i in 0..=7 {
                         debug.push_str(&format!("{:X} ", emu.core.dar[i]));
@@ -77,7 +89,7 @@ fn main() {
 
                     debug.push_str(&format!("A "));
                     for i in 0..=7 {
-                        debug.push_str(&format!("{:X} ", emu.core.dar[i + 7]));
+                        debug.push_str(&format!("{:X} ", emu.core.dar[i + 8]));
                     }
                     debug.push_str(&format!("\n"));
                     debug.push_str(&format!("\n"));
@@ -100,10 +112,9 @@ fn main() {
 
                     // render VRAM
 
-
-                    for (i, duxels) in emu.core.mem.vdp.VRAM.chunks_exact_mut(32).enumerate() {
+                    for (i, duxels) in emu.core.mem.vdp.VRAM.chunks(32).enumerate() {
                         let x_base = (i % 10) * 4 * 8;
-                        let y_base = (i / 10) * 4 * 80 * 8;
+                        let y_base = (i / 10) * 4 * 8 * 80;
                         let mut x = 0;
                         let mut y = 0;
 
@@ -132,8 +143,6 @@ fn main() {
                                 y += 80 * 4;
                             }
                         }
-
-                        // break;
                     }
 
 

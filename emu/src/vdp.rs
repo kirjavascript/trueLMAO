@@ -5,12 +5,12 @@ pub struct VDP {
     pub VRAM: [u8; 0x10000],
     pub CRAM: [u16; 0x40],
     pub VSRAM: [u16; 0x40],
-    registers: [u8; 0x20],
-    status: u32,
-    control_code: u32,
-    control_address: u32,
-    control_pending: bool,
-    dma_pending: bool,
+    pub registers: [u8; 0x20],
+    pub status: u32,
+    pub control_code: u32,
+    pub control_address: u32,
+    pub control_pending: bool,
+    pub dma_pending: bool,
 }
 
 pub enum VDPType {
@@ -43,10 +43,6 @@ impl VDP {
         }
     }
 
-    fn dma_length(&self) -> u32 {
-        self.registers[19] as u32 | ((self.registers[20] as u32) << 8)
-    }
-
     pub fn cram_rgb(&self) -> [(u8, u8, u8); 64] {
         let mut rgb = [(0, 0, 0); 64];
 
@@ -62,6 +58,10 @@ impl VDP {
         rgb
     }
 
+    fn dma_length(&self) -> u32 {
+        self.registers[19] as u32 | ((self.registers[20] as u32) << 8)
+    }
+
     pub fn read(&self, mut address: u32) -> u32 {
         address &= 0x1F;
 
@@ -70,7 +70,6 @@ impl VDP {
         }
 
         todo!("vdp read {:X}", address);
-        0
     }
 
 

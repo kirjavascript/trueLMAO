@@ -1,10 +1,10 @@
 use wasm_bindgen::prelude::*;
 use lazy_mut::lazy_mut;
 
-use emu::Emulator;
+use emu::Megadrive;
 
 lazy_mut! {
-    static mut EMU: Emulator = Emulator::new();
+    static mut EMU: Megadrive = Megadrive::new();
 }
 
 #[wasm_bindgen]
