@@ -139,7 +139,6 @@ impl VDP {
                         mem.vdp.write_data(VDPType::from(mem.vdp.control_code & 0x7), word);
                         mem.vdp.control_address += mem.vdp.registers[15] as u32;
                         mem.vdp.control_address &= 0xffff;
-                        println!("DMA write {}", source);
                     }
 
                 }

@@ -1,5 +1,5 @@
 pub struct IO {
-    registers: [u8; 16],
+    registers: [u8; 0x10],
 }
 
 impl IO {

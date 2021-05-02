@@ -56,7 +56,7 @@ impl Mem {
             0xA04000..=0xA0FFFF => {},
             0xA10000..=0xA1001F => self.io.write_byte(address, value),
             0xA11100..=0xA112FF => self.z80.ctrl_write(address, value),
-            0xC00000..=0xDFFFFF => eprintln!("TODO: vdp write byte {:X} {:X}", address, value),
+            0xC00000..=0xDFFFFF => {/* PSG goes here? */},
             0xFF0000..=0xFFFFFF => {
                 self.ram[address as usize & 0xFFFF] = value as u8;
             },
