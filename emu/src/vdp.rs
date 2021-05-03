@@ -95,11 +95,14 @@ impl VDP {
 
     pub fn plane_size(&self) -> (u8, u8) {
         let to_cells = |size| 32 + (size * 32);
-
         (
             to_cells(self.registers[0x10] & 3),
             to_cells((self.registers[0x10] >> 4) & 3),
         )
+    }
+
+    pub fn hscroll_addr(&self) -> usize {
+        (self.registers[0xD] as usize & 0b111111) << 10
     }
 
     pub fn read(&self, mut address: u32) -> u32 {

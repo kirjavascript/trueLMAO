@@ -37,7 +37,6 @@ fn main() {
     let mut vrambuf: Vec<u8> = vec![0xFF; (256 * 513 * 3) as usize];
 
     let mut screen = Frame::new(0, 350, 320, 240, "");
-    let mut screenbuf: Vec<u8> = vec![0xFF; (320 * 240 * 3) as usize];
 
     wind.end();
     wind.show();
@@ -45,7 +44,7 @@ fn main() {
     unsafe {
         draw::draw_rgb_nocopy(&mut pal, &palbuf);
         draw::draw_rgb_nocopy(&mut vram, &vrambuf);
-        draw::draw_rgb_nocopy(&mut screen, &screenbuf);
+        draw::draw_rgb_nocopy(&mut screen, &emu.screen);
     }
 
     pal.set_size(160,40);
@@ -94,7 +93,6 @@ fn main() {
 
         if running {
             emu.frame();
-
         }
         let mut debug = String::new();
         debug.push_str(&format!("PC: {:X}\n\n", emu.core.pc));
@@ -163,18 +161,6 @@ fn main() {
                 }
             }
         }
-
-        // render screen
-
-        let bg_color = emu.core.mem.vdp.bg_color();
-
-        // clear screen
-        for pixel in screenbuf.chunks_mut(3) {
-            pixel[0] = bg_color.0;
-            pixel[1] = bg_color.1;
-            pixel[2] = bg_color.2;
-        };
-
 
         wind.redraw();
 
