@@ -34,26 +34,16 @@ impl Megadrive {
     pub fn frame(&mut self) {
         // https://segaretro.org/Sega_Mega_Drive/Technical_specifications#Graphics
 
-        let screen_width = if self.core.mem.vdp.registers[12] & 0x01 > 0 {
-            320
-        } else {
-            256
-        };
-        let screen_height = if self.core.mem.vdp.registers[1] & 0x08 > 0 {
-            240
-        } else {
-            224
-        };
-
         self.core.mem.vdp.status &= !8; // clear vblank
 
-        let mut hint_counter = self.core.mem.vdp.registers[10] as isize;
-        for line in 0..screen_height {
+        let screen_height = self.core.mem.vdp.screen_height();
+        let mut hint_counter = self.core.mem.vdp.hint_counter();
+        for _ in 0..screen_height {
             self.core.execute(2680);
 
             hint_counter -= 1;
             if hint_counter < 0 {
-                hint_counter = self.core.mem.vdp.registers[10] as isize;
+                hint_counter = self.core.mem.vdp.hint_counter();
 
                 if self.core.mem.vdp.registers[0] & 0x10 > 0 {
                     self.core.int_ctrl.request_interrupt(4);

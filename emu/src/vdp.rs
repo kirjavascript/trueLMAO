@@ -58,8 +58,20 @@ impl VDP {
         rgb
     }
 
+    pub fn screen_width(&self) -> usize {
+        if self.registers[12] & 0x01 > 0 { 320 } else { 256 }
+    }
+
+    pub fn screen_height(&self) -> usize {
+        if self.registers[1] & 0x08 > 0 { 240 } else { 224 }
+    }
+
+    pub fn hint_counter(&self) -> isize {
+        self.registers[0xA] as isize
+    }
+
     fn dma_length(&self) -> u32 {
-        self.registers[19] as u32 | ((self.registers[20] as u32) << 8)
+        self.registers[0x13] as u32 | ((self.registers[0x14] as u32) << 8)
     }
 
     pub fn read(&self, mut address: u32) -> u32 {
@@ -138,7 +150,7 @@ impl VDP {
                         source += 2;
                         mem.vdp.write_data(VDPType::from(mem.vdp.control_code & 0x7), word);
                         mem.vdp.control_address += mem.vdp.registers[15] as u32;
-                        mem.vdp.control_address &= 0xffff;
+                        mem.vdp.control_address &= 0xFFFF;
                     }
 
                 }
