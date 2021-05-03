@@ -31,21 +31,21 @@ fn main() {
     stepby.set_value("1");
 
     let mut pal = Frame::new(0, 300, 16, 4, "");
-    let mut palbuf: Vec<u8> = vec![0xFF; (16 * 4 * 4) as usize];
+    let mut palbuf: Vec<u8> = vec![0xFF; (16 * 4 * 3) as usize];
 
     let mut vram = Frame::new(500, 0, 256, 513, "");
-    let mut vrambuf: Vec<u8> = vec![0xFF; (256 * 513 * 4) as usize];
+    let mut vrambuf: Vec<u8> = vec![0xFF; (256 * 513 * 3) as usize];
 
     let mut screen = Frame::new(0, 350, 320, 240, "");
-    let mut screenbuf: Vec<u8> = vec![0xFF; (320 * 240 * 4) as usize];
+    let mut screenbuf: Vec<u8> = vec![0xFF; (320 * 240 * 3) as usize];
 
     wind.end();
     wind.show();
 
     unsafe {
-        draw::draw_rgba_nocopy(&mut pal, &palbuf);
-        draw::draw_rgba_nocopy(&mut vram, &vrambuf);
-        draw::draw_rgba_nocopy(&mut screen, &screenbuf);
+        draw::draw_rgb_nocopy(&mut pal, &palbuf);
+        draw::draw_rgb_nocopy(&mut vram, &vrambuf);
+        draw::draw_rgb_nocopy(&mut screen, &screenbuf);
     }
 
     pal.set_size(160,40);
@@ -123,7 +123,7 @@ fn main() {
         let cram_rgb = emu.core.mem.vdp.cram_rgb();
 
         for (i, (red, green, blue)) in cram_rgb.iter().enumerate() {
-            let index = i * 4;
+            let index = i * 3;
             palbuf[index] = *red;
             palbuf[index+1] = *green;
             palbuf[index+2] = *blue;
@@ -131,18 +131,9 @@ fn main() {
 
         // render VRAM
 
-        let bg_color = emu.core.mem.vdp.bg_color();
-
-        // clear screen
-        for pixel in screenbuf.chunks_mut(4) {
-            pixel[0] = bg_color.0;
-            pixel[1] = bg_color.1;
-            pixel[2] = bg_color.2;
-        };
-
         for (i, duxels) in emu.core.mem.vdp.VRAM.chunks(32).enumerate() {
-            let x_base = (i % 32) * 4 * 8;
-            let y_base = (i / 32) * 4 * 8 * 256;
+            let x_base = (i % 32) * 3 * 8;
+            let y_base = (i / 32) * 3 * 8 * 256;
             let mut x = 0;
             let mut y = 0;
 
@@ -165,13 +156,24 @@ fn main() {
                 vrambuf[base] = r;
                 vrambuf[base+1] = g;
                 vrambuf[base+2] = b;
-                x += 4;
-                if x >= (8 * 4) {
+                x += 3;
+                if x >= (8 * 3) {
                     x = 0;
-                    y += 256 * 4;
+                    y += 256 * 3;
                 }
             }
         }
+
+        // render screen
+
+        let bg_color = emu.core.mem.vdp.bg_color();
+
+        // clear screen
+        for pixel in screenbuf.chunks_mut(3) {
+            pixel[0] = bg_color.0;
+            pixel[1] = bg_color.1;
+            pixel[2] = bg_color.2;
+        };
 
 
         wind.redraw();

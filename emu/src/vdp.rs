@@ -93,6 +93,15 @@ impl VDP {
         self.status &= !mask;
     }
 
+    pub fn plane_size(&self) -> (u8, u8) {
+        let to_cells = |size| 32 + (size * 32);
+
+        (
+            to_cells(self.registers[0x10] & 3),
+            to_cells((self.registers[0x10] >> 4) & 3),
+        )
+    }
+
     pub fn read(&self, mut address: u32) -> u32 {
         address &= 0x1F;
 
