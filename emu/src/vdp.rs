@@ -13,6 +13,9 @@ pub struct VDP {
     pub dma_pending: bool,
 }
 
+pub const VBLANK_MASK: u32 = 8;
+pub const HBLANK_MASK: u32 = 4;
+
 pub enum VDPType {
     VRAM, CRAM, VSRAM,
 }
@@ -26,6 +29,14 @@ impl From<u32> for VDPType {
             _ => unreachable!("VDPType {:X}", value),
         }
     }
+}
+
+pub fn cram_to_rgb(color: u16) -> (u8, u8, u8) {
+    let red = color & 0xf;
+    let green = (color & 0xf0) >> 4;
+    let blue = (color & 0xf00) >> 8;
+    let dupe = |x| (x << 4) | x;
+    (dupe(red as u8), dupe(green as u8), dupe(blue as u8))
 }
 
 impl VDP {
@@ -45,17 +56,17 @@ impl VDP {
 
     pub fn cram_rgb(&self) -> [(u8, u8, u8); 64] {
         let mut rgb = [(0, 0, 0); 64];
-
-        let dupe = |x| (x << 4) | x;
-
         for (i, color) in self.CRAM.iter().enumerate() {
-            let red = color & 0xf;
-            let green = (color & 0xf0) >> 4;
-            let blue = (color & 0xf00) >> 8;
-            rgb[i] = (dupe(red as u8), dupe(green as u8), dupe(blue as u8));
+            rgb[i] = cram_to_rgb(*color);
         }
-
         rgb
+    }
+
+    pub fn bg_color(&self) -> (u8, u8, u8) {
+        let vdp_bg = self.registers[7];
+        let index = vdp_bg & 0xF;
+        let line = (vdp_bg >> 4) & 3;
+        cram_to_rgb(self.CRAM[(index + (line * 0x10)) as usize])
     }
 
     pub fn screen_width(&self) -> usize {
@@ -74,6 +85,14 @@ impl VDP {
         self.registers[0x13] as u32 | ((self.registers[0x14] as u32) << 8)
     }
 
+    pub fn set_status(&mut self, mask: u32) {
+        self.status |= mask;
+    }
+
+    pub fn unset_status(&mut self, mask: u32) {
+        self.status &= !mask;
+    }
+
     pub fn read(&self, mut address: u32) -> u32 {
         address &= 0x1F;
 
@@ -83,7 +102,6 @@ impl VDP {
 
         todo!("vdp read {:X}", address);
     }
-
 
     pub fn write(mem: &mut Mem, mut address: u32, value: u32) {
         address &= 0x1F;

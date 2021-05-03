@@ -131,11 +131,13 @@ fn main() {
 
         // render VRAM
 
+        let bg_color = emu.core.mem.vdp.bg_color();
+
         // clear screen
         for pixel in screenbuf.chunks_mut(4) {
-            pixel[0] = cram_rgb[0].0;
-            pixel[1] = cram_rgb[0].1;
-            pixel[2] = cram_rgb[0].2;
+            pixel[0] = bg_color.0;
+            pixel[1] = bg_color.1;
+            pixel[2] = bg_color.2;
         };
 
         for (i, duxels) in emu.core.mem.vdp.VRAM.chunks(32).enumerate() {

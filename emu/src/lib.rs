@@ -34,7 +34,9 @@ impl Megadrive {
     pub fn frame(&mut self) {
         // https://segaretro.org/Sega_Mega_Drive/Technical_specifications#Graphics
 
-        self.core.mem.vdp.status &= !8; // clear vblank
+        self.core.mem.vdp.unset_status(vdp::VBLANK_MASK);
+
+        self.core.mem.vdp.unset_status(128);
 
         let screen_height = self.core.mem.vdp.screen_height();
         let mut hint_counter = self.core.mem.vdp.hint_counter();
@@ -51,16 +53,16 @@ impl Megadrive {
 
             }
 
-            self.core.mem.vdp.status |= 4;
+            self.core.mem.vdp.set_status(vdp::HBLANK_MASK);
             self.core.execute(636);
-            self.core.mem.vdp.status &= !4;
+            self.core.mem.vdp.unset_status(vdp::HBLANK_MASK);
 
             self.core.execute(104);
 
             // render
         }
 
-        self.core.mem.vdp.status |= 4;
+        self.core.mem.vdp.set_status(vdp::VBLANK_MASK);
 
         self.core.execute(588);
 
@@ -70,6 +72,7 @@ impl Megadrive {
 
         if self.core.mem.vdp.registers[1] & 0x20 > 0 {
             self.core.int_ctrl.request_interrupt(6);
+            self.core.mem.vdp.set_status(128);
         }
 
         self.core.execute(3420-788);
