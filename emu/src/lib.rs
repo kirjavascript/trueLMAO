@@ -70,7 +70,7 @@ impl Megadrive {
             if hint_counter < 0 {
                 hint_counter = self.core.mem.vdp.hint_counter();
 
-                if self.core.mem.vdp.registers[0] & 0x10 > 0 {
+                if self.core.mem.vdp.hint_enabled() {
                     self.core.int_ctrl.request_interrupt(4);
                 }
 
@@ -93,7 +93,7 @@ impl Megadrive {
 
         self.core.execute(200);
 
-        if self.core.mem.vdp.registers[1] & 0x20 > 0 {
+        if self.core.mem.vdp.vint_enabled() {
             self.core.int_ctrl.request_interrupt(6);
             self.core.mem.vdp.set_status(128);
         }
@@ -115,6 +115,20 @@ impl Megadrive {
     }
 
     fn render_line(&mut self, line: usize) {
+        let (wcell, hcell) = self.core.mem.vdp.plane_size();
+        let screen_width = self.core.mem.vdp.screen_width();
+        let column_scrolling = self.core.mem.vdp.column_scrolling();
+        let hscroll_addr = self.core.mem.vdp.hscroll_addr();
+
+        let index = match self.core.mem.vdp.registers[0xB] & 3 {
+            0 => 0,
+            1 => line & 7,
+            2 => line & 0xFFF8,
+            3 => line,
+            _ => unreachable!(),
+        };
+
+        let hscroll = hscroll_addr + (index * 4); // 3 ?
 
     }
 }

@@ -81,6 +81,14 @@ impl VDP {
         self.registers[0xA] as isize
     }
 
+    pub fn hint_enabled(&self) -> bool {
+        self.registers[0] & 0x10 != 0
+    }
+
+    pub fn vint_enabled(&self) -> bool {
+        self.registers[1] & 0x20 != 0
+    }
+
     fn dma_length(&self) -> u32 {
         self.registers[0x13] as u32 | ((self.registers[0x14] as u32) << 8)
     }
@@ -94,7 +102,7 @@ impl VDP {
     }
 
     pub fn plane_size(&self) -> (u8, u8) {
-        let to_cells = |size| 32 + (size * 32);
+        let to_cells = |size| (size + 1) * 32;
         (
             to_cells(self.registers[0x10] & 3),
             to_cells((self.registers[0x10] >> 4) & 3),
@@ -102,7 +110,11 @@ impl VDP {
     }
 
     pub fn hscroll_addr(&self) -> usize {
-        (self.registers[0xD] as usize & 0b111111) << 10
+        (self.registers[0xD] as usize & 0x3F) << 10
+    }
+
+    pub fn column_scrolling(&self) -> bool {
+        self.registers[0xB] & 4 != 0
     }
 
     pub fn read(&self, mut address: u32) -> u32 {
