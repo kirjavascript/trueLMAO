@@ -164,6 +164,6 @@ fn main() {
 
         wind.redraw();
 
-        app::sleep(0.016);
+        app::sleep(1./60.); // TODO: remove time taken to render
     }
 }

@@ -15,6 +15,7 @@ pub struct VDP {
 
 pub const VBLANK_MASK: u32 = 8;
 pub const HBLANK_MASK: u32 = 4;
+pub const VINT_MASK: u32 = 0x80;
 
 pub enum VDPType {
     VRAM, CRAM, VSRAM,
@@ -89,7 +90,7 @@ impl VDP {
         self.registers[1] & 0x20 != 0
     }
 
-    fn dma_length(&self) -> u32 {
+    pub fn dma_length(&self) -> u32 {
         self.registers[0x13] as u32 | ((self.registers[0x14] as u32) << 8)
     }
 
@@ -101,7 +102,7 @@ impl VDP {
         self.status &= !mask;
     }
 
-    pub fn plane_size(&self) -> (u8, u8) {
+    pub fn scroll_size(&self) -> (u8, u8) {
         let to_cells = |size| (size + 1) * 32;
         (
             to_cells(self.registers[0x10] & 3),
@@ -113,8 +114,12 @@ impl VDP {
         (self.registers[0xD] as usize & 0x3F) << 10
     }
 
-    pub fn column_scrolling(&self) -> bool {
+    pub fn vscroll_mode(&self) -> bool {
         self.registers[0xB] & 4 != 0
+    }
+
+    pub fn autoinc(&self) -> u32 {
+        self.registers[15] as _
     }
 
     pub fn read(&self, mut address: u32) -> u32 {
@@ -157,14 +162,14 @@ impl VDP {
         if self.control_code & 1 == 1 {
             self.write_data(VDPType::from(self.control_code & 0xE), value);
         }
-        self.control_address = (self.control_address + self.registers[15] as u32) & 0xffff;
+        self.control_address = (self.control_address + self.autoinc()) & 0xFFFF;
         self.control_pending = false;
 
         if self.dma_pending {
             self.dma_pending = false;
             for _ in 0..self.dma_length() {
                 self.VRAM[self.control_address as usize] = (value >> 8) as _;
-                self.control_address += self.registers[15] as u32;
+                self.control_address += self.autoinc();
                 self.control_address &= 0xFFFF;
             }
         }
@@ -191,7 +196,7 @@ impl VDP {
                         let word = mem.read_u16(source);
                         source += 2;
                         mem.vdp.write_data(VDPType::from(mem.vdp.control_code & 0x7), word);
-                        mem.vdp.control_address += mem.vdp.registers[15] as u32;
+                        mem.vdp.control_address += mem.vdp.autoinc();
                         mem.vdp.control_address &= 0xFFFF;
                     }
 

@@ -6,7 +6,7 @@ impl IO {
     pub fn new() -> Self {
         Self {
             registers: [
-                0xA0, 0x7F, 0x7F, 0x7F, 0, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0
+                0xE0, 0x7F, 0x7F, 0x7F, 0, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0
             ],
         }
     }

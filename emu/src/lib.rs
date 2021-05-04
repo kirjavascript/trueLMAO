@@ -55,11 +55,12 @@ impl Megadrive {
     }
 
     pub fn frame(&mut self) {
+        /* cycle counts taken from drx/kiwi */
+
         self.clear_screen();
 
         self.core.mem.vdp.unset_status(vdp::VBLANK_MASK);
-
-        self.core.mem.vdp.unset_status(128);
+        self.core.mem.vdp.unset_status(vdp::VINT_MASK);
 
         let screen_height = self.core.mem.vdp.screen_height();
         let mut hint_counter = self.core.mem.vdp.hint_counter();
@@ -82,21 +83,19 @@ impl Megadrive {
 
             self.core.execute(104);
 
-            self.render_line(line);
+            self.fire_beam(line);
         }
 
         self.core.mem.vdp.set_status(vdp::VBLANK_MASK);
 
         self.core.execute(588);
 
-        self.core.mem.vdp.status |= 0x80;
-
-        self.core.execute(200);
-
         if self.core.mem.vdp.vint_enabled() {
             self.core.int_ctrl.request_interrupt(6);
-            self.core.mem.vdp.set_status(128);
+            self.core.mem.vdp.set_status(vdp::VINT_MASK);
         }
+
+        self.core.execute(200);
 
         self.core.execute(3420-788);
 
@@ -114,13 +113,22 @@ impl Megadrive {
         };
     }
 
-    fn render_line(&mut self, line: usize) {
-        let (wcell, hcell) = self.core.mem.vdp.plane_size();
+    fn fire_beam(&mut self, line: usize) {
+        let (cellw, cellh) = self.core.mem.vdp.scroll_size();
         let screen_width = self.core.mem.vdp.screen_width();
-        let column_scrolling = self.core.mem.vdp.column_scrolling();
+
         let hscroll_addr = self.core.mem.vdp.hscroll_addr();
 
-        let index = match self.core.mem.vdp.registers[0xB] & 3 {
+
+
+        let vscroll_mode = self.core.mem.vdp.vscroll_mode();
+        let hscroll_mode = self.core.mem.vdp.registers[0xB] & 3;
+        let planea_nametable =
+            ((self.core.mem.vdp.registers[4] >> 3) as u32 & 3) << 10;
+        let planeb_nametable =
+            (self.core.mem.vdp.registers[4] as u32 & 3) << 10;
+
+        let index = match hscroll_mode {
             0 => 0,
             1 => line & 7,
             2 => line & 0xFFF8,
@@ -129,6 +137,11 @@ impl Megadrive {
         };
 
         let hscroll = hscroll_addr + (index * 4); // 3 ?
+
+        for cell in 0..screen_width {
+
+        }
+
 
     }
 }
