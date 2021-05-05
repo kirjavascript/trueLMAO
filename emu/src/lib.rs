@@ -136,15 +136,17 @@ impl Megadrive {
         let hscroll = hscroll_addr + (index * 4); // 3 ?
 
         let planeb_nametable =
-            (self.core.mem.vdp.registers[4] as u32 & 3) << 10;
+            (self.core.mem.vdp.registers[4] as usize & 3) << 10;
 
-        let planeb = &self.core.mem.vdp.VRAM[planea_nametable as usize..];
+        let planeb = &self.core.mem.vdp.VRAM[planeb_nametable*0x10..];
+
+        println!("{:X}", planeb_nametable);
 
 
         let tiles = (0..cellw).map(|i| {
             let mut offset = i as usize * 2;
             offset += (line / 8) * cellw as usize * 2;
-            if i as usize + 1 > planeb.len() { return 0 }
+            if offset as usize + 1 > planeb.len() { return 0 }
             (planeb[offset] as usize & 7) << 8 | planeb[offset + 1] as usize
         }).collect::<Vec<_>>();
 
