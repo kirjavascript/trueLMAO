@@ -111,7 +111,6 @@ impl Megadrive {
         };
     }
 
-    #[allow(unused_variables)]
     fn fire_beam(&mut self, line: usize) {
         let (cellw, cellh) = self.core.mem.vdp.scroll_size();
         let screen_width = self.core.mem.vdp.screen_width();
@@ -139,11 +138,12 @@ impl Megadrive {
         let planeb_nametable =
             (self.core.mem.vdp.registers[4] as u32 & 3) << 10;
 
-        let planeb = &self.core.mem.vdp.VRAM[planeb_nametable as usize..];
+        let planeb = &self.core.mem.vdp.VRAM[planea_nametable as usize..];
 
 
         let tiles = (0..cellw).map(|i| {
-            let offset = (i as usize * 2) ;
+            let mut offset = i as usize * 2;
+            offset += (line / 8) * cellw as usize * 2;
             if i as usize + 1 > planeb.len() { return 0 }
             (planeb[offset] as usize & 7) << 8 | planeb[offset + 1] as usize
         }).collect::<Vec<_>>();
@@ -153,6 +153,7 @@ impl Megadrive {
         let tile_y = line & 7;
         let y_offset = tile_y * 4;
 
+        // let y_offset = 0;
 
 
         // for i in 0..0xFF {
@@ -165,10 +166,10 @@ impl Megadrive {
 
         for pixel in 0..screen_width {
             if let Some(tile) = tiles.get(pixel / 8) {
-                let x_offset = pixel & 6;
+                let x_offset = (pixel & 6) >> 1;
                 let px = self.core.mem.vdp.VRAM[(tile * 32) + x_offset + y_offset];
 
-                let px = if pixel & 1 == 1 {
+                let px = if pixel & 1 == 0 {
                     px >> 4
                 } else {
                     px & 0xF
