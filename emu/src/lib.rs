@@ -122,7 +122,7 @@ impl Megadrive {
         let vscroll_mode = self.core.mem.vdp.vscroll_mode();
         let hscroll_mode = self.core.mem.vdp.registers[0xB] & 3;
         let planea_nametable =
-            ((self.core.mem.vdp.registers[4] >> 3) as u32 & 3) << 10;
+            ((self.core.mem.vdp.registers[4] >> 3) as usize & 3) << 10;
 
 
         let index = match hscroll_mode {
@@ -136,11 +136,9 @@ impl Megadrive {
         let hscroll = hscroll_addr + (index * 4); // 3 ?
 
         let planeb_nametable =
-            (self.core.mem.vdp.registers[4] as usize & 3) << 10;
+            (self.core.mem.vdp.registers[4] as usize & 3) << 14;
 
-        let planeb = &self.core.mem.vdp.VRAM[planeb_nametable*0x10..];
-
-        println!("{:X}", planeb_nametable);
+        let planeb = &self.core.mem.vdp.VRAM[planeb_nametable..];
 
 
         let tiles = (0..cellw).map(|i| {
@@ -155,15 +153,6 @@ impl Megadrive {
         let tile_y = line & 7;
         let y_offset = tile_y * 4;
 
-        // let y_offset = 0;
-
-
-        // for i in 0..0xFF {
-        //     print!("{:b} ", planeb[i]);
-        // }
-
-        // println!("");
-
         // tile is 32 bytes
 
         for pixel in 0..screen_width {
@@ -177,13 +166,16 @@ impl Megadrive {
                     px & 0xF
                 };
 
-                let (r, g, b) = self.core.mem.vdp.color(0, px as _);
+                if px != 0 {
+                    let (r, g, b) = self.core.mem.vdp.color(0, px as _);
 
-                let screen_offset = (pixel + (line * screen_width)) * 3;
+                    let screen_offset = (pixel + (line * screen_width)) * 3;
 
-                self.screen[screen_offset] = r;
-                self.screen[screen_offset + 1] = g;
-                self.screen[screen_offset + 2] = b;
+                    self.screen[screen_offset] = r;
+                    self.screen[screen_offset + 1] = g;
+                    self.screen[screen_offset + 2] = b;
+                }
+
             }
         }
 
