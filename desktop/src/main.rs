@@ -26,7 +26,7 @@ fn main() {
     let mut toggle = Button::new(400, 300, 80, 40, "stop");
     let mut but = Button::new(400, 350, 80, 40, "frame");
     let mut step = Button::new(400, 400, 80, 40, "step");
-    let mut stepby = IntInput::new(400, 450, 80, 40, "step by");
+    let stepby = IntInput::new(400, 450, 80, 40, "step by");
     let mut info = TextDisplay::new(0, 0, 500, 300, "asm");
     stepby.set_value("1");
 

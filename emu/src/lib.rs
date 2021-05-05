@@ -55,7 +55,7 @@ impl Megadrive {
     }
 
     pub fn frame(&mut self) {
-        /* cycle counts taken from drx/kiwi */
+        /* cycle counts initially taken from drx/kiwi */
 
         self.clear_screen();
 
@@ -95,9 +95,7 @@ impl Megadrive {
             self.core.mem.vdp.set_status(vdp::VINT_MASK);
         }
 
-        self.core.execute(200);
-
-        self.core.execute(3420-788);
+        self.core.execute(3420-588);
 
         for _ in screen_height..262 {
             self.core.execute(3420);
@@ -113,6 +111,7 @@ impl Megadrive {
         };
     }
 
+    #[allow(unused_variables)]
     fn fire_beam(&mut self, line: usize) {
         let (cellw, cellh) = self.core.mem.vdp.scroll_size();
         let screen_width = self.core.mem.vdp.screen_width();
@@ -125,8 +124,7 @@ impl Megadrive {
         let hscroll_mode = self.core.mem.vdp.registers[0xB] & 3;
         let planea_nametable =
             ((self.core.mem.vdp.registers[4] >> 3) as u32 & 3) << 10;
-        let planeb_nametable =
-            (self.core.mem.vdp.registers[4] as u32 & 3) << 10;
+
 
         let index = match hscroll_mode {
             0 => 0,
@@ -138,9 +136,56 @@ impl Megadrive {
 
         let hscroll = hscroll_addr + (index * 4); // 3 ?
 
-        for cell in 0..screen_width {
+        let planeb_nametable =
+            (self.core.mem.vdp.registers[4] as u32 & 3) << 10;
 
+        let planeb = &self.core.mem.vdp.VRAM[planeb_nametable as usize..];
+
+
+        let tiles = (0..cellw).map(|i| {
+            let offset = (i as usize * 2) ;
+            if i as usize + 1 > planeb.len() { return 0 }
+            (planeb[offset] as usize & 7) << 8 | planeb[offset + 1] as usize
+        }).collect::<Vec<_>>();
+
+        // println!("{:?} {:?}", tiles, tiles.len());
+
+        let tile_y = line & 7;
+        let y_offset = tile_y * 4;
+
+
+
+        // for i in 0..0xFF {
+        //     print!("{:b} ", planeb[i]);
+        // }
+
+        // println!("");
+
+        // tile is 32 bytes
+
+        for pixel in 0..screen_width {
+            if let Some(tile) = tiles.get(pixel / 8) {
+                let x_offset = pixel & 6;
+                let px = self.core.mem.vdp.VRAM[(tile * 32) + x_offset + y_offset];
+
+                let px = if pixel & 1 == 1 {
+                    px >> 4
+                } else {
+                    px & 0xF
+                };
+
+                let (r, g, b) = self.core.mem.vdp.color(0, px as _);
+
+                let screen_offset = (pixel + (line * screen_width)) * 3;
+
+                self.screen[screen_offset] = r;
+                self.screen[screen_offset + 1] = g;
+                self.screen[screen_offset + 2] = b;
+            }
         }
+
+
+
 
 
     }

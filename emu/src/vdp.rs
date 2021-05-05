@@ -55,19 +55,23 @@ impl VDP {
         }
     }
 
-    pub fn cram_rgb(&self) -> [(u8, u8, u8); 64] {
-        let mut rgb = [(0, 0, 0); 64];
-        for (i, color) in self.CRAM.iter().enumerate() {
-            rgb[i] = cram_to_rgb(*color);
-        }
-        rgb
+    pub fn color(&self, line: usize, index: usize) -> (u8, u8, u8) {
+        cram_to_rgb(self.CRAM[index + (line * 0x10)])
     }
 
     pub fn bg_color(&self) -> (u8, u8, u8) {
         let vdp_bg = self.registers[7];
         let index = vdp_bg & 0xF;
         let line = (vdp_bg >> 4) & 3;
-        cram_to_rgb(self.CRAM[(index + (line * 0x10)) as usize])
+        self.color(line as _, index as _)
+    }
+
+    pub fn cram_rgb(&self) -> [(u8, u8, u8); 64] {
+        let mut rgb = [(0, 0, 0); 64];
+        for (i, color) in self.CRAM.iter().enumerate() {
+            rgb[i] = cram_to_rgb(*color);
+        }
+        rgb
     }
 
     pub fn screen_width(&self) -> usize {
@@ -104,6 +108,7 @@ impl VDP {
 
     pub fn scroll_size(&self) -> (u8, u8) {
         let to_cells = |size| (size + 1) * 32;
+        // TODO: 96 is invalid
         (
             to_cells(self.registers[0x10] & 3),
             to_cells((self.registers[0x10] >> 4) & 3),
