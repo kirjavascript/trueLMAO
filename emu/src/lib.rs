@@ -147,7 +147,11 @@ impl Megadrive {
                 let mut offset = i as usize * 2;
                 offset += (line / 8) * cellw as usize * 2;
                 if offset as usize + 1 > plane.len() { panic!("offset > planelen") }
-                (plane[offset] as usize & 7) << 8 | plane[offset + 1] as usize
+
+                let art = (plane[offset] as usize & 7) << 8 | plane[offset + 1] as usize;
+                let palette = (plane[offset] as usize & 0x60) >> 5;
+
+                (palette, art)
             }).collect::<Vec<_>>()
         };
 
@@ -166,7 +170,7 @@ impl Megadrive {
 
             // switch to inner tile loop
 
-            if let Some(tile) = tiles_b.get(pixel / 8) {
+            if let Some((palette, tile)) = tiles_b.get(pixel / 8) {
                 let x_offset = (pixel & 6) >> 1;
                 let px = self.core.mem.vdp.VRAM[(tile * 32) + x_offset + y_offset];
 
@@ -177,7 +181,7 @@ impl Megadrive {
                 };
 
                 if px != 0 {
-                    let (r, g, b) = self.core.mem.vdp.color(0, px as _);
+                    let (r, g, b) = self.core.mem.vdp.color(*palette, px as _);
 
                     let screen_offset = (pixel + (line * screen_width)) * 3;
 
@@ -188,7 +192,7 @@ impl Megadrive {
 
             }
 
-            if let Some(tile) = tiles_a.get(pixel / 8) {
+            if let Some((palette, tile)) = tiles_a.get(pixel / 8) {
                 let x_offset = (pixel & 6) >> 1;
                 let px = self.core.mem.vdp.VRAM[(tile * 32) + x_offset + y_offset];
 
@@ -199,7 +203,7 @@ impl Megadrive {
                 };
 
                 if px != 0 {
-                    let (r, g, b) = self.core.mem.vdp.color(0, px as _);
+                    let (r, g, b) = self.core.mem.vdp.color(*palette, px as _);
 
                     let screen_offset = (pixel + (line * screen_width)) * 3;
 
