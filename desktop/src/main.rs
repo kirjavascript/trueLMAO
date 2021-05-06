@@ -18,7 +18,7 @@ pub enum Update {
 
 fn main() {
     let app = app::App::default();
-    let buf: Vec<u8> = include_bytes!("./s1.bin").to_vec();
+    let buf: Vec<u8> = include_bytes!("./roms/s1.bin").to_vec();
 
     let mut emu = Megadrive::new(buf);
 
