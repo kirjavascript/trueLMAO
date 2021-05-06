@@ -9,6 +9,8 @@ use fltk::{
     text::{TextBuffer, TextDisplay},
 };
 
+use std::time::{Instant, Duration};
+
 use emu::Megadrive;
 
 #[derive(Debug, Copy, Clone)]
@@ -91,6 +93,8 @@ fn main() {
             }
         }
 
+        let mut start = Instant::now();
+
         if running {
             emu.frame();
         }
@@ -164,6 +168,10 @@ fn main() {
 
         wind.redraw();
 
-        app::sleep(1./60.); // TODO: remove time taken to render
+        let mut end = Instant::now();
+
+        let sleep = 1./60. - (end-start).as_secs_f64();
+
+        app::sleep(sleep); // TODO: remove time taken to render
     }
 }
