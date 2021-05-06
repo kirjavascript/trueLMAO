@@ -93,7 +93,7 @@ fn main() {
             }
         }
 
-        let mut start = Instant::now();
+        let start = Instant::now();
 
         if running {
             emu.frame();
@@ -168,10 +168,10 @@ fn main() {
 
         wind.redraw();
 
-        let mut end = Instant::now();
+        let end = Instant::now();
+        let render_time = (end-start).as_secs_f64();
+        let frame_time = 1./60.;
 
-        let sleep = 1./60. - (end-start).as_secs_f64();
-
-        app::sleep(sleep); // TODO: remove time taken to render
+        app::sleep(frame_time - render_time);
     }
 }
