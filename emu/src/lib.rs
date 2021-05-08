@@ -142,16 +142,23 @@ impl Megadrive {
         // A 0xC000
         // B 0xE000
 
+        // impl Index for tiles
+
         let tiles = |plane: &[u8]| {
             (0..cellw).map(|i| {
                 let mut offset = i as usize * 2;
                 offset += (line / 8) * cellw as usize * 2;
                 if offset as usize + 1 > plane.len() { panic!("offset > planelen") }
 
-                let art = (plane[offset] as usize & 7) << 8 | plane[offset + 1] as usize;
-                let palette = (plane[offset] as usize & 0x60) >> 5;
+                let word = (plane[offset] as usize) << 8 | plane[offset + 1] as usize;
+                let byte = word >> 8;
+                let priority = byte >> 8;
+                let tile = word & 0x7FF;
+                let vflip = (byte & 0x10) != 0;
+                let hflip = (byte & 0x8) != 0;
+                let palette = (byte & 0x60) >> 5;
 
-                (palette, art)
+                (priority, palette, vflip, hflip, tile)
             }).collect::<Vec<_>>()
         };
 
@@ -161,7 +168,6 @@ impl Megadrive {
         // println!("{:?} {:?}", tiles, tiles.len());
 
         let tile_y = line & 7;
-        let y_offset = tile_y * 4;
 
         // tile is 32 bytes
 
@@ -170,11 +176,19 @@ impl Megadrive {
 
             // switch to inner tile loop
 
-            if let Some((palette, tile)) = tiles_b.get(pixel / 8) {
-                let x_offset = (pixel & 6) >> 1;
+            if let Some((priority, palette, vflip, hflip, tile)) = tiles_b.get(pixel / 8) {
+                let tile_pixel = if *hflip {
+                    pixel ^ 0xF
+                } else {
+                    pixel
+                };
+
+                let x_offset = (tile_pixel & 6) >> 1;
+                let y_offset = if *vflip { tile_y ^ 7 } else { tile_y } * 4;
+
                 let px = self.core.mem.vdp.VRAM[(tile * 32) + x_offset + y_offset];
 
-                let px = if pixel & 1 == 0 {
+                let px = if tile_pixel & 1 == 0 {
                     px >> 4
                 } else {
                     px & 0xF
@@ -192,11 +206,19 @@ impl Megadrive {
 
             }
 
-            if let Some((palette, tile)) = tiles_a.get(pixel / 8) {
-                let x_offset = (pixel & 6) >> 1;
+            if let Some((priority, palette, vflip, hflip, tile)) = tiles_a.get(pixel / 8) {
+                let tile_pixel = if *hflip {
+                    pixel ^ 0xF
+                } else {
+                    pixel
+                };
+
+                let x_offset = (tile_pixel & 6) >> 1;
+                let y_offset = if *vflip { tile_y ^ 7 } else { tile_y } * 4;
+
                 let px = self.core.mem.vdp.VRAM[(tile * 32) + x_offset + y_offset];
 
-                let px = if pixel & 1 == 0 {
+                let px = if tile_pixel & 1 == 0 {
                     px >> 4
                 } else {
                     px & 0xF
