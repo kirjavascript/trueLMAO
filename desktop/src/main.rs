@@ -9,7 +9,7 @@ use fltk::{
     text::{TextBuffer, TextDisplay},
 };
 
-use std::time::{Instant, Duration};
+use std::time::Instant;
 
 use emu::Megadrive;
 
@@ -21,7 +21,7 @@ pub enum Update {
 fn main() {
     let app = app::App::default();
     let buf: Vec<u8> = include_bytes!("./roms/s1.bin").to_vec();
-    // let buf: Vec<u8> = include_bytes!("../../notes/rr.bin").to_vec();
+    // let buf: Vec<u8> = include_bytes!("../../notes/hangon.bin").to_vec();
 
     let mut emu = Megadrive::new(buf);
 
@@ -77,6 +77,8 @@ fn main() {
     let mut running = true;
 
     while app.wait() {
+        let start = Instant::now();
+
         while let Some(msg) = r.recv() {
             println!("{:#?}", "asd");
             match msg {
@@ -94,15 +96,25 @@ fn main() {
             }
         }
 
-        let start = Instant::now();
-
         if running {
             emu.frame();
         }
+
         let mut debug = String::new();
         debug.push_str(&format!("PC: {:X}\n\n", emu.core.pc));
-        // let v = emu.core.mem.vdp.VRAM.iter().map(|x|format!("{:X}", x)).collect::<Vec<String>>().join(" ");
-        // debug.push_str(&format!("VRAM: {}\n\n", v));
+        // let v = emu.core.mem.vdp.VSRAM.iter().map(|x|format!("{:X}", x)).collect::<Vec<String>>().join(" ");
+        // debug.push_str(&format!("VSRAM: {}\n\n", v));
+
+
+        debug.push_str(&format!("hscroll_addr: {}\n", emu.core.mem.vdp.hscroll_addr()));
+
+
+        debug.push_str(&format!("hscroll_mode: {}\n", emu.core.mem.vdp.registers[0xB] & 3));
+        debug.push_str(&format!("vscroll_mode: {}\n", emu.core.mem.vdp.registers[0xB] & 4 != 0));
+
+        let v = emu.core.mem.vdp.VRAM[emu.core.mem.vdp.hscroll_addr()..].iter().map(|x|format!("{:X}", x)).collect::<Vec<String>>().join(" ");
+        debug.push_str(&format!("HTABLE: {}\n", v));
+
         debug.push_str(&format!("D "));
         for i in 0..=7 {
             debug.push_str(&format!("{:X} ", emu.core.dar[i]));

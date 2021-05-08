@@ -117,18 +117,12 @@ impl Megadrive {
 
         let hscroll_addr = self.core.mem.vdp.hscroll_addr();
 
-
-
         let vscroll_mode = self.core.mem.vdp.vscroll_mode();
         let hscroll_mode = self.core.mem.vdp.registers[0xB] & 3;
-
-        let planea_nametable =
-            ((self.core.mem.vdp.registers[2] >> 3) as usize & 7) *0x2000;
 
 
         let index = match hscroll_mode {
             0 => 0,
-            1 => line & 7,
             2 => line & 0xFFF8,
             3 => line,
             _ => unreachable!(),
@@ -136,11 +130,10 @@ impl Megadrive {
 
         let hscroll = hscroll_addr + (index * 4); // 3 ?
 
+        let planea_nametable =
+            ((self.core.mem.vdp.registers[2] >> 3) as usize & 7) * 0x2000;
         let planeb_nametable =
             (self.core.mem.vdp.registers[4] as usize & 7) * 0x2000;
-
-        // A 0xC000
-        // B 0xE000
 
         // impl Index for tiles
 
@@ -171,10 +164,11 @@ impl Megadrive {
 
         // tile is 32 bytes
 
-
         for pixel in 0..screen_width {
 
             // switch to inner tile loop
+
+            // do line offset
 
             if let Some((priority, palette, vflip, hflip, tile)) = tiles_b.get(pixel / 8) {
                 let tile_pixel = if *hflip {
