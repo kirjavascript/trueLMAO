@@ -164,18 +164,14 @@ impl Megadrive {
 
         // tile is 32 bytes
 
-        for pixel in 0..screen_width {
+        for screen_pixel in 0..screen_width {
 
             // switch to inner tile loop
 
-            // do line offset
+            let pixel = (screen_pixel + 150) % screen_width;
 
             if let Some((priority, palette, vflip, hflip, tile)) = tiles_b.get(pixel / 8) {
-                let tile_pixel = if *hflip {
-                    pixel ^ 0xF
-                } else {
-                    pixel
-                };
+                let tile_pixel = if *hflip { pixel ^ 0xF } else { pixel };
 
                 let x_offset = (tile_pixel & 6) >> 1;
                 let y_offset = if *vflip { tile_y ^ 7 } else { tile_y } * 4;
@@ -191,7 +187,7 @@ impl Megadrive {
                 if px != 0 {
                     let (r, g, b) = self.core.mem.vdp.color(*palette, px as _);
 
-                    let screen_offset = (pixel + (line * screen_width)) * 3;
+                    let screen_offset = (screen_pixel + (line * screen_width)) * 3;
 
                     self.screen[screen_offset] = r;
                     self.screen[screen_offset + 1] = g;
@@ -200,12 +196,10 @@ impl Megadrive {
 
             }
 
+            let pixel = (screen_pixel + 150) % screen_width;
+
             if let Some((priority, palette, vflip, hflip, tile)) = tiles_a.get(pixel / 8) {
-                let tile_pixel = if *hflip {
-                    pixel ^ 0xF
-                } else {
-                    pixel
-                };
+                let tile_pixel = if *hflip { pixel ^ 0xF } else { pixel };
 
                 let x_offset = (tile_pixel & 6) >> 1;
                 let y_offset = if *vflip { tile_y ^ 7 } else { tile_y } * 4;
@@ -221,7 +215,7 @@ impl Megadrive {
                 if px != 0 {
                     let (r, g, b) = self.core.mem.vdp.color(*palette, px as _);
 
-                    let screen_offset = (pixel + (line * screen_width)) * 3;
+                    let screen_offset = (screen_pixel + (line * screen_width)) * 3;
 
                     self.screen[screen_offset] = r;
                     self.screen[screen_offset + 1] = g;
