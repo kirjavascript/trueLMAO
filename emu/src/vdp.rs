@@ -32,7 +32,7 @@ impl From<u32> for VDPType {
     }
 }
 
-pub fn cram_to_rgb(color: u16) -> (u8, u8, u8) {
+fn cram_to_rgb(color: u16) -> (u8, u8, u8) {
     let red = color & 0xf;
     let green = (color & 0xf0) >> 4;
     let blue = (color & 0xf00) >> 8;
@@ -121,14 +121,14 @@ impl VDP {
         (plane_a, plane_b)
     }
 
-    pub fn hscroll(&self, line: usize) -> (usize, usize) {
+    pub fn hscroll(&self, screen_y: usize) -> (usize, usize) {
         let addr = (self.registers[0xD] as usize & 0x3F) << 10;
         let mode = self.registers[0xB] & 3;
 
         let index = match mode {
             0 => 0,
-            2 => line & 0xFFF8,
-            3 => line,
+            2 => screen_y & 0xFFF8,
+            3 => screen_y,
             _ => unreachable!("invalid hscroll"),
         };
 
@@ -137,6 +137,22 @@ impl VDP {
         let hscroll_a = ((hscroll[0] as usize) << 8) + hscroll[1] as usize;
         let hscroll_b = ((hscroll[2] as usize) << 8) + hscroll[3] as usize;
         (hscroll_a, hscroll_b)
+    }
+
+    pub fn vscroll(&self, screen_x: usize) -> (usize, usize) {
+        let columns = self.registers[0xB] & 4 != 0;
+        let offset = if columns {
+            screen_x * 2
+        } else {
+            0
+        };
+
+        let vscroll = &self.VSRAM[offset..];
+
+        let vscroll_a = vscroll[0] as usize;
+        let vscroll_b = vscroll[1] as usize;
+
+        (vscroll_a, vscroll_b)
     }
 
     pub fn autoinc(&self) -> u32 {
