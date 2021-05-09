@@ -115,6 +115,12 @@ impl VDP {
         )
     }
 
+    pub fn nametables(&self) -> (usize, usize) {
+        let plane_a = ((self.registers[2] >> 3) as usize & 7) * 0x2000;
+        let plane_b = (self.registers[4] as usize & 7) * 0x2000;
+        (plane_a, plane_b)
+    }
+
     pub fn hscroll(&self, line: usize) -> (usize, usize) {
         let addr = (self.registers[0xD] as usize & 0x3F) << 10;
         let mode = self.registers[0xB] & 3;
@@ -128,8 +134,8 @@ impl VDP {
 
         let hscroll = &self.VRAM[addr + (index * 4)..];
 
-        let hscroll_b = ((hscroll[2] as usize) << 8) + hscroll[3] as usize;
         let hscroll_a = ((hscroll[0] as usize) << 8) + hscroll[1] as usize;
+        let hscroll_b = ((hscroll[2] as usize) << 8) + hscroll[3] as usize;
         (hscroll_a, hscroll_b)
     }
 

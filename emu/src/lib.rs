@@ -117,15 +117,22 @@ impl Megadrive {
         let (cellw, cellh) = self.core.mem.vdp.scroll_size();
         let screen_width = self.core.mem.vdp.screen_width();
 
+        // vscroll
 
-        let vscroll_columns = self.core.mem.vdp.registers[0xB] & 4 != 0;
+        let columns = self.core.mem.vdp.registers[0xB] & 4 != 0;
+        let offset = if columns {
+            0 // screen_x * 2
+        } else {
+            0
+        };
 
-        // let vscroll_mode = self.core.mem.vdp.vscroll_mode();
+        let vscroll = &self.core.mem.vdp.VSRAM[offset..];
 
-        let planea_nametable =
-            ((self.core.mem.vdp.registers[2] >> 3) as usize & 7) * 0x2000;
-        let planeb_nametable =
-            (self.core.mem.vdp.registers[4] as usize & 7) * 0x2000;
+        let vscroll_a = vscroll[0] as usize;
+        let vscroll_b = vscroll[1] as usize;
+
+
+        println!("{} {:X} {:X}", columns, vscroll_a, vscroll_b);
 
         let tiles = |plane: &[u8]| {
             (0..cellw).map(|i| {
@@ -145,8 +152,10 @@ impl Megadrive {
             }).collect::<Vec<_>>()
         };
 
-        let tiles_a = tiles(&self.core.mem.vdp.VRAM[planea_nametable..]);
-        let tiles_b = tiles(&self.core.mem.vdp.VRAM[planeb_nametable..]);
+        let (plane_a, plane_b) = self.core.mem.vdp.nametables();
+
+        let tiles_a = tiles(&self.core.mem.vdp.VRAM[plane_a..]);
+        let tiles_b = tiles(&self.core.mem.vdp.VRAM[plane_b..]);
 
         let (hscroll_a, hscroll_b) = self.core.mem.vdp.hscroll(line);
 
