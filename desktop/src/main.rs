@@ -21,7 +21,7 @@ pub enum Update {
 fn main() {
     let app = app::App::default();
     let buf: Vec<u8> = include_bytes!("./roms/s1.bin").to_vec();
-    // let buf: Vec<u8> = include_bytes!("../../notes/hangon.bin").to_vec();
+    // let buf: Vec<u8> = include_bytes!("../../notes/s2.bin").to_vec();
 
     let mut emu = Megadrive::new(buf);
 
@@ -185,6 +185,6 @@ fn main() {
         let render_time = (end-start).as_secs_f64();
         let frame_time = 1./60.;
 
-        app::sleep(frame_time - render_time);
+        // app::sleep(frame_time - render_time);
     }
 }

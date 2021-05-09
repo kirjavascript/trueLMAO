@@ -10,6 +10,7 @@ mod z80;
 pub struct Megadrive {
     pub core: ConfiguredCore<AutoInterruptController, mem::Mem>,
     pub screen: [u8; 320 * 240 * 3],
+    // version: NTSC/PAL
 }
 
 impl Megadrive {
@@ -56,6 +57,7 @@ impl Megadrive {
 
     pub fn frame(&mut self) {
         /* cycle counts initially taken from drx/kiwi */
+        // TODO: use a counter instead
 
         self.clear_screen();
 
@@ -115,31 +117,17 @@ impl Megadrive {
         let (cellw, cellh) = self.core.mem.vdp.scroll_size();
         let screen_width = self.core.mem.vdp.screen_width();
 
-        let hscroll_addr = self.core.mem.vdp.hscroll_addr();
 
-        let vscroll_mode = self.core.mem.vdp.vscroll_mode();
-        let hscroll_mode = self.core.mem.vdp.registers[0xB] & 3;
-
-
-        let index = match hscroll_mode {
-            0 => 0,
-            2 => line & 0xFFF8,
-            3 => line,
-            _ => unreachable!(),
-        };
-
-        let hscroll = hscroll_addr + (index * 4); // 3 ?
+        // let vscroll_mode = self.core.mem.vdp.vscroll_mode();
 
         let planea_nametable =
             ((self.core.mem.vdp.registers[2] >> 3) as usize & 7) * 0x2000;
         let planeb_nametable =
             (self.core.mem.vdp.registers[4] as usize & 7) * 0x2000;
 
-        // impl Index for tiles
-
         let tiles = |plane: &[u8]| {
             (0..cellw).map(|i| {
-                let mut offset = i as usize * 2;
+                let mut offset = i * 2;
                 offset += (line / 8) * cellw as usize * 2;
                 if offset as usize + 1 > plane.len() { panic!("offset > planelen") }
 
@@ -158,24 +146,40 @@ impl Megadrive {
         let tiles_a = tiles(&self.core.mem.vdp.VRAM[planea_nametable..]);
         let tiles_b = tiles(&self.core.mem.vdp.VRAM[planeb_nametable..]);
 
-        // println!("{:?} {:?}", tiles, tiles.len());
+        // vdp.get_hscroll
+
+        let hscroll_addr = self.core.mem.vdp.hscroll_addr();
+        let hscroll_mode = self.core.mem.vdp.registers[0xB] & 3;
+
+        let index = match hscroll_mode {
+            0 => 0,
+            2 => line & 0xFFF8,
+            3 => line,
+            _ => unreachable!("invalid hscroll"),
+        };
+
+        let hscroll = &self.core.mem.vdp.VRAM[hscroll_addr + (index * 4)..];
+
+        let hscroll_b = ((hscroll[2] as usize) << 8) + hscroll[3] as usize;
+        let hscroll_a = ((hscroll[0] as usize) << 8) + hscroll[1] as usize;
 
         let tile_y = line & 7;
 
-        // tile is 32 bytes
-
         for screen_pixel in 0..screen_width {
 
-            // switch to inner tile loop
+            // TODO: switch to inner tile loop
 
-            let pixel = (screen_pixel + 150) % screen_width;
+            let hoffset = hscroll_b;
+            let pixel = (screen_pixel + hoffset) % screen_width;
+            let tile_index = ((screen_pixel + hoffset) / 8) % cellw;
 
-            if let Some((priority, palette, vflip, hflip, tile)) = tiles_b.get(pixel / 8) {
+            if let Some((_priority, palette, vflip, hflip, tile)) = tiles_b.get(tile_index) {
                 let tile_pixel = if *hflip { pixel ^ 0xF } else { pixel };
 
                 let x_offset = (tile_pixel & 6) >> 1;
                 let y_offset = if *vflip { tile_y ^ 7 } else { tile_y } * 4;
 
+                // tile is 32 bytes
                 let px = self.core.mem.vdp.VRAM[(tile * 32) + x_offset + y_offset];
 
                 let px = if tile_pixel & 1 == 0 {
@@ -196,9 +200,11 @@ impl Megadrive {
 
             }
 
-            let pixel = (screen_pixel + 150) % screen_width;
+            let hoffset = hscroll_a;
+            let pixel = (screen_pixel + hoffset) % screen_width;
+            let tile_index = ((screen_pixel + hoffset) / 8) % cellw;
 
-            if let Some((priority, palette, vflip, hflip, tile)) = tiles_a.get(pixel / 8) {
+            if let Some((_priority, palette, vflip, hflip, tile)) = tiles_a.get(tile_index) {
                 let tile_pixel = if *hflip { pixel ^ 0xF } else { pixel };
 
                 let x_offset = (tile_pixel & 6) >> 1;

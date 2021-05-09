@@ -106,8 +106,8 @@ impl VDP {
         self.status &= !mask;
     }
 
-    pub fn scroll_size(&self) -> (u8, u8) {
-        let to_cells = |size| (size + 1) * 32;
+    pub fn scroll_size(&self) -> (usize, usize) {
+        let to_cells = |size| (size as usize + 1) * 32;
         // TODO: 96 is invalid
         (
             to_cells(self.registers[0x10] & 3),
