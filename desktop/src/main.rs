@@ -106,15 +106,6 @@ fn main() {
         // debug.push_str(&format!("VSRAM: {}\n\n", v));
 
 
-        debug.push_str(&format!("hscroll_addr: {}\n", emu.core.mem.vdp.hscroll_addr()));
-
-
-        debug.push_str(&format!("hscroll_mode: {}\n", emu.core.mem.vdp.registers[0xB] & 3));
-        debug.push_str(&format!("vscroll_mode: {}\n", emu.core.mem.vdp.registers[0xB] & 4 != 0));
-
-        let v = emu.core.mem.vdp.VRAM[emu.core.mem.vdp.hscroll_addr()..].iter().map(|x|format!("{:X}", x)).collect::<Vec<String>>().join(" ");
-        debug.push_str(&format!("HTABLE: {}\n", v));
-
         debug.push_str(&format!("D "));
         for i in 0..=7 {
             debug.push_str(&format!("{:X} ", emu.core.dar[i]));
@@ -185,6 +176,6 @@ fn main() {
         let render_time = (end-start).as_secs_f64();
         let frame_time = 1./60.;
 
-        // app::sleep(frame_time - render_time);
+        app::sleep(frame_time - render_time);
     }
 }

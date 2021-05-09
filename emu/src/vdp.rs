@@ -115,12 +115,22 @@ impl VDP {
         )
     }
 
-    pub fn hscroll_addr(&self) -> usize {
-        (self.registers[0xD] as usize & 0x3F) << 10
-    }
+    pub fn hscroll(&self, line: usize) -> (usize, usize) {
+        let addr = (self.registers[0xD] as usize & 0x3F) << 10;
+        let mode = self.registers[0xB] & 3;
 
-    pub fn vscroll_mode(&self) -> bool {
-        self.registers[0xB] & 4 != 0
+        let index = match mode {
+            0 => 0,
+            2 => line & 0xFFF8,
+            3 => line,
+            _ => unreachable!("invalid hscroll"),
+        };
+
+        let hscroll = &self.VRAM[addr + (index * 4)..];
+
+        let hscroll_b = ((hscroll[2] as usize) << 8) + hscroll[3] as usize;
+        let hscroll_a = ((hscroll[0] as usize) << 8) + hscroll[1] as usize;
+        (hscroll_a, hscroll_b)
     }
 
     pub fn autoinc(&self) -> u32 {

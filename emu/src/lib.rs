@@ -118,6 +118,8 @@ impl Megadrive {
         let screen_width = self.core.mem.vdp.screen_width();
 
 
+        let vscroll_columns = self.core.mem.vdp.registers[0xB] & 4 != 0;
+
         // let vscroll_mode = self.core.mem.vdp.vscroll_mode();
 
         let planea_nametable =
@@ -146,28 +148,16 @@ impl Megadrive {
         let tiles_a = tiles(&self.core.mem.vdp.VRAM[planea_nametable..]);
         let tiles_b = tiles(&self.core.mem.vdp.VRAM[planeb_nametable..]);
 
-        // vdp.get_hscroll
-
-        let hscroll_addr = self.core.mem.vdp.hscroll_addr();
-        let hscroll_mode = self.core.mem.vdp.registers[0xB] & 3;
-
-        let index = match hscroll_mode {
-            0 => 0,
-            2 => line & 0xFFF8,
-            3 => line,
-            _ => unreachable!("invalid hscroll"),
-        };
-
-        let hscroll = &self.core.mem.vdp.VRAM[hscroll_addr + (index * 4)..];
-
-        let hscroll_b = ((hscroll[2] as usize) << 8) + hscroll[3] as usize;
-        let hscroll_a = ((hscroll[0] as usize) << 8) + hscroll[1] as usize;
+        let (hscroll_a, hscroll_b) = self.core.mem.vdp.hscroll(line);
 
         let tile_y = line & 7;
 
         for screen_pixel in 0..screen_width {
 
             // TODO: switch to inner tile loop
+            // TODO: draw_plane
+
+            // TODO: correct overscan + vscroll
 
             let hoffset = (cellw * 8) - hscroll_b;
             let pixel = (screen_pixel + hoffset) % screen_width;
