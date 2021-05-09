@@ -169,7 +169,7 @@ impl Megadrive {
 
             // TODO: switch to inner tile loop
 
-            let hoffset = hscroll_b;
+            let hoffset = (cellw * 8) - hscroll_b;
             let pixel = (screen_pixel + hoffset) % screen_width;
             let tile_index = ((screen_pixel + hoffset) / 8) % cellw;
 
@@ -200,7 +200,7 @@ impl Megadrive {
 
             }
 
-            let hoffset = hscroll_a;
+            let hoffset = (cellw * 8) - hscroll_a;
             let pixel = (screen_pixel + hoffset) % screen_width;
             let tile_index = ((screen_pixel + hoffset) / 8) % cellw;
 
