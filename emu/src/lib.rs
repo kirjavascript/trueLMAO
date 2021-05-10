@@ -115,11 +115,10 @@ impl Megadrive {
 
     fn fire_beam(&mut self, screen_y: usize) {
         let (cell_w, cell_h) = self.core.mem.vdp.scroll_size();
-        let screen_width = self.core.mem.vdp.screen_width();
-
         let (plane_a, plane_b) = self.core.mem.vdp.nametables();
-
         let (hscroll_a, hscroll_b) = self.core.mem.vdp.hscroll(screen_y);
+
+        let screen_width = self.core.mem.vdp.screen_width();
 
         for screen_x in 0..screen_width {
             let (vscroll_a, vscroll_b) = self.core.mem.vdp.vscroll(screen_x);
@@ -145,9 +144,7 @@ impl Megadrive {
                 hscroll_a,
                 vscroll_a,
             );
-
         }
-
     }
 
     fn draw_plane_pixel(
@@ -185,12 +182,7 @@ impl Megadrive {
         let y_offset = if vflip { vline ^ 7 } else { vline } * 4;
 
         let px = self.core.mem.vdp.VRAM[(tile * 32) + x_offset + y_offset];
-
-        let px = if hline & 1 == 0 {
-            px >> 4
-        } else {
-            px & 0xF
-        };
+        let px = if hline & 1 == 0 { px >> 4 } else { px & 0xF };
 
         if px != 0 {
             let (r, g, b) = self.core.mem.vdp.color(palette, px as _);

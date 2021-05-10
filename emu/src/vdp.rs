@@ -121,6 +121,10 @@ impl VDP {
         (plane_a, plane_b)
     }
 
+    pub fn sprite_table(&self) -> usize {
+        (self.registers[5] as usize) & 0x7F << 9
+    }
+
     pub fn hscroll(&self, screen_y: usize) -> (usize, usize) {
         let addr = (self.registers[0xD] as usize & 0x3F) << 10;
         let mode = self.registers[0xB] & 3;
