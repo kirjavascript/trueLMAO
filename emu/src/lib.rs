@@ -117,35 +117,11 @@ impl Megadrive {
         let (cell_w, cell_h) = self.core.mem.vdp.scroll_size();
         let screen_width = self.core.mem.vdp.screen_width();
 
-        let tiles = |plane: &[u8]| {
-            (0..cell_w).map(|i| {
-                let mut offset = i * 2;
-                offset += (screen_y / 8) * cell_w as usize * 2;
-                if offset as usize + 1 > plane.len() { panic!("offset > planelen") }
-
-                let word = (plane[offset] as usize) << 8 | plane[offset + 1] as usize;
-                let byte = word >> 8;
-                let priority = byte >> 8;
-                let tile = word & 0x7FF;
-                let vflip = (byte & 0x10) != 0;
-                let hflip = (byte & 0x8) != 0;
-                let palette = (byte & 0x60) >> 5;
-
-                (priority, palette, vflip, hflip, tile)
-            }).collect::<Vec<_>>()
-        };
-
         let (plane_a, plane_b) = self.core.mem.vdp.nametables();
-
-        let tiles_a = tiles(&self.core.mem.vdp.VRAM[plane_a..]);
-        let tiles_b = tiles(&self.core.mem.vdp.VRAM[plane_b..]);
 
         let (hscroll_a, hscroll_b) = self.core.mem.vdp.hscroll(screen_y);
 
-        let tile_y = screen_y & 7;
-
         for screen_x in 0..screen_width {
-
             let (vscroll_a, vscroll_b) = self.core.mem.vdp.vscroll(screen_x);
 
             self.draw_plane_pixel(
@@ -170,75 +146,6 @@ impl Megadrive {
                 vscroll_a,
             );
 
-            continue;
-
-            // continue;
-
-            // TODO: switch to inner tile loop
-            // TODO: draw_plane
-
-            // TODO: correct overscan + vscroll
-
-            let hoffset = (cell_w * 8) - hscroll_b;
-            let pixel = (screen_x + hoffset) % screen_width;
-            let tile_index = ((screen_x + hoffset) / 8) % cell_w;
-
-            if let Some((_priority, palette, vflip, hflip, tile)) = tiles_b.get(tile_index) {
-                let tile_pixel = if *hflip { pixel ^ 0xF } else { pixel };
-
-                let x_offset = (tile_pixel & 6) >> 1;
-                let y_offset = if *vflip { tile_y ^ 7 } else { tile_y } * 4;
-
-                // tile is 32 bytes
-                let px = self.core.mem.vdp.VRAM[(tile * 32) + x_offset + y_offset];
-
-                let px = if tile_pixel & 1 == 0 {
-                    px >> 4
-                } else {
-                    px & 0xF
-                };
-
-                if px != 0 {
-                    let (r, g, b) = self.core.mem.vdp.color(*palette, px as _);
-
-                    let screen_offset = (screen_x + (screen_y * screen_width)) * 3;
-
-                    self.screen[screen_offset] = r;
-                    self.screen[screen_offset + 1] = g;
-                    self.screen[screen_offset + 2] = b;
-                }
-
-            }
-
-            let hoffset = (cell_w * 8) - hscroll_a;
-            let pixel = (screen_x + hoffset) % screen_width;
-            let tile_index = ((screen_x + hoffset) / 8) % cell_w;
-
-            if let Some((_priority, palette, vflip, hflip, tile)) = tiles_a.get(tile_index) {
-                let tile_pixel = if *hflip { pixel ^ 0xF } else { pixel };
-
-                let x_offset = (tile_pixel & 6) >> 1;
-                let y_offset = if *vflip { tile_y ^ 7 } else { tile_y } * 4;
-
-                let px = self.core.mem.vdp.VRAM[(tile * 32) + x_offset + y_offset];
-
-                let px = if tile_pixel & 1 == 0 {
-                    px >> 4
-                } else {
-                    px & 0xF
-                };
-
-                if px != 0 {
-                    let (r, g, b) = self.core.mem.vdp.color(*palette, px as _);
-
-                    let screen_offset = (screen_x + (screen_y * screen_width)) * 3;
-
-                    self.screen[screen_offset] = r;
-                    self.screen[screen_offset + 1] = g;
-                    self.screen[screen_offset + 2] = b;
-                }
-
-            }
         }
 
     }
@@ -259,9 +166,6 @@ impl Megadrive {
 
         let x_offset = (screen_x + plane_width - hscroll) % plane_width;
         let y_offset = (screen_y + vscroll) % plane_height;
-
-        // let x_offset = (screen_x + plane_width) % plane_width;
-        // let y_offset = (screen_y + plane_height) % plane_height;
 
         let tile_index = ((x_offset / 8) + (y_offset / 8 * cell_w)) * 2;
         let tile_slice = &self.core.mem.vdp.VRAM[nametable + tile_index..];
