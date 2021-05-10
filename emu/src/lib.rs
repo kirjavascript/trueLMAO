@@ -114,13 +114,13 @@ impl Megadrive {
     }
 
     fn fire_beam(&mut self, screen_y: usize) {
-        let (cellw, cellh) = self.core.mem.vdp.scroll_size();
+        let (cell_w, cell_h) = self.core.mem.vdp.scroll_size();
         let screen_width = self.core.mem.vdp.screen_width();
 
         let tiles = |plane: &[u8]| {
-            (0..cellw).map(|i| {
+            (0..cell_w).map(|i| {
                 let mut offset = i * 2;
-                offset += (screen_y / 8) * cellw as usize * 2;
+                offset += (screen_y / 8) * cell_w as usize * 2;
                 if offset as usize + 1 > plane.len() { panic!("offset > planelen") }
 
                 let word = (plane[offset] as usize) << 8 | plane[offset + 1] as usize;
@@ -148,7 +148,29 @@ impl Megadrive {
 
             let (vscroll_a, vscroll_b) = self.core.mem.vdp.vscroll(screen_x);
 
-            // self.draw_plane(cellw, cellh, screen_x, screen_y, screen_width, plane_b, hscroll_b, vscroll_b);
+            self.draw_plane_pixel(
+                cell_w,
+                cell_h,
+                screen_x,
+                screen_y,
+                screen_width,
+                plane_b,
+                hscroll_b,
+                vscroll_b,
+            );
+
+            self.draw_plane_pixel(
+                cell_w,
+                cell_h,
+                screen_x,
+                screen_y,
+                screen_width,
+                plane_a,
+                hscroll_a,
+                vscroll_a,
+            );
+
+            continue;
 
             // continue;
 
@@ -157,9 +179,9 @@ impl Megadrive {
 
             // TODO: correct overscan + vscroll
 
-            let hoffset = (cellw * 8) - hscroll_b;
+            let hoffset = (cell_w * 8) - hscroll_b;
             let pixel = (screen_x + hoffset) % screen_width;
-            let tile_index = ((screen_x + hoffset) / 8) % cellw;
+            let tile_index = ((screen_x + hoffset) / 8) % cell_w;
 
             if let Some((_priority, palette, vflip, hflip, tile)) = tiles_b.get(tile_index) {
                 let tile_pixel = if *hflip { pixel ^ 0xF } else { pixel };
@@ -188,9 +210,9 @@ impl Megadrive {
 
             }
 
-            let hoffset = (cellw * 8) - hscroll_a;
+            let hoffset = (cell_w * 8) - hscroll_a;
             let pixel = (screen_x + hoffset) % screen_width;
-            let tile_index = ((screen_x + hoffset) / 8) % cellw;
+            let tile_index = ((screen_x + hoffset) / 8) % cell_w;
 
             if let Some((_priority, palette, vflip, hflip, tile)) = tiles_a.get(tile_index) {
                 let tile_pixel = if *hflip { pixel ^ 0xF } else { pixel };
@@ -221,14 +243,59 @@ impl Megadrive {
 
     }
 
-    // fn draw_plane(
-    //     &mut self,
-    //     screen_x: usize,
-    //     screen_y: usize,
-    //     nametable: usize,
-    //     hscroll: usize,
-    //     vscroll: usize
-    // ) {
+    fn draw_plane_pixel(
+        &mut self,
+        cell_w: usize,
+        cell_h: usize,
+        screen_x: usize,
+        screen_y: usize,
+        screen_width: usize,
+        nametable: usize,
+        hscroll: usize,
+        vscroll: usize
+    ) {
+        let plane_width = cell_w * 8;
+        let plane_height = cell_h * 8;
 
-    // }
+        // let x_offset = (screen_x + plane_width - hscroll) % plane_width;
+        // let y_offset = (screen_y + plane_height - vscroll) % plane_height;
+
+        let x_offset = (screen_x + plane_width) % plane_width;
+        let y_offset = (screen_y + plane_height) % plane_height;
+
+        let tile_index = ((x_offset / 8) + (y_offset/* / 8 * 8 */)) * 2;
+        let tile_slice = &self.core.mem.vdp.VRAM[nametable + tile_index..];
+
+        let word = (tile_slice[0] as usize) << 8 | tile_slice[1] as usize;
+        let byte = word >> 8;
+
+        let priority = byte >> 8;
+        let tile = word & 0x7FF;
+        let vflip = (byte & 0x10) != 0;
+        let hflip = (byte & 0x8) != 0;
+        let palette = (byte & 0x60) >> 5;
+
+        let hline = if hflip { x_offset ^ 0xF } else { x_offset };
+        let x_offset = (hline & 6) >> 1;
+        let yline = screen_y & 7; // TODO: use y_offset instead
+        let y_offset = if vflip { yline ^ 7 } else { yline } * 4;
+
+        let px = self.core.mem.vdp.VRAM[(tile * 32) + x_offset + y_offset];
+
+        let px = if hline & 1 == 0 {
+            px >> 4
+        } else {
+            px & 0xF
+        };
+
+        if px != 0 {
+            let (r, g, b) = self.core.mem.vdp.color(palette, px as _);
+
+            let screen_offset = (screen_x + (screen_y * screen_width)) * 3;
+
+            self.screen[screen_offset] = r;
+            self.screen[screen_offset + 1] = g;
+            self.screen[screen_offset + 2] = b;
+        }
+    }
 }
