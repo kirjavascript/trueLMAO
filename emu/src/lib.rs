@@ -257,13 +257,13 @@ impl Megadrive {
         let plane_width = cell_w * 8;
         let plane_height = cell_h * 8;
 
-        // let x_offset = (screen_x + plane_width - hscroll) % plane_width;
-        // let y_offset = (screen_y + plane_height - vscroll) % plane_height;
+        let x_offset = (screen_x + plane_width - hscroll) % plane_width;
+        let y_offset = (screen_y + vscroll) % plane_height;
 
-        let x_offset = (screen_x + plane_width) % plane_width;
-        let y_offset = (screen_y + plane_height) % plane_height;
+        // let x_offset = (screen_x + plane_width) % plane_width;
+        // let y_offset = (screen_y + plane_height) % plane_height;
 
-        let tile_index = ((x_offset / 8) + (y_offset/* / 8 * 8 */)) * 2;
+        let tile_index = ((x_offset / 8) + (y_offset / 8 * cell_w)) * 2;
         let tile_slice = &self.core.mem.vdp.VRAM[nametable + tile_index..];
 
         let word = (tile_slice[0] as usize) << 8 | tile_slice[1] as usize;
@@ -277,8 +277,8 @@ impl Megadrive {
 
         let hline = if hflip { x_offset ^ 0xF } else { x_offset };
         let x_offset = (hline & 6) >> 1;
-        let yline = screen_y & 7; // TODO: use y_offset instead
-        let y_offset = if vflip { yline ^ 7 } else { yline } * 4;
+        let vline = y_offset & 7;
+        let y_offset = if vflip { vline ^ 7 } else { vline } * 4;
 
         let px = self.core.mem.vdp.VRAM[(tile * 32) + x_offset + y_offset];
 
