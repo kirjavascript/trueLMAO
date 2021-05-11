@@ -75,7 +75,7 @@ impl VDP {
     }
 
     pub fn screen_width(&self) -> usize {
-        if self.registers[12] & 0x01 > 0 { 320 } else { 256 }
+        if self.registers[12] & 1 > 0 { 320 } else { 256 }
     }
 
     pub fn screen_height(&self) -> usize {
@@ -121,8 +121,46 @@ impl VDP {
         (plane_a, plane_b)
     }
 
-    pub fn sprite_table(&self) -> usize {
-        (self.registers[5] as usize) & 0x7F << 9
+    pub fn sprite_table(&self) -> Vec<(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize)>{
+        let cell40 = (self.registers[0xC] as usize) >> 7 == 1;
+        let mask = if cell40 { 0x7F } else { 0x7E };
+        let addr = ((self.registers[5] as usize) & mask) << 9;
+
+        let mut index = 0usize;
+        let mut sprites = vec![];
+        loop {
+            let offset = addr + (index * 8);
+            let sprite = &self.VRAM[offset..];
+            let next = sprite[3].into();
+            let y_pos = ((sprite[0] as usize) << 8) + sprite[1] as usize;
+            let width = sprite[2] as usize >> 2;
+            let height = sprite[2] as usize & 3;
+            let priority = sprite[4] as usize >> 7;
+            let palette  = sprite[4] as usize >> 5 & 3;
+            let vflip = sprite[4] as usize >> 4 & 1;
+            let hflip = sprite[4] as usize >> 3 & 1;
+            let tile = ((sprite[4] as usize & 7 << 8) + sprite[5] as usize) * 0x20;
+            let x_pos = ((sprite[0] as usize) << 8) + sprite[1] as usize;
+            sprites.push((
+                next,
+                y_pos,
+                width ,
+                height,
+                priority,
+                palette ,
+                vflip,
+                hflip ,
+                tile,
+                x_pos,
+            ));
+
+            index = next;
+            if index == 0 || sprites.len() == if cell40 { 80 } else { 64 } {
+                break;
+            }
+        }
+
+        sprites
     }
 
     pub fn hscroll(&self, screen_y: usize) -> (usize, usize) {
@@ -170,7 +208,8 @@ impl VDP {
             return self.status;
         }
 
-        todo!("vdp read {:X}", address);
+        println!("TODO: vdp read {:X}", address);
+        0
     }
 
     pub fn write(mem: &mut Mem, mut address: u32, value: u32) {

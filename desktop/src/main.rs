@@ -20,8 +20,8 @@ pub enum Update {
 
 fn main() {
     let app = app::App::default();
-    // let buf: Vec<u8> = include_bytes!("./roms/s1.bin").to_vec();
-    let buf: Vec<u8> = include_bytes!("../../notes/s2.bin").to_vec();
+    let buf: Vec<u8> = include_bytes!("./roms/s1.bin").to_vec();
+    // let buf: Vec<u8> = include_bytes!("../../notes/s2.bin").to_vec();
 
     let mut emu = Megadrive::new(buf);
 
@@ -102,6 +102,8 @@ fn main() {
 
         let mut debug = String::new();
         debug.push_str(&format!("PC: {:X}\n\n", emu.core.pc));
+
+        debug.push_str(&format!("{:?}\n\n", emu.core.mem.vdp.sprite_table()));
         // let v = emu.core.mem.vdp.VSRAM.iter().map(|x|format!("{:X}", x)).collect::<Vec<String>>().join(" ");
         // debug.push_str(&format!("VSRAM: {}\n\n", v));
 

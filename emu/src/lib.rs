@@ -56,6 +56,7 @@ impl Megadrive {
     }
 
     pub fn frame(&mut self) {
+        // TODO: read controller
         /* cycle counts initially taken from drx/kiwi */
         // TODO: use a counter instead
 
@@ -86,6 +87,7 @@ impl Megadrive {
             self.core.execute(104);
 
             self.fire_beam(screen_y);
+
         }
 
         self.core.mem.vdp.set_status(vdp::VBLANK_MASK);
@@ -117,7 +119,6 @@ impl Megadrive {
         let (cell_w, cell_h) = self.core.mem.vdp.scroll_size();
         let (plane_a, plane_b) = self.core.mem.vdp.nametables();
         let (hscroll_a, hscroll_b) = self.core.mem.vdp.hscroll(screen_y);
-
         let screen_width = self.core.mem.vdp.screen_width();
 
         for screen_x in 0..screen_width {
@@ -145,6 +146,8 @@ impl Megadrive {
                 vscroll_a,
             );
         }
+
+        // TODO: draw+plane+line
     }
 
     fn draw_plane_pixel(
