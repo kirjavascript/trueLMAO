@@ -32,6 +32,19 @@ impl From<u32> for VDPType {
     }
 }
 
+#[derive(Debug)]
+pub struct Sprite {
+    y_pos: usize,
+    width: usize,
+    height: usize,
+    priority: usize,
+    palette: usize,
+    v_flip: usize,
+    h_flip: usize,
+    tile: usize,
+    x_pos: usize,
+}
+
 fn cram_to_rgb(color: u16) -> (u8, u8, u8) {
     let red = color & 0xf;
     let green = (color & 0xf0) >> 4;
@@ -121,7 +134,7 @@ impl VDP {
         (plane_a, plane_b)
     }
 
-    pub fn sprite_table(&self) -> Vec<(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize)>{
+    pub fn sprite_table(&self) -> Vec<Sprite>{
         let cell40 = (self.registers[0xC] as usize) >> 7 == 1;
         let mask = if cell40 { 0x7F } else { 0x7E };
         let addr = ((self.registers[5] as usize) & mask) << 9;
@@ -137,22 +150,21 @@ impl VDP {
             let height = sprite[2] as usize & 3;
             let priority = sprite[4] as usize >> 7;
             let palette  = sprite[4] as usize >> 5 & 3;
-            let vflip = sprite[4] as usize >> 4 & 1;
-            let hflip = sprite[4] as usize >> 3 & 1;
+            let v_flip = sprite[4] as usize >> 4 & 1;
+            let h_flip = sprite[4] as usize >> 3 & 1;
             let tile = ((sprite[4] as usize & 7 << 8) + sprite[5] as usize) * 0x20;
             let x_pos = ((sprite[0] as usize) << 8) + sprite[1] as usize;
-            sprites.push((
-                next,
+            sprites.push(Sprite {
                 y_pos,
                 width ,
                 height,
                 priority,
-                palette ,
-                vflip,
-                hflip ,
+                palette,
+                v_flip,
+                h_flip,
                 tile,
                 x_pos,
-            ));
+            });
 
             index = next;
             if index == 0 || sprites.len() == if cell40 { 80 } else { 64 } {
