@@ -121,8 +121,11 @@ impl Megadrive {
         let (hscroll_a, hscroll_b) = self.core.mem.vdp.hscroll(screen_y);
         let screen_width = self.core.mem.vdp.screen_width();
 
+        let sprites = self.core.mem.vdp.sprites(screen_y);
+
         for screen_x in 0..screen_width {
             let (vscroll_a, vscroll_b) = self.core.mem.vdp.vscroll(screen_x);
+
 
             self.draw_plane_pixel(
                 cell_w,
@@ -135,6 +138,8 @@ impl Megadrive {
                 vscroll_b,
             );
 
+            // p1
+
             self.draw_plane_pixel(
                 cell_w,
                 cell_h,
@@ -145,6 +150,8 @@ impl Megadrive {
                 hscroll_a,
                 vscroll_a,
             );
+
+            // p2
         }
 
         // TODO: draw+plane+line
