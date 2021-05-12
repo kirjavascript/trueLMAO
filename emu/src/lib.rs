@@ -154,7 +154,29 @@ impl Megadrive {
             // p2
         }
 
-        // TODO: draw+plane+line
+        // TODO: draw_plane_line
+
+
+        // if sprites.len() > 0 {
+        //     println!("{:#?}", sprites[0]);
+        // }
+        for sprite in sprites {
+            let crate::vdp::Sprite { x_pos, width, .. } = sprite;
+
+            for i in 0..width * 8 {
+                let x_offset = x_pos + i;
+
+                let (r, g, b) = self.core.mem.vdp.color(0, 4);
+
+                let screen_offset = (x_offset + (screen_y * screen_width)) * 3;
+
+                self.screen[screen_offset] = r;
+                self.screen[screen_offset + 1] = g;
+                self.screen[screen_offset + 2] = b;
+            }
+
+            // break;
+        }
     }
 
     fn draw_plane_pixel(
@@ -171,7 +193,8 @@ impl Megadrive {
         let plane_width = cell_w * 8;
         let plane_height = cell_h * 8;
 
-        let x_offset = (screen_x + plane_width - hscroll) % plane_width;
+        let hscroll_rem = hscroll % plane_width;
+        let x_offset = (screen_x + plane_width - hscroll_rem) % plane_width;
         let y_offset = (screen_y + vscroll) % plane_height;
 
         let tile_index = ((x_offset / 8) + (y_offset / 8 * cell_w)) * 2;

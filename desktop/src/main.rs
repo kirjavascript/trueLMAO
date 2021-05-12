@@ -103,7 +103,8 @@ fn main() {
         let mut debug = String::new();
         debug.push_str(&format!("PC: {:X}\n\n", emu.core.pc));
 
-        // debug.push_str(&format!("{:#?}\n\n", emu.core.mem.vdp.sprites()));
+
+        debug.push_str(&format!("{:#?}\n\n", emu.core.mem.vdp.sprites_DEBUG()));
         // let v = emu.core.mem.vdp.VSRAM.iter().map(|x|format!("{:X}", x)).collect::<Vec<String>>().join(" ");
         // debug.push_str(&format!("VSRAM: {}\n\n", v));
 

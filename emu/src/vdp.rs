@@ -34,15 +34,15 @@ impl From<u32> for VDPType {
 
 #[derive(Debug)] // TODO: remove
 pub struct Sprite {
-    y_pos: usize,
-    width: usize,
-    height: usize,
-    priority: usize,
-    palette: usize,
-    v_flip: usize,
-    h_flip: usize,
-    tile: usize,
-    x_pos: usize,
+    pub y_pos: usize,
+    pub width: usize,
+    pub height: usize,
+    pub priority: usize,
+    pub palette: usize,
+    pub v_flip: usize,
+    pub h_flip: usize,
+    pub tile: usize,
+    pub x_pos: usize,
 }
 
 fn cram_to_rgb(color: u16) -> (u8, u8, u8) {
@@ -134,6 +134,45 @@ impl VDP {
         (plane_a, plane_b)
     }
 
+    pub fn sprites_DEBUG(&self) -> Vec<Sprite> {
+        let cell40 = (self.registers[0xC] as usize) >> 7 == 1;
+        let mask = if cell40 { 0x7F } else { 0x7E };
+        let addr = ((self.registers[5] as usize) & mask) << 9;
+        let mut index = 0usize;
+        let mut sprites = vec![];
+        loop {
+            let offset = addr + (index * 8);
+            let sprite = &self.VRAM[offset..];
+            let next = sprite[3].into();
+            let y_pos = ((sprite[0] as usize) << 8) | sprite[1] as usize;
+
+            let height = (sprite[2] as usize & 3) + 1;
+                let width = (sprite[2] as usize >> 2) + 1;
+                let priority = sprite[4] as usize >> 7;
+                let palette  = sprite[4] as usize >> 5 & 3;
+                let v_flip = sprite[4] as usize >> 4 & 1;
+                let h_flip = sprite[4] as usize >> 3 & 1;
+                let tile = ((sprite[4] as usize & 7 << 8) | sprite[5] as usize) * 0x20;
+                let x_pos = ((sprite[6] as usize) << 8) | sprite[7] as usize;
+                sprites.push(Sprite {
+                    y_pos,
+                    width,
+                    height,
+                    priority,
+                    palette,
+                    v_flip,
+                    h_flip,
+                    tile,
+                    x_pos,
+                });
+            index = next;
+            if index == 0 || sprites.len() == if cell40 { 80 } else { 64 } {
+                break;
+            }
+        }
+        sprites
+    }
+
     pub fn sprites(&self, screen_y: usize) -> Vec<Sprite> {
         let cell40 = (self.registers[0xC] as usize) >> 7 == 1;
         let mask = if cell40 { 0x7F } else { 0x7E };
@@ -149,8 +188,8 @@ impl VDP {
             let next = sprite[3].into();
             let y_pos = ((sprite[0] as usize) << 8) | sprite[1] as usize;
             let height = (sprite[2] as usize & 3) + 1;
-            if screen_y >= y_pos && screen_y > height * 8 {
-                // TODO: ignore in X too
+            if screen_y >= y_pos && screen_y < y_pos + (height * 8) {
+                // TODO: ignore offscreen in X
 
                 let width = (sprite[2] as usize >> 2) + 1;
                 let priority = sprite[4] as usize >> 7;
@@ -158,7 +197,7 @@ impl VDP {
                 let v_flip = sprite[4] as usize >> 4 & 1;
                 let h_flip = sprite[4] as usize >> 3 & 1;
                 let tile = ((sprite[4] as usize & 7 << 8) | sprite[5] as usize) * 0x20;
-                let x_pos = ((sprite[0] as usize) << 8) | sprite[1] as usize;
+                let x_pos = ((sprite[6] as usize) << 8) | sprite[7] as usize;
 
                 sprites.push(Sprite {
                     y_pos,
