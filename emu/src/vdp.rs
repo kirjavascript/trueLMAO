@@ -45,6 +45,11 @@ pub struct Sprite {
     pub x_pos: usize,
 }
 
+impl Sprite {
+    pub fn x_coord(&self) -> isize { (self.x_pos as isize)-128 }
+    pub fn y_coord(&self) -> isize { (self.y_pos as isize)-128 }
+}
+
 fn cram_to_rgb(color: u16) -> (u8, u8, u8) {
     let red = color & 0xf;
     let green = (color & 0xf0) >> 4;
@@ -183,13 +188,13 @@ impl VDP {
         let mut index = 0usize;
         let mut sprites = vec![];
         loop {
+            let sprite_screen_y = screen_y + 128;
             let offset = addr + (index * 8);
             let sprite = &self.VRAM[offset..];
             let next = sprite[3].into();
-            let mut y_pos = ((sprite[0] as usize) << 8) | sprite[1] as usize;
-            y_pos -= 128;
+            let y_pos = ((sprite[0] as usize) << 8) | sprite[1] as usize;
             let height = (sprite[2] as usize & 3) + 1;
-            if screen_y >= y_pos && screen_y < y_pos + (height * 8) {
+            if sprite_screen_y >= y_pos && sprite_screen_y < y_pos + (height * 8) {
                 // TODO: ignore offscreen in X
 
                 let width = (sprite[2] as usize >> 2) + 1;
@@ -198,8 +203,7 @@ impl VDP {
                 let v_flip = sprite[4] as usize >> 4 & 1;
                 let h_flip = sprite[4] as usize >> 3 & 1;
                 let tile = ((sprite[4] as usize & 7 << 8) | sprite[5] as usize) * 0x20;
-                let mut x_pos = ((sprite[6] as usize) << 8) | sprite[7] as usize;
-                x_pos -= 128;
+                let x_pos = ((sprite[6] as usize) << 8) | sprite[7] as usize;
                 sprites.push(Sprite {
                     y_pos,
                     width,

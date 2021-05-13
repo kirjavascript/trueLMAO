@@ -161,16 +161,23 @@ impl Megadrive {
         //     println!("{:#?}", sprites[0]);
         // }
         for sprite in sprites {
-            let crate::vdp::Sprite { x_pos, width, .. } = sprite;
 
-            for i in 0..width * 8 {
-                let x_offset = x_pos + i;
+            for i in 0..sprite.width * 8 {
+                let x_offset = sprite.x_coord() + i as isize;
 
-                let screen_offset = (x_offset + (screen_y * screen_width)) * 3;
+                if x_offset >= 0 && x_offset <= screen_width as isize {
 
-                self.screen[screen_offset] = 0xFF;
-                self.screen[screen_offset + 1] = 0x00;
-                self.screen[screen_offset + 2] = 0xEB;
+                    let screen_offset = (x_offset as usize + (screen_y * screen_width)) * 3;
+
+                    if screen_offset + 2 <= self.screen.len() {
+                        self.screen[screen_offset] = 0xFF;
+                        self.screen[screen_offset + 1] = 0x00;
+                        self.screen[screen_offset + 2] = 0xEB;
+                    } else {
+                        eprintln!("screen index {}", screen_offset);
+                    }
+                }
+
             }
 
             // break;
