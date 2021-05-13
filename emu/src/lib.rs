@@ -166,13 +166,11 @@ impl Megadrive {
             for i in 0..width * 8 {
                 let x_offset = x_pos + i;
 
-                let (r, g, b) = self.core.mem.vdp.color(0, 5);
-
                 let screen_offset = (x_offset + (screen_y * screen_width)) * 3;
 
-                self.screen[screen_offset] = r;
-                self.screen[screen_offset + 1] = g;
-                self.screen[screen_offset + 2] = b;
+                self.screen[screen_offset] = 0xFF;
+                self.screen[screen_offset + 1] = 0x00;
+                self.screen[screen_offset + 2] = 0xEB;
             }
 
             // break;

@@ -34,8 +34,7 @@ impl From<u32> for VDPType {
 
 #[derive(Debug)] // TODO: remove
 pub struct Sprite {
-    pub x_pos: isize,
-    pub y_pos: isize,
+    pub y_pos: usize,
     pub width: usize,
     pub height: usize,
     pub priority: usize,
@@ -43,6 +42,7 @@ pub struct Sprite {
     pub v_flip: usize,
     pub h_flip: usize,
     pub tile: usize,
+    pub x_pos: usize,
 }
 
 fn cram_to_rgb(color: u16) -> (u8, u8, u8) {
@@ -186,7 +186,7 @@ impl VDP {
             let offset = addr + (index * 8);
             let sprite = &self.VRAM[offset..];
             let next = sprite[3].into();
-            let mut y_pos = ((sprite[0] as isize) << 8) | sprite[1] as isize;
+            let mut y_pos = ((sprite[0] as usize) << 8) | sprite[1] as usize;
             y_pos -= 128;
             let height = (sprite[2] as usize & 3) + 1;
             if screen_y >= y_pos && screen_y < y_pos + (height * 8) {
@@ -198,7 +198,7 @@ impl VDP {
                 let v_flip = sprite[4] as usize >> 4 & 1;
                 let h_flip = sprite[4] as usize >> 3 & 1;
                 let tile = ((sprite[4] as usize & 7 << 8) | sprite[5] as usize) * 0x20;
-                let mut x_pos = ((sprite[6] as isize) << 8) | sprite[7] as isize;
+                let mut x_pos = ((sprite[6] as usize) << 8) | sprite[7] as usize;
                 x_pos -= 128;
                 sprites.push(Sprite {
                     y_pos,
