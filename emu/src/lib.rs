@@ -123,113 +123,123 @@ impl Megadrive {
 
         let sprites = self.core.mem.vdp.sprites(screen_y);
 
-        for screen_x in 0..screen_width {
-            let (vscroll_a, vscroll_b) = self.core.mem.vdp.vscroll(screen_x);
+        // TODO: priority https://segaretro.org/Sega_Mega_Drive/Priority
+        // (unused in the plane drawing
+        // TODO: make these methods static (for debug), move to GFX
 
 
-            self.draw_plane_pixel(
-                cell_w,
-                cell_h,
-                screen_x,
-                screen_y,
-                screen_width,
-                plane_b,
-                hscroll_b,
-                vscroll_b,
-            );
+        self.draw_plane_line(
+            cell_w,
+            cell_h,
+            screen_y,
+            screen_width,
+            plane_b,
+            hscroll_b,
+            1, // vscroll_offset
+        );
 
-            // p1
+        self.draw_sprite_line(
+            &sprites,
+            screen_y,
+            screen_width,
+            0, // priority
+        );
 
-            self.draw_plane_pixel(
-                cell_w,
-                cell_h,
-                screen_x,
-                screen_y,
-                screen_width,
-                plane_a,
-                hscroll_a,
-                vscroll_a,
-            );
+        self.draw_plane_line(
+            cell_w,
+            cell_h,
+            screen_y,
+            screen_width,
+            plane_a,
+            hscroll_a,
+            0,
+        );
 
-            // p2
-        }
+        self.draw_sprite_line(
+            &sprites,
+            screen_y,
+            screen_width,
+            1,
+        );
+    }
 
-        // TODO: draw_plane_line
-
-
-        // if sprites.len() > 0 {
-        //     println!("{:#?}", sprites[0]);
-        // }
+    fn draw_sprite_line(
+        &mut self,
+        sprites: &Vec<crate::vdp::Sprite>,
+        screen_y: usize,
+        screen_width: usize,
+        priority: usize,
+    ) {
         for sprite in sprites {
+            if sprite.priority == priority {
+                for i in 0..sprite.width * 8 {
+                    let x_offset = sprite.x_coord() + i as isize;
 
-            for i in 0..sprite.width * 8 {
-                let x_offset = sprite.x_coord() + i as isize;
+                    if x_offset >= 0 && x_offset <= screen_width as isize {
 
-                if x_offset >= 0 && x_offset <= screen_width as isize {
+                        let screen_offset = (x_offset as usize + (screen_y * screen_width)) * 3;
 
-                    let screen_offset = (x_offset as usize + (screen_y * screen_width)) * 3;
-
-                    if screen_offset + 2 <= self.screen.len() {
-                        self.screen[screen_offset] = 0xFF;
-                        self.screen[screen_offset + 1] = 0x00;
-                        self.screen[screen_offset + 2] = 0xEB;
-                    } else {
-                        eprintln!("screen index {}", screen_offset);
+                        if screen_offset + 2 <= self.screen.len() {
+                            self.screen[screen_offset] = 0xFF;
+                            self.screen[screen_offset + 1] = 0x00;
+                            self.screen[screen_offset + 2] = 0xEB;
+                        }
                     }
                 }
-
             }
-
-            // break;
         }
     }
 
-    fn draw_plane_pixel(
+
+    fn draw_plane_line(
         &mut self,
         cell_w: usize,
         cell_h: usize,
-        screen_x: usize,
         screen_y: usize,
         screen_width: usize,
         nametable: usize,
         hscroll: usize,
-        vscroll: usize
+        vscroll_offset: usize
     ) {
-        let plane_width = cell_w * 8;
-        let plane_height = cell_h * 8;
+        for screen_x in 0..screen_width {
+            let vscroll = self.core.mem.vdp.vscroll(screen_x)[vscroll_offset] as usize;
 
-        let hscroll_rem = hscroll % plane_width;
-        let x_offset = (screen_x + plane_width - hscroll_rem) % plane_width;
-        let y_offset = (screen_y + vscroll) % plane_height;
+            let plane_width = cell_w * 8;
+            let plane_height = cell_h * 8;
 
-        let tile_index = ((x_offset / 8) + (y_offset / 8 * cell_w)) * 2;
-        let tile_slice = &self.core.mem.vdp.VRAM[nametable + tile_index..];
+            let hscroll_rem = hscroll % plane_width;
+            let x_offset = (screen_x + plane_width - hscroll_rem) % plane_width;
+            let y_offset = (screen_y + vscroll) % plane_height;
 
-        let word = (tile_slice[0] as usize) << 8 | tile_slice[1] as usize;
-        let byte = word >> 8;
+            let tile_index = ((x_offset / 8) + (y_offset / 8 * cell_w)) * 2;
+            let tile_slice = &self.core.mem.vdp.VRAM[nametable + tile_index..];
 
-        let priority = byte >> 8;
-        let tile = word & 0x7FF;
-        let vflip = (byte & 0x10) != 0;
-        let hflip = (byte & 0x8) != 0;
-        let palette = (byte & 0x60) >> 5;
+            let word = (tile_slice[0] as usize) << 8 | tile_slice[1] as usize;
+            let byte = word >> 8;
 
-        let hline = if hflip { x_offset ^ 0xF } else { x_offset };
-        let x_offset = (hline & 6) >> 1;
-        let vline = y_offset & 7;
-        let y_offset = if vflip { vline ^ 7 } else { vline } * 4;
+            let priority = byte >> 8;
+            let tile = word & 0x7FF;
+            let vflip = (byte & 0x10) != 0;
+            let hflip = (byte & 0x8) != 0;
+            let palette = (byte & 0x60) >> 5;
 
-        let px = self.core.mem.vdp.VRAM[(tile * 32) + x_offset + y_offset];
-        let px = if hline & 1 == 0 { px >> 4 } else { px & 0xF };
+            let hline = if hflip { x_offset ^ 0xF } else { x_offset };
+            let x_offset = (hline & 6) >> 1;
+            let vline = y_offset & 7;
+            let y_offset = if vflip { vline ^ 7 } else { vline } * 4;
 
-        if px != 0 {
-            let (r, g, b) = self.core.mem.vdp.color(palette, px as _);
+            let px = self.core.mem.vdp.VRAM[(tile * 32) + x_offset + y_offset];
+            let px = if hline & 1 == 0 { px >> 4 } else { px & 0xF };
 
-            let screen_offset = (screen_x + (screen_y * screen_width)) * 3;
+            if px != 0 {
+                let (r, g, b) = self.core.mem.vdp.color(palette, px as _);
 
-            self.screen[screen_offset] = r;
-            self.screen[screen_offset + 1] = g;
-            self.screen[screen_offset + 2] = b;
+                let screen_offset = (screen_x + (screen_y * screen_width)) * 3;
+
+                self.screen[screen_offset] = r;
+                self.screen[screen_offset + 1] = g;
+                self.screen[screen_offset + 2] = b;
+            }
         }
     }
 }

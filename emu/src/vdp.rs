@@ -39,9 +39,9 @@ pub struct Sprite {
     pub width: usize,
     pub height: usize,
     pub palette: usize,
+    pub priority: usize,
     pub v_flip: bool,
     pub h_flip: bool,
-    pub priority: bool,
 }
 
 impl Sprite {
@@ -154,7 +154,7 @@ impl VDP {
             let height = (sprite[2] as usize & 3) + 1;
             if sprite_screen_y >= y_pos && sprite_screen_y < y_pos + (height * 8) {
                 let width = (sprite[2] as usize >> 2) + 1;
-                let priority = sprite[4] as usize >> 7 == 1;
+                let priority = sprite[4] as usize >> 7;
                 let palette  = sprite[4] as usize >> 5 & 3;
                 let v_flip = sprite[4] as usize >> 4 & 1 == 1;
                 let h_flip = sprite[4] as usize >> 3 & 1 == 1;
@@ -202,7 +202,7 @@ impl VDP {
         (hscroll_a, hscroll_b)
     }
 
-    pub fn vscroll(&self, screen_x: usize) -> (usize, usize) {
+    pub fn vscroll(&self, screen_x: usize) -> &[u16] {
         let columns = self.registers[0xB] & 4 != 0;
         let offset = if columns {
             screen_x * 2
@@ -210,12 +210,9 @@ impl VDP {
             0
         };
 
-        let vscroll = &self.VSRAM[offset..];
+        // 0 is A, 1 is B
 
-        let vscroll_a = vscroll[0] as usize;
-        let vscroll_b = vscroll[1] as usize;
-
-        (vscroll_a, vscroll_b)
+        &self.VSRAM[offset..]
     }
 
     pub fn autoinc(&self) -> u32 {
