@@ -126,8 +126,9 @@ impl Megadrive {
         // TODO: priority https://segaretro.org/Sega_Mega_Drive/Priority
         // (unused in the plane drawing
         // TODO: make these methods static (for debug), move to GFX, make a draw_pixel func
+        // TODO: improve perf by having two buffers to render to and combine them
 
-
+        // plane B, low priority
         self.draw_plane_line(
             cell_w,
             cell_h,
@@ -136,15 +137,10 @@ impl Megadrive {
             plane_b,
             hscroll_b,
             1, // vscroll_offset
-        );
-
-        self.draw_sprite_line(
-            &sprites,
-            screen_y,
-            screen_width,
             0, // priority
         );
 
+        // plane A, low priority
         self.draw_plane_line(
             cell_w,
             cell_h,
@@ -153,8 +149,42 @@ impl Megadrive {
             plane_a,
             hscroll_a,
             0,
+            0,
         );
 
+        // sprites, low priority
+        self.draw_sprite_line(
+            &sprites,
+            screen_y,
+            screen_width,
+            0, // priority
+        );
+
+        // plane B, high priority
+        self.draw_plane_line(
+            cell_w,
+            cell_h,
+            screen_y,
+            screen_width,
+            plane_b,
+            hscroll_b,
+            1,
+            1,
+        );
+
+        // plane A, high priority
+        self.draw_plane_line(
+            cell_w,
+            cell_h,
+            screen_y,
+            screen_width,
+            plane_a,
+            hscroll_a,
+            0,
+            1,
+        );
+
+        // sprites, high priority
         self.draw_sprite_line(
             &sprites,
             screen_y,
@@ -171,29 +201,30 @@ impl Megadrive {
         priority: usize,
     ) {
         for sprite in sprites {
-            if sprite.priority == priority {
-                let y_offset = screen_y as isize - sprite.y_coord();
-                let tiles = &self.core.mem.vdp.VRAM[sprite.tile..];
-                for i in 0..sprite.width * 8 {
-                    let x_offset = sprite.x_coord() + i as isize;
+            if sprite.priority != priority {
+                continue
+            }
+            let y_offset = screen_y as isize - sprite.y_coord();
+            let tiles = &self.core.mem.vdp.VRAM[sprite.tile..];
+            for i in 0..sprite.width * 8 {
+                let x_offset = sprite.x_coord() + i as isize;
 
-                    if x_offset >= 0 && x_offset <= screen_width as isize {
+                if x_offset >= 0 && x_offset <= screen_width as isize {
 
-                        let x_offset_ = i & 7;
-                        let y_offset_ = y_offset & 7;
+                    let x_offset_ = i & 7;
+                    let y_offset_ = y_offset & 7;
 
-                        let px = tiles[(0 * 32) + (x_offset_ as usize >> 1) + y_offset_ as usize];
-                        let px = if x_offset_ & 1 == 0 { px >> 4 } else { px & 0xF };
+                    let px = tiles[(0 * 32) + (x_offset_ as usize >> 1) + y_offset_ as usize];
+                    let px = if x_offset_ & 1 == 0 { px >> 4 } else { px & 0xF };
 
-                        let (r, g, b) = self.core.mem.vdp.color(sprite.palette, px as _);
+                    let (r, g, b) = self.core.mem.vdp.color(sprite.palette, px as _);
 
-                        let screen_offset = (x_offset as usize + (screen_y * screen_width)) * 3;
+                    let screen_offset = (x_offset as usize + (screen_y * screen_width)) * 3;
 
-                        if screen_offset + 2 <= self.screen.len() {
-                            self.screen[screen_offset] = r;
-                            self.screen[screen_offset + 1] = g;
-                            self.screen[screen_offset + 2] = b;
-                        }
+                    if screen_offset + 2 <= self.screen.len() {
+                        self.screen[screen_offset] = r;
+                        self.screen[screen_offset + 1] = g;
+                        self.screen[screen_offset + 2] = b;
                     }
                 }
             }
@@ -209,7 +240,8 @@ impl Megadrive {
         screen_width: usize,
         nametable: usize,
         hscroll: usize,
-        vscroll_offset: usize
+        vscroll_offset: usize,
+        layer_priority: usize,
     ) {
         for screen_x in 0..screen_width {
             let vscroll = self.core.mem.vdp.vscroll(screen_x)[vscroll_offset] as usize;
@@ -227,7 +259,12 @@ impl Megadrive {
             let word = (tile_slice[0] as usize) << 8 | tile_slice[1] as usize;
             let byte = word >> 8;
 
-            let priority = byte >> 8;
+            let priority = (byte >> 7) & 1;
+
+            if priority != layer_priority {
+                continue
+            }
+
             let tile = word & 0x7FF;
             let vflip = (byte & 0x10) != 0;
             let hflip = (byte & 0x8) != 0;
