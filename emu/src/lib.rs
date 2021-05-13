@@ -125,7 +125,7 @@ impl Megadrive {
 
         // TODO: priority https://segaretro.org/Sega_Mega_Drive/Priority
         // (unused in the plane drawing
-        // TODO: make these methods static (for debug), move to GFX
+        // TODO: make these methods static (for debug), move to GFX, make a draw_pixel func
 
 
         self.draw_plane_line(
@@ -172,17 +172,27 @@ impl Megadrive {
     ) {
         for sprite in sprites {
             if sprite.priority == priority {
+                let y_offset = screen_y as isize - sprite.y_coord();
+                let tiles = &self.core.mem.vdp.VRAM[sprite.tile..];
                 for i in 0..sprite.width * 8 {
                     let x_offset = sprite.x_coord() + i as isize;
 
                     if x_offset >= 0 && x_offset <= screen_width as isize {
 
+                        let x_offset_ = i & 7;
+                        let y_offset_ = y_offset & 7;
+
+                        let px = tiles[(0 * 32) + (x_offset_ as usize >> 1) + y_offset_ as usize];
+                        let px = if x_offset_ & 1 == 0 { px >> 4 } else { px & 0xF };
+
+                        let (r, g, b) = self.core.mem.vdp.color(sprite.palette, px as _);
+
                         let screen_offset = (x_offset as usize + (screen_y * screen_width)) * 3;
 
                         if screen_offset + 2 <= self.screen.len() {
-                            self.screen[screen_offset] = 0xFF;
-                            self.screen[screen_offset + 1] = 0x00;
-                            self.screen[screen_offset + 2] = 0xEB;
+                            self.screen[screen_offset] = r;
+                            self.screen[screen_offset + 1] = g;
+                            self.screen[screen_offset + 2] = b;
                         }
                     }
                 }
