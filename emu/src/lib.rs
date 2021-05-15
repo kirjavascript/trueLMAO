@@ -1,12 +1,12 @@
 use r68k_emu::cpu::{STACK_POINTER_REG, ConfiguredCore};
 use r68k_emu::interrupts::AutoInterruptController;
 
-mod gfx;
-mod io;
-mod mem;
-mod rom;
-mod vdp;
-mod z80;
+pub mod gfx;
+pub mod io;
+pub mod mem;
+pub mod rom;
+pub mod vdp;
+pub mod z80;
 
 use gfx::Gfx;
 

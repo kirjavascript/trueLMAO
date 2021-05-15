@@ -2,11 +2,49 @@
 <html>
     <head>
         <meta charset="utf-8" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=1" name="viewport" />
-        <link rel="stylesheet" href="/styles.css" media="screen">
-        <link href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAdJ6tAP///wAmOUAAq6ahAIpyUwB4TxkA45MrAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYAZjMzMAAABmZjERETMAAGZjERERERAAZmMREiIhFABmZzIlIiIwQGZ3d1IiACAAZ3d3IiIAUAB3d3ciIgB3AHd3dyIiB3cAd3d3QiRXd1B3d3V0RXd3cHYzd1d3d3cAdjERdVVXdwBmMRZ1d3d2AHdhZ3d3d2YAd2Z3d3dwZgBgPwAAAA8AAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAADAAAAAwAAAAMAAAADAAAAEwAA" rel="icon" type="image/x-icon" />
+        <meta
+            content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=1"
+            name="viewport"
+        />
+        <link rel="stylesheet" href="/styles.css" media="screen" />
+        <link
+            href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAdJ6tAP///wAmOUAAq6ahAIpyUwB4TxkA45MrAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYAZjMzMAAABmZjERETMAAGZjERERERAAZmMREiIhFABmZzIlIiIwQGZ3d1IiACAAZ3d3IiIAUAB3d3ciIgB3AHd3dyIiB3cAd3d3QiRXd1B3d3V0RXd3cHYzd1d3d3cAdjERdVVXdwBmMRZ1d3d2AHdhZ3d3d2YAd2Z3d3dwZgBgPwAAAA8AAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAADAAAAAwAAAAMAAAADAAAAEwAA"
+            rel="icon"
+            type="image/x-icon"
+        />
         <title>trueLMAO</title>
     </head>
-    <body><script src="/main.js"></script></body>
+    <body>
+        <canvas width="320" height="240">
+        <script type="module">
+            // try stdweb
+
+            import init, { frame, screen } from '../pkg/web.js';
+
+            const canvas = document.querySelector('canvas');
+            const ctx = canvas.getContext('2d');
+
+            ~async function() {
+                await init();
+                (function loop() {
+                    requestAnimationFrame(loop);
+                    frame();
+                    const imgData = ctx.createImageData(320, 240);
+                    const buffer = JSON.parse(screen());
+                    for (let i = 0; i < 320*240; i++) {
+                        const bufferIndex = i * 3;
+                        const imgIndex = i * 4;
+                        imgData.data[imgIndex+0] = buffer[bufferIndex+0];
+                        imgData.data[imgIndex+1] = buffer[bufferIndex+1];
+                        imgData.data[imgIndex+2] = buffer[bufferIndex+2];
+                        imgData.data[imgIndex+3] = 255;
+                    }
+
+                    ctx.putImageData(imgData, 0, 0);
+                    console.log('frame');
+                })();
+            } ();
+
+        </script>
+    </body>
 </html>

@@ -1,7 +1,9 @@
 use super::Megadrive;
 
+pub type Screen = [u8; 320 * 240 * 3];
+
 pub struct Gfx {
-    pub screen: [u8; 320 * 240 * 3],
+    pub screen: Screen,
 }
 
 impl Gfx {
