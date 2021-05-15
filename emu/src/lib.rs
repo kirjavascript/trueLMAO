@@ -212,19 +212,20 @@ impl Megadrive {
 
                 if x_offset >= 0 && x_offset <= screen_width as isize {
 
-                    let x_base = (sprite_x & 6) >> 1;
-                    let y_base = (sprite_y & 7) * 4;
-                    let x_base = if sprite.h_flip { x_base ^ 7 } else { x_base };
-                    let y_base = if sprite.v_flip { y_base ^ 7 } else { y_base };
+                    let sprite_base_x = if sprite.h_flip { sprite_x ^ 7 } else { sprite_x };
+                    let x_base = (sprite_base_x & 6) >> 1;
+                    let y_base = sprite_y & 7;
+                    let y_base = if sprite.v_flip { y_base ^ 7 } else { y_base } * 4;
 
                     let tile_offset = (x_base as usize) + y_base as usize;
 
+                    // TODO / flip / mirror correctly
                     let x_tile_offset = (sprite_y as usize / 8) * 32;
                     let y_tile_offset = (sprite_x as usize / 8) * 32 * sprite.height;
                     let extra = y_tile_offset + x_tile_offset;
 
                     let px = tiles[tile_offset + extra];
-                    let px = if x_base & 1 == 0 { px >> 4 } else { px & 0xF };
+                    let px = if sprite_base_x & 1 == 0 { px >> 4 } else { px & 0xF };
 
                     if px != 0 {
                         let (r, g, b) = self.core.mem.vdp.color(sprite.palette, px as _);
