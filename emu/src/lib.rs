@@ -219,9 +219,10 @@ impl Megadrive {
 
                     let tile_offset = (x_base as usize) + y_base as usize;
 
-                    // TODO / flip / mirror correctly
-                    let x_tile_offset = (sprite_y as usize / 8) * 32;
-                    let y_tile_offset = (sprite_x as usize / 8) * 32 * sprite.height;
+                    let y_tile = sprite_y as usize / 8;
+                    let y_tile_offset = if sprite.v_flip { sprite.height - y_tile - 1} else { y_tile } * 32;
+                    let x_tile = sprite_x as usize / 8;
+                    let x_tile_offset = if sprite.h_flip { sprite.width - x_tile - 1} else { x_tile } * 32 * sprite.height;
                     let extra = y_tile_offset + x_tile_offset;
 
                     let px = tiles[tile_offset + extra];
