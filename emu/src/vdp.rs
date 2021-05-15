@@ -158,7 +158,7 @@ impl VDP {
                 let palette  = sprite[4] as usize >> 5 & 3;
                 let v_flip = sprite[4] as usize >> 4 & 1 == 1;
                 let h_flip = sprite[4] as usize >> 3 & 1 == 1;
-                let tile = ((sprite[4] as usize & 7 << 8) | sprite[5] as usize) * 0x20;
+                let tile = (((sprite[4] as usize & 7) << 8) | sprite[5] as usize) * 0x20;
                 let x_pos = ((sprite[6] as usize) << 8) | sprite[7] as usize;
                 sprites.push(Sprite {
                     y_pos,
