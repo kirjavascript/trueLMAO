@@ -129,6 +129,8 @@ impl Megadrive {
         // TODO: improve perf by having two buffers to render to and combine them, doing both
         // priorities at once. OR have a write queue
 
+        // TODO: sprites disappearing off the edge of screens
+
         // plane B, low priority
         self.draw_plane_line(
             cell_w,
@@ -219,11 +221,11 @@ impl Megadrive {
 
                     let tile_offset = (x_base as usize) + y_base as usize;
 
-                    let y_tile = sprite_y as usize / 8;
-                    let y_tile_offset = if sprite.v_flip { sprite.height - y_tile - 1} else { y_tile } * 32;
                     let x_tile = sprite_x as usize / 8;
-                    let x_tile_offset = if sprite.h_flip { sprite.width - x_tile - 1} else { x_tile } * 32 * sprite.height;
-                    let extra = y_tile_offset + x_tile_offset;
+                    let x_tile = if sprite.h_flip { sprite.width - x_tile - 1} else { x_tile };
+                    let y_tile = sprite_y as usize / 8;
+                    let y_tile = if sprite.v_flip { sprite.height - y_tile - 1} else { y_tile };
+                    let extra = (y_tile * 32) + (x_tile * 32 * sprite.height);
 
                     let px = tiles[tile_offset + extra];
                     let px = if sprite_base_x & 1 == 0 { px >> 4 } else { px & 0xF };
