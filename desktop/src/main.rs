@@ -47,7 +47,7 @@ fn main() {
     unsafe {
         draw::draw_rgb_nocopy(&mut pal, &palbuf);
         draw::draw_rgb_nocopy(&mut vram, &vrambuf);
-        draw::draw_rgb_nocopy(&mut screen, &emu.screen);
+        draw::draw_rgb_nocopy(&mut screen, &emu.gfx.screen);
     }
 
     pal.set_size(160,40);
