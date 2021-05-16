@@ -5,3 +5,7 @@ members = [
     "web",
     "desktop",
 ]
+
+[profile.release]
+lto = true
+opt-level = 3

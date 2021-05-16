@@ -12,12 +12,16 @@
             rel="icon"
             type="image/x-icon"
         />
-        <title>trueLMAO</title>
+        <title>trueLMAO - SONIC THE HEDGEHOG</title>
+        <script src="https://mrdoob.github.io/stats.js/build/stats.min.js"></script>
     </head>
     <body>
         <canvas width="320" height="240">
         <script type="module">
             // try stdweb
+
+            const stats=new Stats();
+            document.body.appendChild(stats.dom);
 
             import init, { frame, screen } from '../pkg/web.js';
 
@@ -25,23 +29,25 @@
             const ctx = canvas.getContext('2d');
 
             ~async function() {
-                await init();
-                (function loop() {
-                    requestAnimationFrame(loop);
-                    frame();
-                    const imgData = ctx.createImageData(320, 240);
-                    const buffer = JSON.parse(screen());
-                    for (let i = 0; i < 320*240; i++) {
-                        const bufferIndex = i * 3;
-                        const imgIndex = i * 4;
-                        imgData.data[imgIndex+0] = buffer[bufferIndex+0];
-                        imgData.data[imgIndex+1] = buffer[bufferIndex+1];
-                        imgData.data[imgIndex+2] = buffer[bufferIndex+2];
-                        imgData.data[imgIndex+3] = 255;
-                    }
+                const { memory } = await init();
 
-                    ctx.putImageData(imgData, 0, 0);
-                    console.log('frame');
+                (function loop() {
+                    stats.begin();
+                    frame();
+                     const buffer = new Uint8Array(memory.buffer, screen(), 320 * 240 * 3);
+                        const imgData = ctx.createImageData(320, 240);
+                        for (let i = 0; i < 320*240; i++) {
+                            const bufferIndex = i * 3;
+                            const imgIndex = i * 4;
+                            imgData.data[imgIndex+0] = buffer[bufferIndex+0];
+                            imgData.data[imgIndex+1] = buffer[bufferIndex+1];
+                            imgData.data[imgIndex+2] = buffer[bufferIndex+2];
+                            imgData.data[imgIndex+3] = 255;
+                        }
+
+                        ctx.putImageData(imgData, 0, 0);
+                    stats.end();
+                    requestAnimationFrame(loop);
                 })();
             } ();
 

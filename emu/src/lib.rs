@@ -90,7 +90,6 @@ impl Megadrive {
             self.core.execute(104);
 
             self.fire_beam(screen_y);
-
         }
 
         self.core.mem.vdp.set_status(vdp::VBLANK_MASK);
