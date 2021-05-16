@@ -15,15 +15,8 @@ pub fn frame() {
     unsafe { EMU.frame(); }
 }
 
-#[wasm_bindgen]
-pub fn _screen() -> String {
-    let bytes = unsafe { EMU.gfx.screen.clone().to_vec().iter().map(|e| e.to_string()).collect::<Vec<String>>().join(",") };
-    format!("[{}]", bytes)
-}
 
 #[wasm_bindgen]
 pub fn screen() -> *const u8 {
-    unsafe {
-        EMU.gfx.screen.as_ptr()
-    }
+    unsafe { EMU.gfx.screen.as_ptr() }
 }
