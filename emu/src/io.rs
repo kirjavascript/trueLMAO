@@ -1,9 +1,9 @@
 pub struct IO {
     registers: [u8; 0x10],
-    gamepad: [Gamepad; 2],
+    pub gamepad: [Gamepad; 2],
 }
 
-struct Gamepad(usize);
+pub struct Gamepad(usize);
 
 impl From<usize> for Gamepad {
     fn from(state: usize) -> Self {
