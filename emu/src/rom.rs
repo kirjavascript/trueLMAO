@@ -8,7 +8,6 @@ impl From<Vec<u8>> for ROM {
     }
 }
 
-#[allow(dead_code)]
 impl ROM {
     pub fn read_byte(&self, addr: u32) -> u8 {
         *self.bytes.get(addr as usize).unwrap_or(&0)

@@ -1,20 +1,37 @@
 pub struct IO {
     registers: [u8; 0x10],
+    gamepad: [u8; 2],
 }
 
 impl IO {
     pub fn new() -> Self {
         Self {
             registers: [
-                0xA0, 0x7F, 0x7F, 0x7F, 0, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0
+                0xA0,
+                0x7F,
+                0x7F,
+                0x7F,
+                0,
+                0,
+                0,
+                0xFF,
+                0,
+                0,
+                0xFF,
+                0,
+                0,
+                0xFF,
+                0,
+                0,
             ],
+            gamepad: [0, 0],
         }
     }
 
     pub fn read_byte(&self, mut address: u32) -> u8 {
         address >>= 1;
 
-        if (1u32..=3).contains(&address) {
+        if (1u32..=2).contains(&address) {
             // TODO: gamepad
             0
         } else {
