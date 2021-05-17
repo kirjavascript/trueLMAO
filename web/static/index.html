@@ -67,13 +67,7 @@
                     requestAnimationFrame(loop);
                     stats.begin();
                     b = !b;
-                    //wasm.gamepad_p1(b ? 0b10000000 : 0);
-                    wasm.frame();
-                    wasm.frame();
-                    wasm.frame();
-                    wasm.frame();
-                    wasm.frame();
-                    wasm.frame();
+                    wasm.gamepad_p1(b ? 0b10000001 : 0);
                     wasm.frame();
                     const buffer = new Uint8Array(
                         wasm.memory.buffer, wasm.screen(), 320 * 240 * 3
