@@ -13,6 +13,7 @@ impl From<usize> for Gamepad {
 
 impl Gamepad {
     // .. SABCRLDU
+    //    10000000
 
     pub fn read(&self, control: u8) -> u8 {
         let select = control & 0x40;
@@ -24,7 +25,6 @@ impl Gamepad {
             (self.0 >> 2) & 0x30 // SA
             | self.0 & 3 // DU
         };
-
         latch | select | value as u8
     }
 
@@ -62,23 +62,25 @@ impl IO {
         }
     }
 
-    pub fn read_byte(&self, mut address: u32) -> u8 {
-        address >>= 1;
+    pub fn read_byte(&self, address: u32) -> u8 {
+        let index = (address as usize >> 1);
 
-        if (1u32..=2).contains(&address) {
-            let address = address as usize;
-            let ctrl = self.registers[address + 3];
-            self.gamepad[address - 1].read(ctrl)
+        // println!("{:#?}", );
+
+        if (1..=3).contains(&index) {
+            // let ctrl = self.registers[index + 3];
+            // self.gamepad[index - 1].read(ctrl)
+            0
         } else {
-            self.registers[address as usize & 0xF]
+            self.registers[index & 0xF]
         }
     }
 
-    pub fn write_byte(&mut self, mut address: u32, value: u32) {
-        address >>= 1;
+    pub fn write_byte(&mut self, address: u32, value: u32) {
+        let index = (address as usize >> 1) & 0x1F;
 
-        if (1u32..=6).contains(&address) {
-            self.registers[address as usize & 0xF] = value as _;
+        if (4..=6).contains(&index) {
+            self.registers[index] = value as _;
         }
     }
 }

@@ -8,6 +8,5 @@ crate-type = ["cdylib"]
 
 [dependencies]
 emu = { path = "../emu" }
-lazy_static = "1.3.0"
 lazy_mut = "0.1.0"
 wasm-bindgen = "*"

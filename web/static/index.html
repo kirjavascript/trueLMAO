@@ -60,10 +60,20 @@
 
             (async () => {
                 const wasm = await init();
+                window.wasm = wasm;
 
+                let b = false;
                 (function loop() {
                     requestAnimationFrame(loop);
                     stats.begin();
+                    b = !b;
+                    //wasm.gamepad_p1(b ? 0b10000000 : 0);
+                    wasm.frame();
+                    wasm.frame();
+                    wasm.frame();
+                    wasm.frame();
+                    wasm.frame();
+                    wasm.frame();
                     wasm.frame();
                     const buffer = new Uint8Array(
                         wasm.memory.buffer, wasm.screen(), 320 * 240 * 3
