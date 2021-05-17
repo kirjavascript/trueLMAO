@@ -20,3 +20,8 @@ pub fn frame() {
 pub fn screen() -> *const u8 {
     unsafe { EMU.gfx.screen.as_ptr() }
 }
+
+#[wasm_bindgen]
+pub fn gamepad_p1(value: usize) {
+    unsafe { EMU.core.mem.io.gamepad[0].set(value) }
+}
