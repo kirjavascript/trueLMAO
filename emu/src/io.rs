@@ -12,28 +12,24 @@ impl From<usize> for Gamepad {
 }
 
 impl Gamepad {
-    // UDLRABCS
+    // .. SABCRLDU
 
     pub fn read(&self, control: u8) -> u8 {
-        let flip = |b: u64| (b * 0x0202020202u64 & 0x010884422010u64) % 1023;
         let select = control & 0x40;
         let latch = control & 0x80;
 
         let value = if select != 0 {
-            0
+            self.0 & 0x3F // CBRLDU
         } else {
-            0
+            (self.0 >> 2) & 0x30 // SA
+            | self.0 & 3 // DU
         };
 
-        latch | select | value
+        latch | select | value as u8
     }
 
     pub fn set(&mut self, value: usize) {
         self.0 = value;
-    }
-
-    fn bit(&self, bit: usize) -> usize {
-        0
     }
 }
 
@@ -43,9 +39,9 @@ impl IO {
         Self {
             registers: [
                 0xA0, // version
-                0, // ctrl 1 data
-                0, // ctrl 2 data
-                0, // exp data
+                0x7F, // ctrl 1 data
+                0x7F, // ctrl 2 data
+                0x7F, // exp data
                 0, // ctrl 1 ctrl
                 0, // ctrl 2 ctrl
                 0, // exp control
