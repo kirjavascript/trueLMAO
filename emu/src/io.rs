@@ -14,8 +14,25 @@ impl From<usize> for Gamepad {
 impl Gamepad {
     // UDLRABCS
 
-    pub fn read(&self, select: bool) -> u8 {
+    pub fn read(&self, control: u8) -> u8 {
         let flip = |b: u64| (b * 0x0202020202u64 & 0x010884422010u64) % 1023;
+        let select = control & 0x40;
+        let latch = control & 0x80;
+
+        let value = if select != 0 {
+            0
+        } else {
+            0
+        };
+
+        latch | select | value
+    }
+
+    pub fn set(&mut self, value: usize) {
+        self.0 = value;
+    }
+
+    fn bit(&self, bit: usize) -> usize {
         0
     }
 }
@@ -55,8 +72,7 @@ impl IO {
         if (1u32..=2).contains(&address) {
             let address = address as usize;
             let ctrl = self.registers[address + 3];
-            let select = ctrl & 0x40 != 0;
-            self.gamepad[address - 1].read(select)
+            self.gamepad[address - 1].read(ctrl)
         } else {
             self.registers[address as usize & 0xF]
         }
