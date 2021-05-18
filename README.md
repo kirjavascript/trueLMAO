@@ -2,7 +2,7 @@
 
 ## what is this?
 
-A portable Sega Genesis / Megadrive emulator
+a portable Sega Genesis / Megadrive emulator
 
 ## say some keywords
 
