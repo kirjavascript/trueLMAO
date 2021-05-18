@@ -30,7 +30,7 @@
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                font-family: Hack, monospace;
+                font-family: monospace;
             }
             h1, span {
                 font-size: 15px;
@@ -45,32 +45,28 @@
         <script nomodule>alert("use a browser that supports modules, or ask for older browser support :^)");</script>
         <main>
             <canvas width="320" height="224"></canvas>
-            <section>
-                <h1>SONIC THE HEDGEHOG 2</h1>
-            </section>
+            <h1>SONIC THE HEDGEHOG 2</h1>
         </main>
         <script type="module">
             const stats=new Stats();
             document.body.appendChild(stats.dom);
 
-            import init from '../pkg/web.js';
+            import init from './pkg/web.js';
+            import gamepad from './gamepad.js';
 
             const canvas = document.querySelector('canvas');
             const ctx = canvas.getContext('2d');
 
             (async () => {
-                const wasm = await init();
-                window.wasm = wasm;
+                const emu = await init();
 
-                let b = false;
                 (function loop() {
                     requestAnimationFrame(loop);
                     stats.begin();
-                    b = !b;
-                    wasm.gamepad_p1(b ? 0b10000001 : 0);
-                    wasm.frame();
+                    emu.gamepad_p1(gamepad());
+                    emu.frame();
                     const buffer = new Uint8Array(
-                        wasm.memory.buffer, wasm.screen(), 320 * 240 * 3
+                        emu.memory.buffer, emu.screen(), 320 * 240 * 3
                     );
                     const img = ctx.createImageData(320, 240);
                     for (let i = 0; i < 320*240; i++) {
@@ -86,7 +82,6 @@
                     stats.end();
                 })();
             })();
-
         </script>
     </body>
 </html>
