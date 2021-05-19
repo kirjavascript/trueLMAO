@@ -28,10 +28,12 @@ impl Mem {
 impl Mem {
     pub fn read_u8(&self, address: u32) -> u32 {
         match address & 0xFFFFFF {
-            0..=0x3FFFFF => self.rom.read_byte(address) as _,
+            0..=0x7FFFFF => self.rom.read_byte(address & 0x3FFFFF) as _,
+            0x400000..=0x9FFFFF => /* reserved */ 0,
             0xA00000..=0xA03FFF => self.z80.read_byte(address) as _,
-            0xA04000..=0xA0FFFF => 0,
+            0xA04000..=0xA0FFFF => /* Z80 */ 0,
             0xA10000..=0xA1001F => self.io.read_byte(address) as _,
+            0xA10020..=0xA10FFF => /* reserved */ 0,
             0xA11100..=0xA112FF => self.z80.ctrl_read(address) as _,
             0xC00000..=0xDFFFFF => self.vdp.read(address),
             0xFF0000..=0xFFFFFF => self.ram[address as usize & 0xFFFF] as _,
@@ -51,12 +53,17 @@ impl Mem {
     }
     pub fn write_u8(&mut self, address: u32, value: u32) {
         match address & 0xFFFFFF {
-            0..=0x3FFFFF => {},
+            0..=0x3FFFFF => {/* ROM */},
+            0x400000..=0x9FFFFF => {/* reserved */},
             0xA00000..=0xA03FFF => self.z80.write_byte(address, value),
-            0xA04000..=0xA0FFFF => {},
+            0xA04000..=0xA0FFFF => {/* Z80 */},
             0xA10000..=0xA1001F => self.io.write_byte(address, value),
+            0xA10020..=0xA10FFF => {/* reserved */},
+            0xA11000..=0xA11001 => {/* memory mode register (no-op?) */},
+            0xA11002..=0xA110FF => {/* reserved */},
             0xA11100..=0xA112FF => self.z80.ctrl_write(address, value),
-            0xC00000..=0xDFFFFF => {/* PSG goes here? */},
+            0xA14101..=0xBFFFFF => {/* reserved */},
+            0xC00000..=0xDFFFFF => {/* VDP / PSG? */},
             0xFF0000..=0xFFFFFF => {
                 self.ram[address as usize & 0xFFFF] = value as u8;
             },
