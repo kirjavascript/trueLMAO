@@ -12,7 +12,7 @@ impl From<usize> for Gamepad {
 }
 
 impl Gamepad {
-    // .. SABCRLDU
+    // .. SACBRLDU
 
     pub fn read(&self, register: u8, _control: u8) -> u8 {
         let select = register & 0x40;

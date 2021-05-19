@@ -122,9 +122,8 @@ impl Megadrive {
         // TODO: improve perf by having two buffers to render to and combine them, doing both
         // priorities at once. OR have a write queue
 
-        // TODO: sprites disappearing off the edge of screens (sonic spin)
         // TODO: sprite / FG priority
-        // TODO: sprites appearing at left of screen
+        // TODO: sprite pixels appearing at left of screen
 
         // plane B, low priority
         Gfx::draw_plane_line(
