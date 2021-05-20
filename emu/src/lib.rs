@@ -62,6 +62,7 @@ impl Megadrive {
         // TODO: read controller
         /* cycle counts initially taken from drx/kiwi */
         // TODO: use a counter instead
+        // TODO: patch gfx.screen_width here for gfx.draw()
 
         Gfx::clear_screen(self);
 
@@ -113,8 +114,16 @@ impl Megadrive {
         let (plane_a, plane_b) = self.core.mem.vdp.nametables();
         let (hscroll_a, hscroll_b) = self.core.mem.vdp.hscroll(screen_y);
         let screen_width = self.core.mem.vdp.screen_width();
-
         let sprites = self.core.mem.vdp.sprites(screen_y);
+
+        let plane_w = self.core.mem.vdp.registers[3] >> 1;
+        let window_x = self.core.mem.vdp.registers[0x11];
+        let window_y = self.core.mem.vdp.registers[0x12];
+        let window_left = window_x >> 7 == 0;
+        let window_top =  window_y >> 7 == 0;
+        let window_x = window_x & 0x1F;
+        let window_y = window_y & 0x1F;
+
 
         // TODO: priority https://segaretro.org/Sega_Mega_Drive/Priority
         // (unused in the plane drawing
@@ -160,6 +169,14 @@ impl Megadrive {
             0, // priority
         );
 
+        // window, low priority
+        Gfx::draw_window_line(
+            self,
+            screen_y,
+            screen_width,
+            0, // priority
+        );
+
         // plane B, high priority
         Gfx::draw_plane_line(
             self,
@@ -193,6 +210,14 @@ impl Megadrive {
             screen_y,
             screen_width,
             1,
+        );
+
+        // window, high priority
+        Gfx::draw_window_line(
+            self,
+            screen_y,
+            screen_width,
+            1, // priority
         );
     }
 

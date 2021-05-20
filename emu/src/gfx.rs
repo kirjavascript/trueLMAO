@@ -22,57 +22,6 @@ impl Gfx {
         };
     }
 
-    pub fn draw_sprite_line(
-        emu: &mut Megadrive,
-        sprites: &Vec<crate::vdp::Sprite>,
-        screen_y: usize,
-        screen_width: usize,
-        priority: usize,
-    ) {
-        for sprite in sprites.iter().rev() {
-            if sprite.priority != priority {
-                continue
-            }
-            let sprite_y = screen_y as isize - sprite.y_coord();
-            let tiles = &emu.core.mem.vdp.VRAM[sprite.tile..];
-            for sprite_x in 0..sprite.width * 8 {
-                let x_offset = sprite.x_coord() + sprite_x as isize;
-
-                if x_offset >= 0 && x_offset <= screen_width as isize {
-
-                    let sprite_base_x = if sprite.h_flip { sprite_x ^ 7 } else { sprite_x };
-                    let x_base = (sprite_base_x & 6) >> 1;
-                    let y_base = sprite_y & 7;
-                    let y_base = if sprite.v_flip { y_base ^ 7 } else { y_base } * 4;
-
-                    let tile_offset = (x_base as usize) + y_base as usize;
-
-                    let x_tile = sprite_x as usize / 8;
-                    let x_tile = if sprite.h_flip { sprite.width - x_tile - 1} else { x_tile };
-                    let y_tile = sprite_y as usize / 8;
-                    let y_tile = if sprite.v_flip { sprite.height - y_tile - 1} else { y_tile };
-                    let extra = (y_tile * 32) + (x_tile * 32 * sprite.height);
-
-                    let px = tiles[tile_offset + extra];
-                    let px = if sprite_base_x & 1 == 0 { px >> 4 } else { px & 0xF };
-
-                    if px != 0 {
-                        let (r, g, b) = emu.core.mem.vdp.color(sprite.palette, px as _);
-
-                        let screen_offset = (x_offset as usize + (screen_y * screen_width)) * 3;
-
-                        if screen_offset + 2 <= emu.gfx.screen.len() {
-                            emu.gfx.screen[screen_offset] = r;
-                            emu.gfx.screen[screen_offset + 1] = g;
-                            emu.gfx.screen[screen_offset + 2] = b;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-
     pub fn draw_plane_line(
         emu: &mut Megadrive,
         cell_w: usize,
@@ -130,5 +79,65 @@ impl Gfx {
                 emu.gfx.screen[screen_offset + 2] = b;
             }
         }
+    }
+
+    pub fn draw_sprite_line(
+        emu: &mut Megadrive,
+        sprites: &Vec<crate::vdp::Sprite>,
+        screen_y: usize,
+        screen_width: usize,
+        priority: usize,
+    ) {
+        for sprite in sprites.iter().rev() {
+            if sprite.priority != priority {
+                continue
+            }
+            let sprite_y = screen_y as isize - sprite.y_coord();
+            let tiles = &emu.core.mem.vdp.VRAM[sprite.tile..];
+            for sprite_x in 0..sprite.width * 8 {
+                let x_offset = sprite.x_coord() + sprite_x as isize;
+
+                if x_offset >= 0 && x_offset <= screen_width as isize {
+
+                    let sprite_base_x = if sprite.h_flip { sprite_x ^ 7 } else { sprite_x };
+                    let x_base = (sprite_base_x & 6) >> 1;
+                    let y_base = sprite_y & 7;
+                    let y_base = if sprite.v_flip { y_base ^ 7 } else { y_base } * 4;
+
+                    let tile_offset = (x_base as usize) + y_base as usize;
+
+                    let x_tile = sprite_x as usize / 8;
+                    let x_tile = if sprite.h_flip { sprite.width - x_tile - 1} else { x_tile };
+                    let y_tile = sprite_y as usize / 8;
+                    let y_tile = if sprite.v_flip { sprite.height - y_tile - 1} else { y_tile };
+                    let extra = (y_tile * 32) + (x_tile * 32 * sprite.height);
+
+                    let px = tiles[tile_offset + extra];
+                    let px = if sprite_base_x & 1 == 0 { px >> 4 } else { px & 0xF };
+
+                    if px != 0 {
+                        let (r, g, b) = emu.core.mem.vdp.color(sprite.palette, px as _);
+
+                        let screen_offset = (x_offset as usize + (screen_y * screen_width)) * 3;
+
+                        if screen_offset + 2 <= emu.gfx.screen.len() {
+                            emu.gfx.screen[screen_offset] = r;
+                            emu.gfx.screen[screen_offset + 1] = g;
+                            emu.gfx.screen[screen_offset + 2] = b;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    pub fn draw_window_line(
+        emu: &mut Megadrive,
+        screen_y: usize,
+        screen_width: usize,
+        priority: usize,
+    ) {
+
     }
 }

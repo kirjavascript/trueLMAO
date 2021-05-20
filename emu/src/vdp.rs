@@ -133,8 +133,8 @@ impl VDP {
     }
 
     pub fn nametables(&self) -> (usize, usize) {
-        let plane_a = ((self.registers[2] >> 3) as usize & 7) * 0x2000;
-        let plane_b = (self.registers[4] as usize & 7) * 0x2000;
+        let plane_a = ((self.registers[2] >> 3) as usize) * 0x2000;
+        let plane_b = (self.registers[4] as usize) * 0x2000;
         (plane_a, plane_b)
     }
 
