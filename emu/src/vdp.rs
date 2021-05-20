@@ -138,9 +138,12 @@ impl VDP {
         (plane_a, plane_b)
     }
 
+    pub fn cell40(&self) -> bool {
+        (self.registers[0xC] as usize) >> 7 == 1
+    }
+
     pub fn sprites(&self, screen_y: usize) -> Vec<Sprite> {
-        let cell40 = (self.registers[0xC] as usize) >> 7 == 1;
-        let mask = if cell40 { 0x7F } else { 0x7E };
+        let mask = if self.cell40() { 0x7F } else { 0x7E };
         let addr = ((self.registers[5] as usize) & mask) << 9;
 
         let mut index = 0usize;

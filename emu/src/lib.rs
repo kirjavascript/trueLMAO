@@ -124,14 +124,17 @@ impl Megadrive {
         let window_x = window_x & 0x1F;
         let window_y = window_y & 0x1F;
 
+        let cell40 = self.core.mem.vdp.cell40();
 
-        // TODO: priority https://segaretro.org/Sega_Mega_Drive/Priority
+        for screen_x in 0..screen_width {
+
+        }
+
+
         // (unused in the plane drawing
-        // TODO: make a draw_pixel func
         // TODO: improve perf by having two buffers to render to and combine them, doing both
         // priorities at once. OR have a write queue
 
-        // TODO: sprite / FG priority
         // TODO: sprite pixels appearing at left of screen
 
         // plane B, low priority
