@@ -116,21 +116,6 @@ impl Megadrive {
         let screen_width = self.core.mem.vdp.screen_width();
         let sprites = self.core.mem.vdp.sprites(screen_y);
 
-        let plane_w = self.core.mem.vdp.registers[3] >> 1;
-        let window_x = self.core.mem.vdp.registers[0x11];
-        let window_y = self.core.mem.vdp.registers[0x12];
-        let window_left = window_x >> 7 == 0;
-        let window_top =  window_y >> 7 == 0;
-        let window_x = window_x & 0x1F;
-        let window_y = window_y & 0x1F;
-
-        let cell40 = self.core.mem.vdp.cell40();
-
-        for screen_x in 0..screen_width {
-
-        }
-
-
         // (unused in the plane drawing
         // TODO: improve perf by having two buffers to render to and combine them, doing both
         // priorities at once. OR have a write queue

@@ -138,6 +138,43 @@ impl Gfx {
         screen_width: usize,
         priority: usize,
     ) {
+        let nametable = (emu.core.mem.vdp.registers[3] as usize >> 1) * 0x2000;
+        let window_x = emu.core.mem.vdp.registers[0x11];
+        let window_y = emu.core.mem.vdp.registers[0x12];
+        let window_left = window_x >> 7 == 0;
+        let window_top =  window_y >> 7 == 0;
+        let window_x = window_x as usize & 0x1F;
+        let window_y = window_y as usize & 0x1F;
+        let cell_w = screen_width / 8;
+        let cell_h = 30;
 
+        if window_left && window_top && window_x == 0 && window_y == 0 {
+            return; // TODO: not exhausative, will catch most cases
+        }
+
+            // do priority last, split up works
+
+        if window_left && window_top && screen_y < window_y  * 8 {
+
+            let tiles = &emu.core.mem.vdp.VRAM[nametable..];
+            for n in 0..window_x {
+                let tile = tiles[n]; // add Y
+                let y = screen_y & 7;
+                for x in 0..8 {
+                    let screen_x = x + (n * 8);
+
+
+                }
+            }
+
+        }
+
+        println!("{:?}", (window_left, window_top, window_x, window_y, nametable));
+        // let width = ;
+
+
+        // for screen_x in 0..screen_width {
+        //     // let tile = &emu.core.mem.vdp.VRAM[nametable + 0..];
+        // }
     }
 }
