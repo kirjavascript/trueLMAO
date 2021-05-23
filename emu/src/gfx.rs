@@ -136,9 +136,10 @@ impl Gfx {
         emu: &mut Megadrive,
         screen_y: usize,
         screen_width: usize,
-        priority: usize,
+        layer_priority: usize,
     ) {
-        let nametable = (emu.core.mem.vdp.registers[3] as usize >> 1) * 0x2000;
+        // TODO: support non-320 size nametable
+        let nametable = (emu.core.mem.vdp.registers[3] as usize >> 1) * 0x400;
         let window_x = emu.core.mem.vdp.registers[0x11];
         let window_y = emu.core.mem.vdp.registers[0x12];
         let window_left = window_x >> 7 == 0;
@@ -146,7 +147,7 @@ impl Gfx {
         let window_x = window_x as usize & 0x1F;
         let window_y = window_y as usize & 0x1F;
         let cell_w = screen_width / 8;
-        let cell_h = 30;
+        let cell_h = 30; // TODO: PAL / screen size
 
         if window_left && window_top && window_x == 0 && window_y == 0 {
             return; // TODO: not exhausative, will catch most cases
@@ -154,15 +155,46 @@ impl Gfx {
 
             // do priority last, split up works
 
+        let vram = &emu.core.mem.vdp.VRAM;
+
+        // draw TO left, TO top
+
         if window_left && window_top && screen_y < window_y  * 8 {
 
-            let tiles = &emu.core.mem.vdp.VRAM[nametable..];
-            for n in 0..window_x {
-                let tile = tiles[n]; // add Y
+            for n in 0..cell_w - window_x {
+                let tile_slice = &vram[nametable + (n * 2)..]; // add Y
+
+                let word = (tile_slice[0] as usize) << 8 | tile_slice[1] as usize;
+                let byte = word >> 8;
+
+                let priority = (byte >> 7) & 1;
+
+                // if priority != layer_priority {
+                //     continue
+                // }
+
+                let tile = word & 0x7FF;
+                let vflip = (byte & 0x10) != 0;
+                let hflip = (byte & 0x8) != 0;
+                let palette = (byte & 0x60) >> 5;
+
+
                 let y = screen_y & 7;
                 for x in 0..8 {
                     let screen_x = x + (n * 8);
 
+                    let px = vram[(tile * 32) + y + (x>>1)] & 0xf;
+                    let px = if x & 1 == 0 { px >> 4 } else { px & 0xF };
+
+                    if px != 0 {
+                        let (r, g, b) = emu.core.mem.vdp.color(palette, px as _);
+
+                        let screen_offset = (screen_x + (screen_y * screen_width)) * 3;
+
+                        emu.gfx.screen[screen_offset] = r;
+                        emu.gfx.screen[screen_offset + 1] = g;
+                        emu.gfx.screen[screen_offset + 2] = b;
+                    }
 
                 }
             }

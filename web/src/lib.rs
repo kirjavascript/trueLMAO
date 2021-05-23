@@ -5,7 +5,7 @@ use emu::Megadrive;
 
 lazy_mut! {
     static mut EMU: Megadrive = Megadrive::new(
-        include_bytes!("/home/cake/sonic/roms/s1.bin").to_vec()
+        include_bytes!("/home/cake/sonic/roms/sspin.bin").to_vec()
     );
 }
 
