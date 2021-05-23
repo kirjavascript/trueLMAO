@@ -35,6 +35,7 @@ impl Gfx {
     ) {
         for screen_x in 0..screen_width {
             // TODO: perf optim by doing things in tiles instead of pixels
+            // TODO: use hotspot & cpu usage to check
             let vscroll = emu.core.mem.vdp.vscroll(screen_x)[vscroll_offset] as usize;
 
             let plane_width = cell_w * 8;
@@ -97,7 +98,7 @@ impl Gfx {
             for sprite_x in 0..sprite.width * 8 {
                 let x_offset = sprite.x_coord() + sprite_x as isize;
 
-                if x_offset >= 0 && x_offset <= screen_width as isize {
+                if x_offset >= 0 && x_offset < screen_width as isize {
 
                     let sprite_base_x = if sprite.h_flip { sprite_x ^ 7 } else { sprite_x };
                     let x_base = (sprite_base_x & 6) >> 1;
