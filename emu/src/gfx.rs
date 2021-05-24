@@ -140,7 +140,7 @@ impl Gfx {
         layer_priority: usize,
     ) {
         // TODO: support non-320 size nametable
-        let nametable = (emu.core.mem.vdp.registers[3] as usize >> 1) * 0x400;
+        let nametable = (emu.core.mem.vdp.registers[3] as usize >> 1) * 0x800;
         let window_x = emu.core.mem.vdp.registers[0x11];
         let window_y = emu.core.mem.vdp.registers[0x12];
         let window_left = window_x >> 7 == 0;
@@ -162,8 +162,11 @@ impl Gfx {
 
         if window_left && window_top && screen_y < window_y  * 8 {
 
+            let row = screen_y >> 3;
+
             for n in 0..cell_w - window_x {
-                let tile_slice = &vram[nametable + (n * 2)..]; // add Y
+                let tile_offset = (n + (row * cell_w)) * 2;
+                let tile_slice = &vram[nametable + tile_offset..]; // add Y
 
                 let word = (tile_slice[0] as usize) << 8 | tile_slice[1] as usize;
                 let byte = word >> 8;
