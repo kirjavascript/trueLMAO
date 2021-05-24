@@ -36,6 +36,7 @@ impl Gfx {
         for screen_x in 0..screen_width {
             // TODO: perf optim by doing things in tiles instead of pixels
             // TODO: use hotspot & cpu usage to check
+            // TODO: also split hi-pri
             let vscroll = emu.core.mem.vdp.vscroll(screen_x)[vscroll_offset] as usize;
 
             let plane_width = cell_w * 8;
@@ -160,13 +161,13 @@ impl Gfx {
 
         // draw TO left, TO top
 
-        if window_left && window_top && screen_y < window_y  * 8 {
+        if window_left && window_top && screen_y < window_y * 8 {
 
-            let row = screen_y >> 3;
+            let row = screen_y / 8;
 
             for n in 0..cell_w - window_x {
                 let tile_offset = (n + (row * cell_w)) * 2;
-                let tile_slice = &vram[nametable + tile_offset..]; // add Y
+                let tile_slice = &vram[nametable + tile_offset..];
 
                 let word = (tile_slice[0] as usize) << 8 | tile_slice[1] as usize;
                 let byte = word >> 8;
@@ -184,10 +185,10 @@ impl Gfx {
 
 
                 let y = screen_y & 7;
-                for x in 0..8 {
+                for x in 0..8 { // TODO: 0..4
                     let screen_x = x + (n * 8);
 
-                    let px = vram[(tile * 32) + y + (x>>1)] & 0xf;
+                    let px = vram[(tile * 32) + (y*4) + (x>>1)];
                     let px = if x & 1 == 0 { px >> 4 } else { px & 0xF };
 
                     if px != 0 {
