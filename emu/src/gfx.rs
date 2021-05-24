@@ -151,6 +151,8 @@ impl Gfx {
         let cell_w = screen_width / 8;
         let cell_h = 30; // TODO: PAL / screen size
 
+        println!("{:#?}", cell_w);
+
         if window_left && window_top && window_x == 0 && window_y == 0 {
             return; // TODO: not exhausative, will catch most cases
         }
@@ -166,7 +168,7 @@ impl Gfx {
             let row = screen_y / 8;
 
             for n in 0..cell_w - window_x {
-                let tile_offset = (n + (row * cell_w)) * 2;
+                let tile_offset = (n + (row * 64)) * 2;
                 let tile_slice = &vram[nametable + tile_offset..];
 
                 let word = (tile_slice[0] as usize) << 8 | tile_slice[1] as usize;
