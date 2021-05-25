@@ -175,9 +175,9 @@ impl Gfx {
 
                 let priority = (byte >> 7) & 1;
 
-                // if priority != layer_priority {
-                //     continue
-                // }
+                if priority != layer_priority {
+                    continue
+                }
 
                 let tile = word & 0x7FF;
                 let vflip = (byte & 0x10) != 0;
@@ -193,12 +193,12 @@ impl Gfx {
                     screen[screen_offset + 2] = b;
                 };
 
+                let x = n * 8;
                 let y = screen_y & 7;
                 let y = if vflip { y ^ 7 } else { y };
                 let index = (tile * 32) + (y * 4);
 
                 let line = &vram[index..index+4];
-                let x_offset = n * 8;
 
                 let mut cursor = 0;
                 for duxel in line {
@@ -206,7 +206,7 @@ impl Gfx {
                     if px != 0 {
                         draw(
                             &mut emu.gfx.screen,
-                            flip(cursor) + x_offset,
+                            flip(cursor) + x,
                             emu.core.mem.vdp.color(palette, px as usize)
                         );
                     }
@@ -215,7 +215,7 @@ impl Gfx {
                     if px != 0 {
                         draw(
                             &mut emu.gfx.screen,
-                            flip(cursor) + x_offset,
+                            flip(cursor) + x,
                             emu.core.mem.vdp.color(palette, px as usize)
                         );
                     }

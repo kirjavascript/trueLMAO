@@ -1,5 +1,5 @@
 #!/bin/sh
-wasm-pack build --release --target web --out-dir static/emu
+wasm-pack build --release --target web --out-dir static/pkg
 
 # develop
 # https://www.npmjs.com/package/local-web-server
