@@ -141,6 +141,7 @@ impl Gfx {
         layer_priority: usize,
     ) {
         // TODO: support non-320 size nametable
+        // TODO: plane A / window exclusivity
         let nametable = (emu.core.mem.vdp.registers[3] as usize >> 1) * 0x800;
         let window_x = emu.core.mem.vdp.registers[0x11];
         let window_y = emu.core.mem.vdp.registers[0x12];
@@ -148,10 +149,8 @@ impl Gfx {
         let window_top =  window_y >> 7 == 0;
         let window_x = window_x as usize & 0x1F;
         let window_y = window_y as usize & 0x1F;
-        let cell_w = screen_width / 8;
+        let cell_w = 64; // TODO
         let cell_h = 30; // TODO: PAL / screen size
-
-        println!("{:#?}", cell_w);
 
         if window_left && window_top && window_x == 0 && window_y == 0 {
             return; // TODO: not exhausative, will catch most cases
@@ -168,8 +167,8 @@ impl Gfx {
             let row = screen_y / 8;
 
             for n in 0..cell_w - window_x {
-                let tile_offset = (n + (row * 64)) * 2;
-                let tile_slice = &vram[nametable + tile_offset..];
+                let tile_offset = (n + (row * cell_w)) * 2;
+                let tile_slice = &emu.core.mem.vdp.VRAM[nametable + tile_offset..];
 
                 let word = (tile_slice[0] as usize) << 8 | tile_slice[1] as usize;
                 let byte = word >> 8;
@@ -185,24 +184,42 @@ impl Gfx {
                 let hflip = (byte & 0x8) != 0;
                 let palette = (byte & 0x60) >> 5;
 
+                let flip = |cursor| if hflip { cursor ^ 7 } else { cursor };
+
+                let draw = |screen: &mut Screen, screen_x, (r, g, b)| {
+                    let screen_offset = (screen_x + (screen_y * screen_width)) * 3;
+                    screen[screen_offset] = r;
+                    screen[screen_offset + 1] = g;
+                    screen[screen_offset + 2] = b;
+                };
 
                 let y = screen_y & 7;
-                for x in 0..8 { // TODO: 0..4
-                    let screen_x = x + (n * 8);
+                let y = if vflip { y ^ 7 } else { y };
+                let index = (tile * 32) + (y * 4);
 
-                    let px = vram[(tile * 32) + (y*4) + (x>>1)];
-                    let px = if x & 1 == 0 { px >> 4 } else { px & 0xF };
+                let line = &vram[index..index+4];
+                let x_offset = n * 8;
 
+                let mut cursor = 0;
+                for duxel in line {
+                    let px = duxel >> 4;
                     if px != 0 {
-                        let (r, g, b) = emu.core.mem.vdp.color(palette, px as _);
-
-                        let screen_offset = (screen_x + (screen_y * screen_width)) * 3;
-
-                        emu.gfx.screen[screen_offset] = r;
-                        emu.gfx.screen[screen_offset + 1] = g;
-                        emu.gfx.screen[screen_offset + 2] = b;
+                        draw(
+                            &mut emu.gfx.screen,
+                            flip(cursor) + x_offset,
+                            emu.core.mem.vdp.color(palette, px as usize)
+                        );
                     }
-
+                    cursor += 1;
+                    let px = duxel & 0xF;
+                    if px != 0 {
+                        draw(
+                            &mut emu.gfx.screen,
+                            flip(cursor) + x_offset,
+                            emu.core.mem.vdp.color(palette, px as usize)
+                        );
+                    }
+                    cursor += 1;
                 }
             }
 

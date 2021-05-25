@@ -29,6 +29,7 @@ impl Megadrive {
             core,
             gfx: Gfx::new(),
         }
+
     }
 
     pub fn step_n(&mut self, amount: usize) {
