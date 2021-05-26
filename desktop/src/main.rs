@@ -7,6 +7,7 @@ use fltk::{
     prelude::*,
     window::Window,
     text::{TextBuffer, TextDisplay},
+    enums::Event,
 };
 
 use std::time::Instant;
@@ -74,27 +75,20 @@ fn main() {
 
     wind.set_label(&format!("trueLMAO - {}", name));
 
+    wind.handle(move |_, ev| {
+        match ev {
+            Event::KeyDown => {
+                println!("{:#?}", app::event_text());
+                true
+            }
+            _ => false,
+        }
+    });
+
     let mut running = true;
 
     while app.wait() {
         let start = Instant::now();
-
-        while let Some(msg) = r.recv() {
-            println!("{:#?}", "asd");
-            match msg {
-                Update::Step => {
-                    emu.step_n(stepby.value().parse::<usize>().unwrap_or(1));
-                },
-                Update::Frame => {
-                    emu.frame();
-                },
-                Update::Toggle => {
-                    running = !running;
-                    println!("{:?}", running);
-                    toggle.set_label(if running { "stop" } else { "go" });
-                },
-            }
-        }
 
         if running {
             emu.frame();
@@ -169,6 +163,24 @@ fn main() {
                     x = 0;
                     y += 256 * 3;
                 }
+            }
+        }
+
+
+        while let Some(msg) = r.recv() {
+            println!("{:#?}", "asd");
+            match msg {
+                Update::Step => {
+                    emu.step_n(stepby.value().parse::<usize>().unwrap_or(1));
+                },
+                Update::Frame => {
+                    emu.frame();
+                },
+                Update::Toggle => {
+                    running = !running;
+                    println!("{:?}", running);
+                    toggle.set_label(if running { "stop" } else { "go" });
+                },
             }
         }
 

@@ -208,6 +208,7 @@ impl Megadrive {
             screen_width,
             1, // priority
         );
+
     }
 
 }

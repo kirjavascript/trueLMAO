@@ -141,7 +141,7 @@ impl Gfx {
         layer_priority: usize,
     ) {
         // TODO: support non-320 size nametable
-        // TODO: plane A / window exclusivity
+        // TODO: plane A / window exclusivity (perf)
         let nametable = (emu.core.mem.vdp.registers[3] as usize >> 1) * 0x800;
         let window_x = emu.core.mem.vdp.registers[0x11];
         let window_y = emu.core.mem.vdp.registers[0x12];
@@ -155,8 +155,6 @@ impl Gfx {
         if window_left && window_top && window_x == 0 && window_y == 0 {
             return; // TODO: not exhausative, will catch most cases
         }
-
-            // do priority last, split up works
 
         // draw TO left, TO top
 
@@ -258,12 +256,5 @@ impl Gfx {
 
         }
 
-        // println!("{:?}", (window_left, window_top, window_x, window_y, nametable));
-        // let width = ;
-
-
-        // for screen_x in 0..screen_width {
-        //     // let tile = &emu.core.mem.vdp.VRAM[nametable + 0..];
-        // }
     }
 }
