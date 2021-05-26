@@ -10,13 +10,23 @@ use fltk::{
     enums::Event,
 };
 
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::time::Instant;
 
 use emu::Megadrive;
 
-#[derive(Debug, Copy, Clone)]
-pub enum Update {
-    Step, Frame, Toggle
+pub enum Msg {
+    Step, Frame
+}
+
+macro_rules! clone {
+    ( $( $x:ident ),* => $y:expr ) => {
+        {
+            $(let $x = $x.clone();)*
+            $y
+        }
+    };
 }
 
 fn main() {
@@ -27,11 +37,11 @@ fn main() {
     let mut emu = Megadrive::new(buf);
 
     let mut wind = Window::new(100, 100, 800, 600, "trueLMAO");
-    let mut toggle = Button::new(400, 300, 80, 40, "stop");
     let mut but = Button::new(400, 350, 80, 40, "frame");
     let mut step = Button::new(400, 400, 80, 40, "step");
     let stepby = IntInput::new(400, 450, 80, 40, "step by");
     let mut info = TextDisplay::new(0, 0, 500, 300, "asm");
+    let mut toggle = Button::new(400, 300, 80, 40, "stop");
     stepby.set_value("1");
 
     let mut pal = Frame::new(0, 300, 16, 4, "");
@@ -56,20 +66,6 @@ fn main() {
     info.set_buffer(TextBuffer::default());
     let mut buffer = info.buffer().unwrap();
 
-    let (s, r) = app::channel::<Update>();
-
-    but.set_callback(move |_| {
-        s.send(Update::Frame);
-    });
-
-    step.set_callback(move |_| {
-        s.send(Update::Step);
-    });
-
-    toggle.set_callback(move |_| {
-        s.send(Update::Toggle);
-    });
-
     let name = emu.core.mem.rom.domestic_name()
         .split_whitespace().collect::<Vec<&str>>().join(" ");
 
@@ -85,13 +81,41 @@ fn main() {
         }
     });
 
-    let mut running = true;
+    let running = Rc::from(RefCell::from(true));
+
+    toggle.set_callback(clone!(running => move |toggle| {
+        let toggled = !*running.borrow();
+        *running.borrow_mut() = toggled;
+        toggle.set_label(if toggled { "stop" } else { "go" });
+    }));
+
+    let messages = Rc::from(RefCell::from(Vec::new()));
+
+    but.set_callback(clone!(messages => move |_| {
+        messages.borrow_mut().push(Msg::Frame);
+    }));
+
+    step.set_callback(clone!(messages => move |_| {
+        messages.borrow_mut().push(Msg::Step);
+    }));
+
 
     while app.wait() {
         let start = Instant::now();
 
-        if running {
+        if *running.borrow() {
             emu.frame();
+        }
+
+        while let Some(msg) = messages.borrow_mut().pop() {
+            match msg {
+                Msg::Step => {
+                    emu.step_n(stepby.value().parse::<usize>().unwrap_or(1));
+                },
+                Msg::Frame => {
+                    emu.frame();
+                },
+            }
         }
 
         let mut debug = String::new();
@@ -166,23 +190,6 @@ fn main() {
             }
         }
 
-
-        while let Some(msg) = r.recv() {
-            println!("{:#?}", "asd");
-            match msg {
-                Update::Step => {
-                    emu.step_n(stepby.value().parse::<usize>().unwrap_or(1));
-                },
-                Update::Frame => {
-                    emu.frame();
-                },
-                Update::Toggle => {
-                    running = !running;
-                    println!("{:?}", running);
-                    toggle.set_label(if running { "stop" } else { "go" });
-                },
-            }
-        }
 
         wind.redraw();
 
