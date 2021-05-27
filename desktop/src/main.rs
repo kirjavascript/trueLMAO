@@ -7,7 +7,7 @@ use fltk::{
     prelude::*,
     window::Window,
     text::{TextBuffer, TextDisplay},
-    enums::Event,
+    enums::{Event, Key},
 };
 
 use std::cell::RefCell;
@@ -32,7 +32,7 @@ macro_rules! clone {
 fn main() {
     let app = app::App::default();
     let buf: Vec<u8> = include_bytes!("./roms/Window Test by Fonzie (PD).bin").to_vec();
-    // let buf: Vec<u8> = include_bytes!("/home/cake/sonic/roms/sspin.bin").to_vec();
+    // let buf: Vec<u8> = include_bytes!("/home/cake/Genesis/Streets of Rage (JUE) (REV 00) [!].bin").to_vec();
 
     let mut emu = Megadrive::new(buf);
 
@@ -71,16 +71,6 @@ fn main() {
 
     wind.set_label(&format!("trueLMAO - {}", name));
 
-    wind.handle(move |_, ev| {
-        match ev {
-            Event::KeyDown => {
-                println!("{:#?}", app::event_text());
-                true
-            }
-            _ => false,
-        }
-    });
-
     let running = Rc::from(RefCell::from(true));
 
     toggle.set_callback(clone!(running => move |toggle| {
@@ -99,13 +89,20 @@ fn main() {
         messages.borrow_mut().push(Msg::Step);
     }));
 
-
     while app.wait() {
         let start = Instant::now();
 
-        if *running.borrow() {
-            emu.frame();
-        }
+        // bad temp gamepad code:
+        let mut gamepad = 0;
+        if app::event_key_down(Key::from_char('w')) { gamepad |= 1; }
+        if app::event_key_down(Key::from_char('s')) { gamepad |= 1 << 1; }
+        if app::event_key_down(Key::from_char('a')) { gamepad |= 1 << 2; }
+        if app::event_key_down(Key::from_char('d')) { gamepad |= 1 << 3; }
+        if app::event_key_down(Key::from_char(',')) { gamepad |= 1 << 6; }
+        if app::event_key_down(Key::from_char('.')) { gamepad |= 1 << 4; }
+        if app::event_key_down(Key::from_char('/')) { gamepad |= 1 << 5; }
+        if app::event_key_down(Key::ShiftR) { gamepad |= 1 << 7; }
+        emu.core.mem.io.gamepad[0].set(gamepad);
 
         while let Some(msg) = messages.borrow_mut().pop() {
             match msg {
@@ -117,6 +114,11 @@ fn main() {
                 },
             }
         }
+
+        if *running.borrow() {
+            emu.frame();
+        }
+
 
         let mut debug = String::new();
         debug.push_str(&format!("PC: {:X}\n\n", emu.core.pc));
