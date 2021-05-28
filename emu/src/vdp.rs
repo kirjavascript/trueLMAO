@@ -205,7 +205,7 @@ impl VDP {
     pub fn vscroll(&self, screen_x: usize) -> &[u16] {
         let columns = self.registers[0xB] & 4 != 0;
         let offset = if columns {
-            screen_x * 2
+            (screen_x / 16) * 2
         } else {
             0
         };

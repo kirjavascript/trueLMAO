@@ -38,6 +38,8 @@ impl Gfx {
             // TODO: use hotspot & cpu usage to check
             // TODO: also split hi-pri
 
+            // TODO: check per pixel
+
             let vscroll = emu.core.mem.vdp.vscroll(screen_x)[vscroll_offset] as usize;
 
             let plane_width = cell_w * 8;
@@ -151,7 +153,7 @@ impl Gfx {
         let window_x = window_x as usize & 0x1F;
         let window_y = window_y as usize & 0x1F;
         let cell_w = 64; // TODO
-        let cell_h = 30; // TODO: PAL / screen size
+        let _cell_h = 30; // TODO: PAL / screen size
 
         if window_left && window_top && window_x == 0 && window_y == 0 {
             return; // TODO: not exhausative, will catch most cases
