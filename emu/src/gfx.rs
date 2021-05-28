@@ -37,6 +37,7 @@ impl Gfx {
             // TODO: perf optim by doing things in tiles instead of pixels
             // TODO: use hotspot & cpu usage to check
             // TODO: also split hi-pri
+
             let vscroll = emu.core.mem.vdp.vscroll(screen_x)[vscroll_offset] as usize;
 
             let plane_width = cell_w * 8;
@@ -185,9 +186,6 @@ impl Gfx {
                 let y = if vflip { y ^ 7 } else { y };
                 let index = (tile * 32) + (y * 4);
 
-
-                //
-
                 for cursor in 0..8 {
                     let duxel = emu.core.mem.vdp.VRAM[index + (cursor / 2)];
                     let px = if cursor & 1 != 0 { duxel & 0xF } else { duxel >> 4 };
@@ -201,57 +199,6 @@ impl Gfx {
                         emu.gfx.screen[screen_offset + 2] = b;
                     }
                 }
-
-                //
-
-                // let line = &emu.core.mem.vdp.VRAM[index..index+4];
-
-                // let mut cursor = 0;
-                // for i in 0..4 {
-                //     let duxel = emu.core.mem.vdp.VRAM[index+i];
-                //     let px = duxel >> 4;
-                //     if px != 0 {
-                //         let screen_x = if hflip { cursor ^ 7 } else { cursor } + x;
-                //         let (r, g, b) = emu.core.mem.vdp.color(palette, px as usize);
-                //         let screen_offset = (screen_x + (screen_y * screen_width)) * 3;
-                //         emu.gfx.screen[screen_offset] = r;
-                //         emu.gfx.screen[screen_offset + 1] = g;
-                //         emu.gfx.screen[screen_offset + 2] = b;
-                //     }
-                //     cursor += 1;
-                //     let px = duxel & 0xF;
-                //     if px != 0 {
-                //         let screen_x = if hflip { cursor ^ 7 } else { cursor } + x;
-                //         let (r, g, b) = emu.core.mem.vdp.color(palette, px as usize);
-                //         let screen_offset = (screen_x + (screen_y * screen_width)) * 3;
-                //         emu.gfx.screen[screen_offset] = r;
-                //         emu.gfx.screen[screen_offset + 1] = g;
-                //         emu.gfx.screen[screen_offset + 2] = b;
-                //     }
-                //     cursor += 1;
-                // }
-
-
-                //
-
-                // let y = screen_y & 7;
-                // for x in 0..8 { // TODO: 0..4
-                //     let screen_x = x + (n * 8);
-
-                //     let px = &emu.core.mem.vdp.VRAM[(tile * 32) + (y*4) + (x>>1)];
-                //     let px = if x & 1 == 0 { px >> 4 } else { px & 0xF };
-
-                //     if px != 0 {
-                //         let (r, g, b) = emu.core.mem.vdp.color(palette, px as _);
-
-                //         let screen_offset = (screen_x + (screen_y * screen_width)) * 3;
-
-                //         emu.gfx.screen[screen_offset] = r;
-                //         emu.gfx.screen[screen_offset + 1] = g;
-                //         emu.gfx.screen[screen_offset + 2] = b;
-                //     }
-
-                // }
             }
 
         }

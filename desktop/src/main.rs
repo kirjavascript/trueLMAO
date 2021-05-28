@@ -7,7 +7,7 @@ use fltk::{
     prelude::*,
     window::Window,
     text::{TextBuffer, TextDisplay},
-    enums::{Event, Key},
+    enums::Key,
 };
 
 use std::cell::RefCell;
@@ -31,8 +31,9 @@ macro_rules! clone {
 
 fn main() {
     let app = app::App::default();
-    let buf: Vec<u8> = include_bytes!("./roms/Window Test by Fonzie (PD).bin").to_vec();
+    // let buf: Vec<u8> = include_bytes!("./roms/Window Test by Fonzie (PD).bin").to_vec();
     // let buf: Vec<u8> = include_bytes!("/home/cake/Genesis/Streets of Rage (JUE) (REV 00) [!].bin").to_vec();
+    let buf: Vec<u8> = include_bytes!("/home/cake/sonic/roms/s3d.bin").to_vec();
 
     let mut emu = Megadrive::new(buf);
 
