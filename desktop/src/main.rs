@@ -31,9 +31,10 @@ macro_rules! clone {
 
 fn main() {
     let app = app::App::default();
-    // let buf: Vec<u8> = include_bytes!("./roms/Window Test by Fonzie (PD).bin").to_vec();
-    // let buf: Vec<u8> = include_bytes!("/home/cake/Genesis/Streets of Rage (JUE) (REV 00) [!].bin").to_vec();
-    let buf: Vec<u8> = include_bytes!("/home/cake/sonic/roms/s3d.bin").to_vec();
+    // let buf: Vec<u8> = include_bytes!("./roms/DisableRegTestROM.bin").to_vec();
+    // let buf: Vec<u8> = include_bytes!("../../notes/pc.md").to_vec();
+    // let buf: Vec<u8> = include_bytes!("/home/cake/Genesis/Castlevania - Bloodlines (U) [!].bin").to_vec();
+    let buf: Vec<u8> = include_bytes!("/home/cake/sonic/roms/s2.bin").to_vec();
 
     let mut emu = Megadrive::new(buf);
 
