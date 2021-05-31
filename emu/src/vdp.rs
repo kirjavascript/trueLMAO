@@ -72,7 +72,7 @@ impl VDP {
         }
     }
 
-    pub fn color(&self, line: usize, index: usize) -> (u8, u8, u8) {
+    fn color(&self, line: usize, index: usize) -> (u8, u8, u8) {
         cram_to_rgb(self.CRAM[index + (line * 0x10)])
     }
 

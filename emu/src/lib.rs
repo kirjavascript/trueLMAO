@@ -115,6 +115,7 @@ impl Megadrive {
         let (hscroll_a, hscroll_b) = self.core.mem.vdp.hscroll(screen_y);
         let screen_width = self.core.mem.vdp.screen_width();
         let sprites = self.core.mem.vdp.sprites(screen_y);
+        let cram_rgb = self.core.mem.vdp.cram_rgb();
 
         // (unused in the plane drawing
         // TODO: improve perf by having two buffers to render to and combine them, doing both
@@ -123,6 +124,7 @@ impl Megadrive {
         // plane B, low priority
         Gfx::draw_plane_line(
             self,
+            &cram_rgb,
             cell_w,
             cell_h,
             screen_y,
@@ -136,6 +138,7 @@ impl Megadrive {
         // plane A, low priority
         Gfx::draw_plane_line(
             self,
+            &cram_rgb,
             cell_w,
             cell_h,
             screen_y,
@@ -149,6 +152,7 @@ impl Megadrive {
         // sprites, low priority
         Gfx::draw_sprite_line(
             self,
+            &cram_rgb,
             &sprites,
             screen_y,
             screen_width,
@@ -158,6 +162,7 @@ impl Megadrive {
         // window, low priority
         Gfx::draw_window_line(
             self,
+            &cram_rgb,
             screen_y,
             screen_width,
             0, // priority
@@ -166,6 +171,7 @@ impl Megadrive {
         // plane B, high priority
         Gfx::draw_plane_line(
             self,
+            &cram_rgb,
             cell_w,
             cell_h,
             screen_y,
@@ -179,6 +185,7 @@ impl Megadrive {
         // plane A, high priority
         Gfx::draw_plane_line(
             self,
+            &cram_rgb,
             cell_w,
             cell_h,
             screen_y,
@@ -192,6 +199,7 @@ impl Megadrive {
         // sprites, high priority
         Gfx::draw_sprite_line(
             self,
+            &cram_rgb,
             &sprites,
             screen_y,
             screen_width,
@@ -201,6 +209,7 @@ impl Megadrive {
         // window, high priority
         Gfx::draw_window_line(
             self,
+            &cram_rgb,
             screen_y,
             screen_width,
             1, // priority

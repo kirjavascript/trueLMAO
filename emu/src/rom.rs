@@ -10,7 +10,8 @@ impl From<Vec<u8>> for ROM {
 
 impl ROM {
     pub fn read_byte(&self, addr: u32) -> u8 {
-        *self.bytes.get(addr as usize).unwrap_or(&0)
+        // https://godbolt.org/z/decb18Yb5
+        self.bytes.get(addr as usize).copied().unwrap_or(0)
     }
 
     pub fn read_word(&self, addr: u32) -> u16 {

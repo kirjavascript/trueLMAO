@@ -24,6 +24,7 @@ impl Gfx {
 
     pub fn draw_plane_line(
         emu: &mut Megadrive,
+        cram_rgb: &[(u8, u8, u8); 64],
         cell_w: usize,
         cell_h: usize,
         screen_y: usize,
@@ -33,71 +34,73 @@ impl Gfx {
         vscroll_offset: usize,
         layer_priority: usize,
     ) {
-        // let columns = emu.core.mem.vdp.registers[0xB] & 4 != 0;
+        let columns = emu.core.mem.vdp.registers[0xB] & 4 != 0;
 
 
-        // let vscroll = emu.core.mem.vdp.vscroll(0)[vscroll_offset] as usize;
-        // // TODO: 16px columns rather than fullscreen
+        let vscroll = emu.core.mem.vdp.vscroll(0)[vscroll_offset] as usize;
+        // TODO: 16px columns rather than fullscreen
 
-        // let plane_width = cell_w * 8;
-        // let plane_height = cell_h * 8;
+        let plane_width = cell_w * 8;
+        let plane_height = cell_h * 8;
 
-        // let mut screen_x = 0;
+        let mut screen_x = 0;
 
-        // // left edge
-        // let width = hscroll % 8;
-        // // let width = 8 - width;
+        // left edge
+        let width = hscroll % 8;
 
-        // screen_x += width;
+        screen_x += width;
 
-        // while screen_x < screen_width { // loop
-        //     // center tiles + right edge
+        while screen_x < screen_width { // loop
+            // center tiles + right edge
 
-        //     let hscroll_rem = hscroll % plane_width;
-        //     let x_offset = (screen_x + plane_width - hscroll_rem) % plane_width;
-        //     let y_offset = (screen_y + vscroll) % plane_height;
+            let hscroll_rem = hscroll % plane_width;
+            let x_offset = (screen_x + plane_width - hscroll_rem) % plane_width;
+            let y_offset = (screen_y + vscroll) % plane_height;
 
-        //     let tile_index = ((x_offset / 8) + (y_offset / 8 * cell_w)) * 2;
-        //     let tile_slice = &emu.core.mem.vdp.VRAM[nametable + tile_index..];
+            let tile_index = ((x_offset / 8) + (y_offset / 8 * cell_w)) * 2;
+            let tile_slice = &emu.core.mem.vdp.VRAM[nametable + tile_index..];
 
-        //     let word = (tile_slice[0] as usize) << 8 | tile_slice[1] as usize;
-        //     let byte = word >> 8;
+            let word = (tile_slice[0] as usize) << 8 | tile_slice[1] as usize;
+            let byte = word >> 8;
 
-        //     let priority = (byte >> 7) & 1;
+            let priority = (byte >> 7) & 1;
 
-        //     if priority == layer_priority {
-        //         let tile = word & 0x7FF;
-        //         let vflip = (byte & 0x10) != 0;
-        //         let hflip = (byte & 0x8) != 0;
-        //         let palette = (byte & 0x60) >> 5;
+            if priority == layer_priority {
+                let tile = word & 0x7FF;
+                let vflip = (byte & 0x10) != 0;
+                let hflip = (byte & 0x8) != 0;
+                let palette = (byte & 0x60) >> 5;
 
-        //         let x = screen_x;
-        //         let y = y_offset & 7;
-        //         let y = if vflip { y ^ 7 } else { y };
-        //         let index = (tile * 32) + (y * 4);
+                let x = screen_x;
+                let y = y_offset & 7;
+                let y = if vflip { y ^ 7 } else { y };
+                let index = (tile * 32) + (y * 4);
 
-        //         for cursor in 0..8 {
-        //             let duxel = emu.core.mem.vdp.VRAM[index + (cursor / 2)];
-        //             let px = if cursor & 1 != 0 { duxel & 0xF } else { duxel >> 4 };
+                let start = 0;
+                let end = 8.min(screen_width - screen_x);
 
-        //             if px != 0 {
-        //                 let screen_x = if hflip { cursor ^ 7 } else { cursor } + x;
-        //                 let (r, g, b) = emu.core.mem.vdp.color(palette, px as usize);
-        //                 let screen_offset = (screen_x + (screen_y * screen_width)) * 3;
-        //                 emu.gfx.screen[screen_offset] = r;
-        //                 emu.gfx.screen[screen_offset + 1] = g;
-        //                 emu.gfx.screen[screen_offset + 2] = b;
-        //             }
-        //         }
-        //     }
+                for cursor in if hflip { 8 - end..8 - start } else { start..end } {
+                    let duxel = emu.core.mem.vdp.VRAM[index + (cursor / 2)];
+                    let px = if cursor & 1 != 0 { duxel & 0xF } else { duxel >> 4 };
 
-
-        //     screen_x += 8;
-
-        // };
+                    if px != 0 {
+                        let screen_x = if hflip { cursor ^ 7 } else { cursor } + x;
+                        let (r, g, b) = cram_rgb[px as usize + (palette * 0x10)];
+                        let screen_offset = (screen_x + (screen_y * screen_width)) * 3;
+                        emu.gfx.screen[screen_offset] = r;
+                        emu.gfx.screen[screen_offset + 1] = g;
+                        emu.gfx.screen[screen_offset + 2] = b;
+                    }
+                }
+            }
 
 
-        // return;
+            screen_x += 8;
+
+        };
+
+
+        return;
         // println!("{:#?}", columns);
 
         // draw for the size of the vscroll at a time
@@ -149,7 +152,7 @@ impl Gfx {
             let px = if hline & 1 == 0 { px >> 4 } else { px & 0xF };
 
             if px != 0 {
-                let (r, g, b) = emu.core.mem.vdp.color(palette, px as _);
+                let (r, g, b) = cram_rgb[px as usize + (palette * 0x10)];
 
                 let screen_offset = (screen_x + (screen_y * screen_width)) * 3;
 
@@ -162,6 +165,7 @@ impl Gfx {
 
     pub fn draw_sprite_line(
         emu: &mut Megadrive,
+        cram_rgb: &[(u8, u8, u8); 64],
         sprites: &Vec<crate::vdp::Sprite>,
         screen_y: usize,
         screen_width: usize,
@@ -195,8 +199,7 @@ impl Gfx {
                     let px = if sprite_base_x & 1 == 0 { px >> 4 } else { px & 0xF };
 
                     if px != 0 {
-                        let (r, g, b) = emu.core.mem.vdp.color(sprite.palette, px as _);
-
+                        let (r, g, b) = cram_rgb[px as usize + (sprite.palette * 0x10)];
                         let screen_offset = (x_offset as usize + (screen_y * screen_width)) * 3;
 
                         if screen_offset + 2 <= emu.gfx.screen.len() {
@@ -213,6 +216,7 @@ impl Gfx {
 
     pub fn draw_window_line(
         emu: &mut Megadrive,
+        cram_rgb: &[(u8, u8, u8); 64],
         screen_y: usize,
         screen_width: usize,
         layer_priority: usize,
@@ -269,7 +273,7 @@ impl Gfx {
 
                     if px != 0 {
                         let screen_x = if hflip { cursor ^ 7 } else { cursor } + x;
-                        let (r, g, b) = emu.core.mem.vdp.color(palette, px as usize);
+                        let (r, g, b) = cram_rgb[px as usize + (palette * 0x10)];
                         let screen_offset = (screen_x + (screen_y * screen_width)) * 3;
                         emu.gfx.screen[screen_offset] = r;
                         emu.gfx.screen[screen_offset + 1] = g;

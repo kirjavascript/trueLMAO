@@ -5,7 +5,7 @@ use emu::Megadrive;
 
 lazy_mut! {
     static mut EMU: Megadrive = Megadrive::new(
-        include_bytes!("/home/cake/Genesis/Streets of Rage (JUE) (REV 00) [!].bin").to_vec()
+        include_bytes!("/home/cake/sonic/roms/s2.bin").to_vec()
     );
 }
 
