@@ -35,87 +35,91 @@ impl Gfx {
         layer_priority: usize,
     ) {
         let columns = emu.core.mem.vdp.registers[0xB] & 4 != 0;
-        let columns = true;
 
-        // let vscroll = emu.core.mem.vdp.vscroll(0)[vscroll_offset] as usize;
-
-        // let offset = if columns {
-        //     (screen_x / 16) * 2
-        // } else {
-        //     0
-        // };
-
-        // demo vscroll inc offset shit
-        let vscroll = emu.core.mem.vdp.VSRAM[vscroll_offset] as usize;
+        let vscroll_base = emu.core.mem.vdp.VSRAM[vscroll_offset] as usize;
 
         let plane_width = cell_w * 8;
         let plane_height = cell_h * 8;
 
         let mut screen_x = 0;
-        let mut first_item = true;
-        let target = screen_width;
+        let mut target = 0;
+        let inc = if columns { 16 } else { screen_width };
 
-        while screen_x < target {
-            let mut start = 0;
-            let end = 8.min(target - screen_x);
-            let mut width = end;
+        while target < screen_width {
+            target += inc;
 
-            if first_item {
-                let hoff = hscroll % 8;
-                if hoff > 0 {
-                    start = 8 - hoff;
-                    width = hoff;
-                }
-                first_item = false;
-            }
+            let vscroll = if columns {
+                let column_offset = (screen_x / 16) * 2;
+                emu.core.mem.vdp.VSRAM[vscroll_offset + column_offset] as usize
+            } else {
+                vscroll_base
+            };
 
-            let hscroll_rem = hscroll % plane_width;
-            let x_offset = (screen_x + plane_width - hscroll_rem) % plane_width;
-            let y_offset = (screen_y + vscroll) % plane_height;
+            let mut first_item = true;
 
-            let tile_index = ((x_offset / 8) + (y_offset / 8 * cell_w)) * 2;
+            while screen_x < target {
+                let mut start = 0;
+                let end = 8.min(target - screen_x);
+                let mut width = end;
 
-            let byte = emu.core.mem.vdp.VRAM[nametable + tile_index] as usize;
-            let next = emu.core.mem.vdp.VRAM[nametable + tile_index + 1] as usize;
-            let word = byte << 8 | next;
-
-            let priority = (byte >> 7) & 1;
-
-            if priority == layer_priority {
-                let tile = word & 0x7FF;
-                let vflip = (byte & 0x10) != 0;
-                let hflip = (byte & 0x8) != 0;
-                let palette = (byte & 0x60) >> 5;
-
-                let y = y_offset & 7;
-                let y = if vflip { y ^ 7 } else { y };
-                let index = (tile * 32) + (y * 4);
-
-                let mut pixels = [0; 8];
-                let mut pos = 0;
-                for duxel in &emu.core.mem.vdp.VRAM[index..index+4] {
-                    let abs_pos = if hflip { 7 - pos } else { pos };
-                    pixels[abs_pos] = duxel >> 4;
-                    let abs_pos = if hflip { 7 - (pos + 1) } else { pos + 1 };
-                    pixels[abs_pos] = duxel & 0xF;
-                    pos += 2;
+                if first_item {
+                    let hoff = hscroll % 8;
+                    if hoff > 0 {
+                        start = 8 - hoff;
+                        width = hoff;
+                    }
+                    first_item = false;
                 }
 
+                let hscroll_rem = hscroll % plane_width;
+                let x_offset = (screen_x + plane_width - hscroll_rem) % plane_width;
+                let y_offset = (screen_y + vscroll) % plane_height;
 
-                for (x, px) in (&pixels[start..end]).iter().enumerate() {
-                    if *px != 0 {
-                        let screen_x = screen_x + x;
-                        let (r, g, b) = cram_rgb[*px as usize + (palette * 0x10)];
-                        let screen_offset = (screen_x + (screen_y * screen_width)) * 3;
-                        emu.gfx.screen[screen_offset] = r;
-                        emu.gfx.screen[screen_offset + 1] = g;
-                        emu.gfx.screen[screen_offset + 2] = b;
+                let tile_index = ((x_offset / 8) + (y_offset / 8 * cell_w)) * 2;
+
+                let byte = emu.core.mem.vdp.VRAM[nametable + tile_index] as usize;
+                let next = emu.core.mem.vdp.VRAM[nametable + tile_index + 1] as usize;
+                let word = byte << 8 | next;
+
+                let priority = (byte >> 7) & 1;
+
+                if priority == layer_priority {
+                    let tile = word & 0x7FF;
+                    let vflip = (byte & 0x10) != 0;
+                    let hflip = (byte & 0x8) != 0;
+                    let palette = (byte & 0x60) >> 5;
+
+                    let y = y_offset & 7;
+                    let y = if vflip { y ^ 7 } else { y };
+                    let index = (tile * 32) + (y * 4);
+
+                    let mut pixels = [0; 8];
+                    let mut pos = 0;
+                    for duxel in &emu.core.mem.vdp.VRAM[index..index+4] {
+                        let abs_pos = if hflip { 7 - pos } else { pos };
+                        pixels[abs_pos] = duxel >> 4;
+                        let abs_pos = if hflip { 7 - (pos + 1) } else { pos + 1 };
+                        pixels[abs_pos] = duxel & 0xF;
+                        pos += 2;
+                    }
+
+
+                    for (x, px) in (&pixels[start..end]).iter().enumerate() {
+                        if *px != 0 {
+                            let screen_x = screen_x + x;
+                            let (r, g, b) = cram_rgb[*px as usize + (palette * 0x10)];
+                            let screen_offset = (screen_x + (screen_y * screen_width)) * 3;
+                            emu.gfx.screen[screen_offset] = r;
+                            emu.gfx.screen[screen_offset + 1] = g;
+                            emu.gfx.screen[screen_offset + 2] = b;
+                        }
                     }
                 }
-            }
 
-            screen_x += width;
-        };
+                screen_x += width;
+            };
+
+        }
 
 
     }
