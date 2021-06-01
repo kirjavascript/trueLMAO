@@ -44,15 +44,19 @@ impl Gfx {
         let plane_height = cell_h * 8;
 
         let mut screen_x = 0;
+        let mut first_item = true;
 
         while screen_x < screen_width {
             let mut width = 8;
 
-            if screen_x == 0 {
+            // use width for last item too to make .min faster
+
+            if first_item {
                 let hoff = hscroll % 8;
                 if hoff > 0 {
                     width = hoff;
                 }
+                first_item = false;
             }
 
             let hscroll_rem = hscroll % plane_width;
