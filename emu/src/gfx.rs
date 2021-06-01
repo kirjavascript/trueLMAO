@@ -37,23 +37,33 @@ impl Gfx {
         let columns = emu.core.mem.vdp.registers[0xB] & 4 != 0;
         let columns = true;
 
-        let vscroll = emu.core.mem.vdp.vscroll(0)[vscroll_offset] as usize;
-        // TODO: 16px columns rather than fullscreen
+        // let vscroll = emu.core.mem.vdp.vscroll(0)[vscroll_offset] as usize;
+
+        // let offset = if columns {
+        //     (screen_x / 16) * 2
+        // } else {
+        //     0
+        // };
+
+        // demo vscroll inc offset shit
+        let vscroll = emu.core.mem.vdp.VSRAM[vscroll_offset] as usize;
 
         let plane_width = cell_w * 8;
         let plane_height = cell_h * 8;
 
         let mut screen_x = 0;
         let mut first_item = true;
+        let target = screen_width;
 
-        while screen_x < screen_width {
-            let mut width = 8;
-
-            // use width for last item too to make .min faster
+        while screen_x < target {
+            let mut start = 0;
+            let end = 8.min(target - screen_x);
+            let mut width = end;
 
             if first_item {
                 let hoff = hscroll % 8;
                 if hoff > 0 {
+                    start = 8 - hoff;
                     width = hoff;
                 }
                 first_item = false;
@@ -91,8 +101,6 @@ impl Gfx {
                     pos += 2;
                 }
 
-                let start = 8 - width;
-                let end = 8.min(screen_width - screen_x);
 
                 for (x, px) in (&pixels[start..end]).iter().enumerate() {
                     if *px != 0 {
