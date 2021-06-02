@@ -31,11 +31,10 @@ impl Gfx {
         screen_width: usize,
         nametable: usize,
         hscroll: usize,
-        vscroll_offset: usize,
+        vscroll_offset: usize, // 0 is A, 1 is B
         layer_priority: usize,
     ) {
-        let columns = emu.core.mem.vdp.registers[0xB] & 4 != 0;
-
+        let columns_mode = emu.core.mem.vdp.vcolumns_mode();
         let vscroll_base = emu.core.mem.vdp.VSRAM[vscroll_offset] as usize;
 
         let plane_width = cell_w * 8;
@@ -43,12 +42,12 @@ impl Gfx {
 
         let mut screen_x = 0;
         let mut target = 0;
-        let inc = if columns { 16 } else { screen_width };
+        let inc = if columns_mode { 16 } else { screen_width };
 
         while target < screen_width {
             target += inc;
 
-            let vscroll = if columns {
+            let vscroll = if columns_mode {
                 let column_offset = (screen_x / 16) * 2;
                 emu.core.mem.vdp.VSRAM[vscroll_offset + column_offset] as usize
             } else {
@@ -70,6 +69,9 @@ impl Gfx {
                     }
                     first_item = false;
                 }
+
+                let start = start;
+                let width = width;
 
                 let hscroll_rem = hscroll % plane_width;
                 let x_offset = (screen_x + plane_width - hscroll_rem) % plane_width;
@@ -103,7 +105,6 @@ impl Gfx {
                         pos += 2;
                     }
 
-
                     for (x, px) in (&pixels[start..end]).iter().enumerate() {
                         if *px != 0 {
                             let screen_x = screen_x + x;
@@ -118,10 +119,7 @@ impl Gfx {
 
                 screen_x += width;
             };
-
         }
-
-
     }
 
     pub fn draw_sprite_line(

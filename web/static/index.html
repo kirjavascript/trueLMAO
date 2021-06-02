@@ -63,15 +63,12 @@
             const canvas = document.querySelector('canvas');
             const ctx = canvas.getContext('2d', { alpha: false });
 
+
             (async () => {
                 const emu = await init();
 
-                (function loop() {
-                    requestAnimationFrame(loop);
-                    stats.begin();
-                    emu.gamepad_p1(gamepad());
-                    emu.frame();
-                    const buffer = new Uint8Array(
+                function draw() {
+                    const buffer = new Uint8ClampedArray(
                         emu.memory.buffer, emu.screen(), 320 * 240 * 3
                     );
                     const img = ctx.createImageData(320, 240);
@@ -85,6 +82,20 @@
                     }
 
                     ctx.putImageData(img, 0, 0);
+
+                    // const buffer = new Uint8ClampedArray(
+                    //     emu.memory.buffer, emu.canvas(), 320 * 240 * 4
+                    // );
+
+                    // ctx.putImageData(new ImageData(buffer, 320), 0, 0);
+                }
+
+                (function loop() {
+                    requestAnimationFrame(loop);
+                    stats.begin();
+                    emu.gamepad_p1(gamepad());
+                    emu.frame();
+                    draw();
                     stats.end();
                 })();
             })();

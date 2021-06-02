@@ -25,3 +25,23 @@ pub fn screen() -> *const u8 {
 pub fn gamepad_p1(value: usize) {
     unsafe { EMU.core.mem.io.gamepad[0].set(value) }
 }
+
+// lazy_mut! {
+//     static mut CANVAS: [u8; 320 * 240 * 4] = [0; 320 * 240 * 4];
+// }
+
+// #[wasm_bindgen]
+// pub fn canvas() -> *const u8 {
+//     let screen = unsafe { EMU.gfx.screen };
+//     for (i, pixel) in screen.chunks(3).enumerate() {
+//         let index = i * 4;
+//         unsafe {
+//             CANVAS[index] = pixel[0];
+//             CANVAS[index+1] = pixel[1];
+//             CANVAS[index+2] = pixel[2];
+//             CANVAS[index+3] = 255;
+//         }
+
+//     }
+//     unsafe { CANVAS.as_ptr() }
+// }

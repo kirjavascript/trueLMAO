@@ -202,17 +202,8 @@ impl VDP {
         (hscroll_a, hscroll_b)
     }
 
-    pub fn vscroll(&self, screen_x: usize) -> &[u16] {
-        let columns = self.registers[0xB] & 4 != 0;
-        let offset = if columns {
-            (screen_x / 16) * 2
-        } else {
-            0
-        };
-
-        // 0 is A, 1 is B
-
-        &self.VSRAM[offset..]
+    pub fn vcolumns_mode(&self) -> bool {
+        self.registers[0xB] & 4 != 0
     }
 
     pub fn autoinc(&self) -> u32 {
