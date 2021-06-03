@@ -60,6 +60,7 @@ impl Megadrive {
     }
 
     pub fn frame(&mut self) {
+        // TODO: take an int of how amny frames to render?
         /* cycle counts initially taken from drx/kiwi */
         // TODO: use a counter instead
         // TODO: patch gfx.screen_width here for gfx.draw()
@@ -117,17 +118,19 @@ impl Megadrive {
         let sprites = self.core.mem.vdp.sprites(screen_y);
         let cram_rgb = self.core.mem.vdp.cram_rgb();
 
-        // TODO: line low buffer / high buffer, write at end
+        // TODO: use slices for RGB copy
+        // TODO: move clear_screen here
 
-        // (unused in the plane drawing
-        // TODO: improve perf by having two buffers to render to and combine them, doing both
-        // priorities at once. OR have a write queue
+        // 0xFE is an invalid MD colour we use as a marker
+        const MARKER: u8 = 0xFE;
 
-        // for high, if FE low else high
+        // have a dummy line we write high priority stuff to and copy after
+        let mut line_high: [u8; 320 * 3] = [MARKER; 320 * 3]; // TODO: PAL
 
-        // plane B, low priority
+        // plane B
         Gfx::draw_plane_line(
             self,
+            &mut line_high,
             &cram_rgb,
             cell_w,
             cell_h,
@@ -136,12 +139,12 @@ impl Megadrive {
             plane_b,
             hscroll_b,
             1, // vscroll_offset
-            0, // priority
         );
 
-        // plane A, low priority
+        // plane A
         Gfx::draw_plane_line(
             self,
+            &mut line_high,
             &cram_rgb,
             cell_w,
             cell_h,
@@ -150,75 +153,35 @@ impl Megadrive {
             plane_a,
             hscroll_a,
             0,
-            0,
         );
 
-        // sprites, low priority
+        // sprites
         Gfx::draw_sprite_line(
             self,
+            &mut line_high,
             &cram_rgb,
             &sprites,
             screen_y,
             screen_width,
-            0, // priority
         );
 
-        // window, low priority
+        // window
         Gfx::draw_window_line(
             self,
+            &mut line_high,
             &cram_rgb,
             screen_y,
-            screen_width,
-            0, // priority
         );
 
-        // plane B, high priority
-        Gfx::draw_plane_line(
-            self,
-            &cram_rgb,
-            cell_w,
-            cell_h,
-            screen_y,
-            screen_width,
-            plane_b,
-            hscroll_b,
-            1,
-            1,
-        );
+        // copy high priority back to screen
 
-        // plane A, high priority
-        Gfx::draw_plane_line(
-            self,
-            &cram_rgb,
-            cell_w,
-            cell_h,
-            screen_y,
-            screen_width,
-            plane_a,
-            hscroll_a,
-            0,
-            1,
-        );
-
-        // sprites, high priority
-        Gfx::draw_sprite_line(
-            self,
-            &cram_rgb,
-            &sprites,
-            screen_y,
-            screen_width,
-            1,
-        );
-
-        // window, high priority
-        Gfx::draw_window_line(
-            self,
-            &cram_rgb,
-            screen_y,
-            screen_width,
-            1, // priority
-        );
-
+        let line = self.gfx.line_slice(screen_y);
+        for (i, rgb) in line_high.chunks(3).enumerate() {
+            if rgb[0] != MARKER {
+                let offset = i * 3;
+                line[offset..offset+3].copy_from_slice(&rgb[0..3]);
+            }
+        }
     }
 
 }

@@ -22,8 +22,15 @@ impl Gfx {
         };
     }
 
-    pub fn draw_plane_line(
-        emu: &mut Megadrive,
+    pub fn line_slice(&mut self, screen_y: usize) -> &mut [u8] {
+        // TODO: screen_width
+        let offset = screen_y * 320 * 3;
+        &mut self.screen[offset..offset + (320 * 3)]
+    }
+
+    pub fn draw_plane_line<'a>(
+        emu: &'a mut Megadrive,
+        mut line_high: &'a mut [u8],
         cram_rgb: &[(u8, u8, u8); 64],
         cell_w: usize,
         cell_h: usize,
@@ -32,8 +39,9 @@ impl Gfx {
         nametable: usize,
         hscroll: usize,
         vscroll_offset: usize, // 0 is A, 1 is B
-        layer_priority: usize,
     ) {
+        let mut line_low = emu.gfx.line_slice(screen_y);
+
         let columns_mode = emu.core.mem.vdp.vcolumns_mode();
         let vscroll_base = emu.core.mem.vdp.VSRAM[vscroll_offset] as usize;
 
@@ -83,37 +91,35 @@ impl Gfx {
                 let next = emu.core.mem.vdp.VRAM[nametable + tile_index + 1] as usize;
                 let word = byte << 8 | next;
 
+                let tile = word & 0x7FF;
+                let vflip = (byte & 0x10) != 0;
+                let hflip = (byte & 0x8) != 0;
+                let palette = (byte & 0x60) >> 5;
                 let priority = (byte >> 7) & 1;
 
-                if priority == layer_priority {
-                    let tile = word & 0x7FF;
-                    let vflip = (byte & 0x10) != 0;
-                    let hflip = (byte & 0x8) != 0;
-                    let palette = (byte & 0x60) >> 5;
+                let y = y_offset & 7;
+                let y = if vflip { y ^ 7 } else { y };
+                let index = (tile * 32) + (y * 4);
 
-                    let y = y_offset & 7;
-                    let y = if vflip { y ^ 7 } else { y };
-                    let index = (tile * 32) + (y * 4);
+                let mut pixels = [0; 8];
+                let mut pos = 0;
+                for duxel in &emu.core.mem.vdp.VRAM[index..index+4] {
+                    let abs_pos = if hflip { 7 - pos } else { pos };
+                    pixels[abs_pos] = duxel >> 4;
+                    let abs_pos = if hflip { 7 - (pos + 1) } else { pos + 1 };
+                    pixels[abs_pos] = duxel & 0xF;
+                    pos += 2;
+                }
 
-                    let mut pixels = [0; 8];
-                    let mut pos = 0;
-                    for duxel in &emu.core.mem.vdp.VRAM[index..index+4] {
-                        let abs_pos = if hflip { 7 - pos } else { pos };
-                        pixels[abs_pos] = duxel >> 4;
-                        let abs_pos = if hflip { 7 - (pos + 1) } else { pos + 1 };
-                        pixels[abs_pos] = duxel & 0xF;
-                        pos += 2;
-                    }
+                let target = if priority == 0 { &mut line_low } else { &mut line_high };
 
-                    for (x, px) in (&pixels[start..end]).iter().enumerate() {
-                        if *px != 0 {
-                            let screen_x = screen_x + x;
-                            let (r, g, b) = cram_rgb[*px as usize + (palette * 0x10)];
-                            let screen_offset = (screen_x + (screen_y * screen_width)) * 3;
-                            emu.gfx.screen[screen_offset] = r;
-                            emu.gfx.screen[screen_offset + 1] = g;
-                            emu.gfx.screen[screen_offset + 2] = b;
-                        }
+                for (x, px) in (&pixels[start..end]).iter().enumerate() {
+                    if *px != 0 {
+                        let (r, g, b) = cram_rgb[*px as usize + (palette * 0x10)];
+                        let offset = (screen_x + x) * 3;
+                        (*target)[offset] = r;
+                        (*target)[offset + 1] = g;
+                        (*target)[offset + 2] = b;
                     }
                 }
 
@@ -122,24 +128,21 @@ impl Gfx {
         }
     }
 
-    pub fn draw_sprite_line(
-        emu: &mut Megadrive,
+    pub fn draw_sprite_line<'a>(
+        emu: &'a mut Megadrive,
+        mut line_high: &'a mut [u8],
         cram_rgb: &[(u8, u8, u8); 64],
         sprites: &Vec<crate::vdp::Sprite>,
         screen_y: usize,
         screen_width: usize,
-        priority: usize,
     ) {
         // let max_sprites = if screen_width == 320 { 20 } else { 16 };
         // let max_pixels = if screen_width == 320 { 320 } else { 256 };
-        // TODO: combine somehow :/
-        // TODO: have a screen buffer in draw_plane_line
-        // 0xFE is an invalid MD colour
+
+        let mut line_low = emu.gfx.line_slice(screen_y);
 
         for sprite in sprites.iter().rev() {
-            if sprite.priority != priority {
-                continue
-            }
+            let target = if sprite.priority == 0 { &mut line_low } else { &mut line_high };
             let sprite_y = screen_y as isize - sprite.y_coord();
             let tiles = &emu.core.mem.vdp.VRAM[sprite.tile..];
             for sprite_x in 0..sprite.width * 8 {
@@ -165,12 +168,12 @@ impl Gfx {
 
                     if px != 0 {
                         let (r, g, b) = cram_rgb[px as usize + (sprite.palette * 0x10)];
-                        let screen_offset = (x_offset as usize + (screen_y * screen_width)) * 3;
+                        let offset = x_offset as usize * 3;
 
-                        if screen_offset + 2 <= emu.gfx.screen.len() {
-                            emu.gfx.screen[screen_offset] = r;
-                            emu.gfx.screen[screen_offset + 1] = g;
-                            emu.gfx.screen[screen_offset + 2] = b;
+                        if offset + 2 <= target.len() {
+                            (*target)[offset] = r;
+                            (*target)[offset + 1] = g;
+                            (*target)[offset + 2] = b;
                         }
                     }
                 }
@@ -179,16 +182,15 @@ impl Gfx {
     }
 
 
-    pub fn draw_window_line(
-        emu: &mut Megadrive,
+    pub fn draw_window_line<'a>(
+        emu: &'a mut Megadrive,
+        mut line_high: &'a mut [u8],
         cram_rgb: &[(u8, u8, u8); 64],
         screen_y: usize,
-        screen_width: usize,
-        layer_priority: usize,
     ) {
+        let mut line_low = emu.gfx.line_slice(screen_y);
         // TODO: support non-320 size nametable
         // TODO: plane A / window exclusivity (perf)
-        // TODO: cache these variables
         let nametable = (emu.core.mem.vdp.registers[3] as usize >> 1) * 0x800;
         let window_x = emu.core.mem.vdp.registers[0x11];
         let window_y = emu.core.mem.vdp.registers[0x12];
@@ -218,10 +220,6 @@ impl Gfx {
 
                 let priority = (byte >> 7) & 1;
 
-                if priority != layer_priority {
-                    continue
-                }
-
                 let tile = word & 0x7FF;
                 let vflip = (byte & 0x10) != 0;
                 let hflip = (byte & 0x8) != 0;
@@ -232,6 +230,8 @@ impl Gfx {
                 let y = if vflip { y ^ 7 } else { y };
                 let index = (tile * 32) + (y * 4);
 
+                let target = if priority == 0 { &mut line_low } else { &mut line_high };
+
                 for cursor in 0..8 {
                     let duxel = emu.core.mem.vdp.VRAM[index + (cursor / 2)];
                     let px = if cursor & 1 != 0 { duxel & 0xF } else { duxel >> 4 };
@@ -239,10 +239,10 @@ impl Gfx {
                     if px != 0 {
                         let screen_x = if hflip { cursor ^ 7 } else { cursor } + x;
                         let (r, g, b) = cram_rgb[px as usize + (palette * 0x10)];
-                        let screen_offset = (screen_x + (screen_y * screen_width)) * 3;
-                        emu.gfx.screen[screen_offset] = r;
-                        emu.gfx.screen[screen_offset + 1] = g;
-                        emu.gfx.screen[screen_offset + 2] = b;
+                        let offset = screen_x * 3;
+                        (*target)[offset] = r;
+                        (*target)[offset + 1] = g;
+                        (*target)[offset + 2] = b;
                     }
                 }
             }
