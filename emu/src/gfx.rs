@@ -130,6 +130,12 @@ impl Gfx {
         screen_width: usize,
         priority: usize,
     ) {
+        // let max_sprites = if screen_width == 320 { 20 } else { 16 };
+        // let max_pixels = if screen_width == 320 { 320 } else { 256 };
+        // TODO: combine somehow :/
+        // TODO: have a screen buffer in draw_plane_line
+        // 0xFE is an invalid MD colour
+
         for sprite in sprites.iter().rev() {
             if sprite.priority != priority {
                 continue

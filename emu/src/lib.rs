@@ -117,9 +117,13 @@ impl Megadrive {
         let sprites = self.core.mem.vdp.sprites(screen_y);
         let cram_rgb = self.core.mem.vdp.cram_rgb();
 
+        // TODO: line low buffer / high buffer, write at end
+
         // (unused in the plane drawing
         // TODO: improve perf by having two buffers to render to and combine them, doing both
         // priorities at once. OR have a write queue
+
+        // for high, if FE low else high
 
         // plane B, low priority
         Gfx::draw_plane_line(
