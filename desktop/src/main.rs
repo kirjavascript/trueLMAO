@@ -33,8 +33,8 @@ fn main() {
     let app = app::App::default();
     // let buf: Vec<u8> = include_bytes!("./roms/DisableRegTestROM.bin").to_vec();
     // let buf: Vec<u8> = include_bytes!("../../notes/pc.md").to_vec();
-    // let buf: Vec<u8> = include_bytes!("/home/cake/Genesis/Ristar (UE) (Aug 1994) [!].bin").to_vec();
-    let buf: Vec<u8> = include_bytes!("/home/cake/sonic/roms/s2.bin").to_vec();
+    // let buf: Vec<u8> = include_bytes!("/home/cake/Genesis/Toy Story (U) [!].bin").to_vec();
+    let buf: Vec<u8> = include_bytes!("/home/cake/sonic/roms/s1.bin").to_vec();
 
     let mut emu = Megadrive::new(buf);
 

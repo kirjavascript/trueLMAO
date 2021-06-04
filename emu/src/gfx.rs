@@ -132,16 +132,20 @@ impl Gfx {
         emu: &'a mut Megadrive,
         mut line_high: &'a mut [u8],
         cram_rgb: &[(u8, u8, u8); 64],
-        sprites: &Vec<crate::vdp::Sprite>,
         screen_y: usize,
         screen_width: usize,
     ) {
-        // let max_sprites = if screen_width == 320 { 20 } else { 16 };
-        // let max_pixels = if screen_width == 320 { 320 } else { 256 };
+        let max_sprites = if screen_width == 320 { 20 } else { 16 };
+        let mut pixel_quota = if screen_width == 320 { 320 } else { 256 };
 
         let mut line_low = emu.gfx.line_slice(screen_y);
 
-        for sprite in sprites.iter().rev() {
+        let sprites = emu.core.mem.vdp.sprites(screen_y);
+
+        'draw_sprites: for (i, sprite) in sprites.iter().rev().enumerate() {
+            if i >= max_sprites {
+                break;
+            }
             let target = if sprite.priority == 0 { &mut line_low } else { &mut line_high };
             let sprite_y = screen_y as isize - sprite.y_coord();
             let tiles = &emu.core.mem.vdp.VRAM[sprite.tile..];
@@ -176,6 +180,11 @@ impl Gfx {
                             (*target)[offset + 2] = b;
                         }
                     }
+                }
+
+                pixel_quota -= 1;
+                if pixel_quota == 0 {
+                    break 'draw_sprites;
                 }
             }
         }

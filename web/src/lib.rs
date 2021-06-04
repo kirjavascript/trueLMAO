@@ -26,9 +26,7 @@ pub fn gamepad_p1(value: usize) {
     unsafe { EMU.core.mem.io.gamepad[0].set(value) }
 }
 
-// lazy_mut! {
-//     static mut CANVAS: [u8; 320 * 240 * 4] = [0; 320 * 240 * 4];
-// }
+// static mut CANVAS: [u8; 320 * 240 * 4] = [0; 320 * 240 * 4];
 
 // #[wasm_bindgen]
 // pub fn canvas() -> *const u8 {

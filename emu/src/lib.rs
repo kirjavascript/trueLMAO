@@ -115,11 +115,13 @@ impl Megadrive {
         let (plane_a, plane_b) = self.core.mem.vdp.nametables();
         let (hscroll_a, hscroll_b) = self.core.mem.vdp.hscroll(screen_y);
         let screen_width = self.core.mem.vdp.screen_width();
-        let sprites = self.core.mem.vdp.sprites(screen_y);
         let cram_rgb = self.core.mem.vdp.cram_rgb();
 
         // TODO: use slices for RGB copy
         // TODO: move clear_screen here
+
+        // TODO: try rendering with PIXI / web perf
+        // TODO: remove parts to hit 60
 
         // 0xFE is an invalid MD colour we use as a marker
         const MARKER: u8 = 0xFE;
@@ -160,7 +162,6 @@ impl Megadrive {
             self,
             &mut line_high,
             &cram_rgb,
-            &sprites,
             screen_y,
             screen_width,
         );
