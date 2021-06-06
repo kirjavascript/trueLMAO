@@ -141,7 +141,12 @@ impl VDP {
     pub fn sprites(&self, screen_y: usize) -> Vec<Sprite> {
         let cell40 = self.screen_width() == 320;
         let mask = if cell40 { 0x7F } else { 0x7E };
+        // max_sprites for screen: if cell40 { 80 } else { 64 }
+        let max_sprites = if cell40 { 20 } else { 16 };
+        let mut pixel_quota = if cell40 { 320 } else { 256 };
+
         let addr = ((self.registers[5] as usize) & mask) << 9;
+
 
         let mut index = 0usize;
         let mut sprites = vec![];
@@ -153,13 +158,18 @@ impl VDP {
             let y_pos = ((sprite[0] as usize) << 8) | sprite[1] as usize;
             let height = (sprite[2] as usize & 3) + 1;
             if sprite_screen_y >= y_pos && sprite_screen_y < y_pos + (height * 8) {
-                let width = (sprite[2] as usize >> 2) + 1;
+                let mut width = (sprite[2] as usize >> 2) + 1;
                 let priority = sprite[4] as usize >> 7;
                 let palette  = sprite[4] as usize >> 5 & 3;
                 let v_flip = sprite[4] as usize >> 4 & 1 == 1;
                 let h_flip = sprite[4] as usize >> 3 & 1 == 1;
                 let tile = (((sprite[4] as usize & 7) << 8) | sprite[5] as usize) * 0x20;
                 let x_pos = ((sprite[6] as usize) << 8) | sprite[7] as usize;
+
+                let quota = width * 8;
+                if quota > pixel_quota {
+                    width = pixel_quota / 8;
+                }
                 sprites.push(Sprite {
                     y_pos,
                     width,
@@ -171,12 +181,13 @@ impl VDP {
                     tile,
                     x_pos,
                 });
+                pixel_quota -= width * 8;
             }
 
 
             index = next;
 
-            if index == 0 || sprites.len() == if cell40 { 80 } else { 64 } {
+            if pixel_quota <= 0 || index == 0 || sprites.len() == max_sprites {
                 break;
             }
         }
