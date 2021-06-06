@@ -128,8 +128,6 @@ impl Gfx {
         }
     }
 
-    //
-
     pub fn draw_sprite_line<'a>(
         emu: &'a mut Megadrive,
         mut line_high: &'a mut [u8],

@@ -187,7 +187,7 @@ impl VDP {
 
             index = next;
 
-            if pixel_quota <= 0 || index == 0 || sprites.len() == max_sprites {
+            if pixel_quota == 0 || index == 0 || sprites.len() == max_sprites {
                 break;
             }
         }

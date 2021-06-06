@@ -31,10 +31,10 @@ macro_rules! clone {
 
 fn main() {
     let app = app::App::default();
-    // let buf: Vec<u8> = include_bytes!("./roms/DisableRegTestROM.bin").to_vec();
+    // let buf: Vec<u8> = include_bytes!("./roms/joy_speed_v1.02.bin").to_vec();
     // let buf: Vec<u8> = include_bytes!("../../notes/pc.md").to_vec();
-    // let buf: Vec<u8> = include_bytes!("/home/cake/Genesis/Toy Story (U) [!].bin").to_vec();
-    let buf: Vec<u8> = include_bytes!("/home/cake/sonic/roms/s2.bin").to_vec();
+    // let buf: Vec<u8> = include_bytes!("/home/cake/Genesis/Golden Axe II (W) [!].bin").to_vec();
+    let buf: Vec<u8> = include_bytes!("/home/cake/sonic/roms/s1p.bin").to_vec();
 
     let mut emu = Megadrive::new(buf);
 
@@ -112,13 +112,13 @@ fn main() {
                     emu.step_n(stepby.value().parse::<usize>().unwrap_or(1));
                 },
                 Msg::Frame => {
-                    emu.frame();
+                    emu.frame(true);
                 },
             }
         }
 
         if *running.borrow() {
-            emu.frame();
+            emu.frame(true);
         }
 
 

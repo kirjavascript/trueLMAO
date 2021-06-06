@@ -47,13 +47,13 @@ impl IO {
                 0, // ctrl 1 ctrl
                 0, // ctrl 2 ctrl
                 0, // exp control
+                0xFF,
                 0,
                 0,
+                0xFF,
                 0,
                 0,
-                0,
-                0,
-                0,
+                0xFF,
                 0,
                 0,
             ],

@@ -59,13 +59,15 @@ impl Megadrive {
         opcodes
     }
 
-    pub fn frame(&mut self) {
+    pub fn frame(&mut self, draw: bool) {
         // TODO: take an int of how amny frames to render?
         /* cycle counts initially taken from drx/kiwi */
         // TODO: use a counter instead
         // TODO: patch gfx.screen_width here for gfx.draw()
 
-        Gfx::clear_screen(self);
+        if draw {
+            Gfx::clear_screen(self);
+        }
 
         self.core.mem.vdp.unset_status(vdp::VBLANK_MASK);
         self.core.mem.vdp.unset_status(vdp::VINT_MASK);
@@ -91,7 +93,9 @@ impl Megadrive {
 
             self.core.execute(104);
 
-            self.fire_beam(screen_y);
+            if draw {
+                self.fire_beam(screen_y);
+            }
         }
 
         self.core.mem.vdp.set_status(vdp::VBLANK_MASK);
