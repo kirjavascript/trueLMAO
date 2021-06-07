@@ -88,16 +88,36 @@
                     // );
 
                     // ctx.putImageData(new ImageData(buffer, 320), 0, 0);
+
+                    // TODO: webgl
                 }
 
-                (function loop() {
-                    requestAnimationFrame(loop);
+                // TODO: sonic 1 & 2
+
+                let frames = 0;
+                const frameTime = 1000/60;
+
+                requestAnimationFrame(function frame(diff) {
+                    requestAnimationFrame(frame);
+                    const toRender = (diff / frameTime);
+
+                    const quantity = 0 | (toRender - frames);
+
                     stats.begin();
+
                     emu.gamepad_p1(gamepad());
-                    emu.frame();
-                    draw();
+
+                    if (quantity > 1) {
+                        emu.skip(quantity);
+                    } else {
+                        emu.frame();
+                        draw();
+                    }
+
+                    frames += quantity;
+
                     stats.end();
-                })();
+                });
             })();
         </script>
     </body>
