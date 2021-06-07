@@ -108,11 +108,10 @@
                     emu.gamepad_p1(gamepad());
 
                     if (quantity > 1) {
-                        emu.skip(quantity);
-                    } else {
-                        emu.frame();
-                        draw();
+                        emu.skip(quantity-1);
                     }
+                    emu.frame();
+                    draw();
 
                     frames += quantity;
 
