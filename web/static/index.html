@@ -62,7 +62,7 @@
 
             const canvas = document.querySelector('canvas');
             const ctx = canvas.getContext('2d', { alpha: false });
-
+            const img = ctx.createImageData(320, 240);
 
             (async () => {
                 const emu = await init();
@@ -71,7 +71,6 @@
                     const buffer = new Uint8ClampedArray(
                         emu.memory.buffer, emu.screen(), 320 * 240 * 3
                     );
-                    const img = ctx.createImageData(320, 240);
                     for (let i = 0; i < 320*240; i++) {
                         const bufferIndex = i * 3;
                         const imgIndex = i * 4;
@@ -82,10 +81,6 @@
                     }
 
                     ctx.putImageData(img, 0, 0);
-
-                    // const buffer = new Uint8ClampedArray(
-                    //     emu.memory.buffer, emu.canvas(), 320 * 240 * 4
-                    // );
 
                     // ctx.putImageData(new ImageData(buffer, 320), 0, 0);
 
@@ -107,11 +102,10 @@
 
                     emu.gamepad_p1(gamepad());
 
-                    if (quantity > 1) {
-                        emu.skip(quantity-1);
+                    if (quantity <3) {
+                        emu.render(quantity);
+                        draw();
                     }
-                    emu.frame();
-                    draw();
 
                     frames += quantity;
 
