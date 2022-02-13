@@ -10,17 +10,8 @@ lazy_mut! {
 }
 
 #[wasm_bindgen]
-pub fn frame() {
-    unsafe { EMU.frame(true); }
-}
-
-#[wasm_bindgen]
-pub fn skip(quantity: u64) {
-    unsafe {
-        for _ in 0..quantity {
-            EMU.frame(false);
-        }
-    }
+pub fn frame(render: bool) {
+    unsafe { EMU.frame(render); }
 }
 
 #[wasm_bindgen]

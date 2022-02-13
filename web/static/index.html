@@ -44,19 +44,15 @@
             }
         </style>
         <title>trueLMAO</title>
-        <script src="https://mrdoob.github.io/stats.js/build/stats.min.js"></script>
     </head>
     <body>
         <noscript>noscript mode</noscript>
-        <script nomodule>alert("use a browser that supports modules, or ask for older browser support :^)");</script>
         <main>
             <canvas width="320" height="224"></canvas>
             <h1>DEMO</h1>
+            <span class="frameCount"></span>
         </main>
         <script type="module">
-            const stats=new Stats();
-            document.body.appendChild(stats.dom);
-
             import init from './pkg/web.js';
             import gamepad from './gamepad.js';
 
@@ -89,28 +85,33 @@
 
                 // TODO: sonic 1 & 2
 
-                let frames = 0;
-                const frameTime = 1000/60;
+                const frameCount = document.querySelector('.frameCount');
+                const epoch = performance.now();
+                let framesDone = 0;
+                const loop = () => {
+                    requestAnimationFrame(loop);
 
-                requestAnimationFrame(function frame(diff) {
-                    requestAnimationFrame(frame);
-                    const toRender = (diff / frameTime);
+                    const diff = performance.now() - epoch;
+                    const frames = diff * 0.06 | 0;
+                    const frameAmount = frames - framesDone;
+                    frameCount.textContent = String(frameAmount);
 
-                    const quantity = 0 | (toRender - frames);
+                    if (document.visibilityState !== 'hidden') {
 
-                    stats.begin();
+                        emu.gamepad_p1(gamepad());
 
-                    emu.gamepad_p1(gamepad());
-
-                    if (quantity <3) {
-                        emu.render(quantity);
+                        if (frameAmount > 5) {
+                            emu.frame(true);
+                        } else {
+                            for (let i = 0; i < frameAmount; i++) {
+                                emu.frame(i === frameAmount - 1);
+                            }
+                        }
                         draw();
                     }
-
-                    frames += quantity;
-
-                    stats.end();
-                });
+                    framesDone = frames;
+                };
+                loop();
             })();
         </script>
     </body>

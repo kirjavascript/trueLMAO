@@ -10,6 +10,9 @@ pub mod z80;
 
 use gfx::Gfx;
 
+// TODO: rendering from nestulator
+// TODO: composit layers in gfx istead of multiple buffers
+
 pub struct Megadrive {
     pub core: ConfiguredCore<AutoInterruptController, mem::Mem>,
     pub gfx: Gfx,
