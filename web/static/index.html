@@ -92,7 +92,7 @@
                     requestAnimationFrame(loop);
 
                     const diff = performance.now() - epoch;
-                    const frames = diff * 0.06 | 0;
+                    const frames = diff * 0.05992274 | 0;
                     const frameAmount = frames - framesDone;
                     frameCount.textContent = String(frameAmount);
 
@@ -107,7 +107,9 @@
                                 emu.frame(i === frameAmount - 1);
                             }
                         }
-                        draw();
+                        if (frameAmount > 0) {
+                            draw();
+                        }
                     }
                     framesDone = frames;
                 };
