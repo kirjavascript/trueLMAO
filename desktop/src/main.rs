@@ -32,9 +32,11 @@ macro_rules! clone {
 fn main() {
     let app = app::App::default();
     // let buf: Vec<u8> = include_bytes!("./roms/joy_speed_v1.02.bin").to_vec();
+    // let buf: Vec<u8> = include_bytes!("./roms/Window Test by Fonzie (PD).bin").to_vec();
+    let buf: Vec<u8> = include_bytes!("../../notes/test-roms/240ptestsuite/240pSuite-1.23.bin").to_vec();
     // let buf: Vec<u8> = include_bytes!("../../notes/pc.md").to_vec();
     // let buf: Vec<u8> = include_bytes!("/home/cake/Genesis/Golden Axe II (W) [!].bin").to_vec();
-    let buf: Vec<u8> = include_bytes!("/home/cake/sonic/roms/s2.bin").to_vec();
+    // let buf: Vec<u8> = include_bytes!("/home/cake/sonic/roms/s2.bin").to_vec();
 
     let mut emu = Megadrive::new(buf);
 

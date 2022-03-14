@@ -61,7 +61,6 @@ impl Megadrive {
     }
 
     pub fn frame(&mut self, draw: bool) {
-        // TODO: take an int of how amny frames to render?
         /* cycle counts initially taken from drx/kiwi */
         // TODO: use a counter instead
         // TODO: patch gfx.screen_width here for gfx.draw()

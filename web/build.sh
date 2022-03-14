@@ -1,6 +1,6 @@
 #!/bin/sh
 wasm-pack build --release --target web --out-dir pkg
-cp pkg/web_bg.wasm static/web_bg.wasm
+cp pkg/web_bg.wasm static/emu.wasm
 
 # develop
 # https://www.npmjs.com/package/local-web-server

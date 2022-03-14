@@ -6,7 +6,7 @@ const ctx = canvas.getContext('2d', { alpha: false });
 const img = ctx.createImageData(320, 240);
 
 (async () => {
-    const emu = await init('web_bg.wasm');
+    const emu = await init('emu.wasm');
 
     function draw() {
         const buffer = new Uint8ClampedArray(
@@ -28,8 +28,6 @@ const img = ctx.createImageData(320, 240);
         // TODO: webgl
     }
 
-    // TODO: sonic 1 & 2
-
     const frameCount = document.querySelector('.frameCount');
     const epoch = performance.now();
     let framesDone = 0;
@@ -37,7 +35,7 @@ const img = ctx.createImageData(320, 240);
         requestAnimationFrame(loop);
 
         const diff = performance.now() - epoch;
-        const frames = diff * 0.05992274 | 0;
+        const frames = diff * 0.06 | 0; // real value is 0.05992274
         const frameAmount = frames - framesDone;
         frameCount.textContent = String(frameAmount);
 

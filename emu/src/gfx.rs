@@ -8,9 +8,7 @@ pub struct Gfx {
 
 impl Gfx {
     pub fn new() -> Self {
-        Gfx {
-            screen: [0; 320 * 240 * 3],
-        }
+        Gfx { screen: [0; 320 * 240 * 3], }
     }
 
     pub fn clear_screen(emu: &mut Megadrive) {
