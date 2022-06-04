@@ -29,7 +29,7 @@ impl Mem {
     pub fn read_u8(&self, address: u32) -> u32 {
         match address & 0xFFFFFF {
             0..=0x7FFFFF => self.rom.read_byte(address & 0x3FFFFF) as _,
-            0x400000..=0x9FFFFF => /* reserved */ 0,
+            0x800000..=0x9FFFFF => /* reserved */ 0,
             0xA00000..=0xA03FFF => self.z80.read_byte(address) as _,
             0xA04000..=0xA0FFFF => /* Z80 */ 0,
             0xA10000..=0xA1001F => self.io.read_byte(address) as _,
