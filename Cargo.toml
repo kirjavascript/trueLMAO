@@ -4,6 +4,7 @@ members = [
     "emu",
     "web",
     "desktop",
+    "egui",
 ]
 
 [profile.release]
