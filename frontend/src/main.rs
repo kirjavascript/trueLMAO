@@ -9,8 +9,8 @@ fn main() {
 
     let native_options = eframe::NativeOptions::default();
     eframe::run_native(
-        "eframe template",
+        "trueLMAO",
         native_options,
-        Box::new(|cc| Box::new(frontend::TemplateApp::new(cc))),
+        Box::new(|cc| Box::new(frontend::Frontend::new(cc))),
     );
 }
