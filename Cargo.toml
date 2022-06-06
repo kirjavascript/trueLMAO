@@ -4,10 +4,9 @@ members = [
     "emu",
     "web",
     "desktop",
-    "egui",
+    "frontend",
 ]
 
 [profile.release]
+opt-level = 2
 # lto = true
-# opt-level = 3
-# debug = true
