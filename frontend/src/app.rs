@@ -1,11 +1,11 @@
 use emu::Megadrive;
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
-// #[derive(serde::Deserialize, serde::Serialize)]
-// #[serde(default)] // if we add new fields, give them default values when deserializing old state
+#[derive(serde::Deserialize, serde::Serialize)]
+#[serde(default)] // if we add new fields, give them default values when deserializing old state
 pub struct Frontend {
     // Example stuff:
-    // #[serde(skip)]
+    #[serde(skip)]
     emu:  Megadrive,
     fullscreen: bool,
     tmp_zoom: f32,
@@ -24,10 +24,21 @@ impl Default for Frontend {
 }
 
 impl Frontend {
-    /// Called once before the first frame.
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        // This is also where you can customized the look at feel of egui using
-        // `cc.egui_ctx.set_visuals` and `cc.egui_ctx.set_fonts`.
+        cc.egui_ctx.set_visuals(egui::Visuals {
+            dark_mode: true,
+            ..egui::Visuals::default()
+        });
+
+        // let mut fonts = egui::FontDefinitions::default();
+
+        // fonts
+        //     .families
+        //     .entry(egui::FontFamily::Monospace)
+        //     .or_default()
+        //     .push("Hack".to_string());
+
+        // cc.egui_ctx.set_fonts(fonts);
 
         // Load previous app state (if any).
         // Note that you must enable the `persistence` feature for this to work.
@@ -35,54 +46,55 @@ impl Frontend {
         //     return eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default();
         // }
 
+
         Default::default()
     }
 }
 
 impl eframe::App for Frontend {
     /// Called by the frame work to save state before shutdown.
-    // fn save(&mut self, storage: &mut dyn eframe::Storage) {
-    //     eframe::set_value(storage, eframe::APP_KEY, self);
-    // }
+    fn save(&mut self, storage: &mut dyn eframe::Storage) {
+        eframe::set_value(storage, eframe::APP_KEY, self);
+    }
 
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
 
         if self.fullscreen {
-            // egui::CentralPanel::default().show(ctx, |ui| {
-            //     ctx.request_repaint();
+            egui::CentralPanel::default().show(ctx, |ui| {
+                ctx.request_repaint();
 
-            //     let response = ui.interact(
-            //         egui::Rect::EVERYTHING,
-            //         ui.id(),
-            //         egui::Sense::click()
-            //     );
-            //     if response.double_clicked() {
-            //         self.fullscreen = false;
-            //     }
+                let response = ui.interact(
+                    egui::Rect::EVERYTHING,
+                    ui.id(),
+                    egui::Sense::click()
+                );
+                if response.double_clicked() {
+                    self.fullscreen = false;
+                }
 
-            //     self.emu.frame(true);
-            //     let pixels = self.emu.gfx.screen.chunks_exact(3)
-            //         .map(|p| egui::Color32::from_rgba_unmultiplied(p[0], p[1], p[2], 255))
-            //         .collect();
-            //     let texture: &egui::TextureHandle = &ui.ctx().load_texture(
-            //         "viewport",
-            //         egui::ColorImage {
-            //             size: [320, 240],
-            //             pixels,
-            //         },
-            //     );
-            //     let img_size = ui.available_height() * texture.size_vec2() / texture.size_vec2().y;
+                self.emu.frame(true);
+                let pixels = self.emu.gfx.screen.chunks_exact(3)
+                    .map(|p| egui::Color32::from_rgba_unmultiplied(p[0], p[1], p[2], 255))
+                    .collect();
+                let texture: &egui::TextureHandle = &ui.ctx().load_texture(
+                    "viewport",
+                    egui::ColorImage {
+                        size: [320, 240],
+                        pixels,
+                    },
+                );
+                let img_size = ui.available_height() * texture.size_vec2() / texture.size_vec2().y;
 
-            //     // let mut size = egui::Vec2::new(image.size[0] as f32, image.size[1] as f32);
-            //     // size *= (ui.available_width() / size.x).min(1.0);
-            //     // ui.image(texture_id, size);
+                // let mut size = egui::Vec2::new(image.size[0] as f32, image.size[1] as f32);
+                // size *= (ui.available_width() / size.x).min(1.0);
+                // ui.image(texture_id, size);
 
-            //     ui.image(texture, img_size);
-            // });
+                ui.image(texture, img_size);
+            });
 
-            // return
+            return
 
         }
             // ui.heading("Side Panel");
@@ -98,6 +110,30 @@ impl eframe::App for Frontend {
             // if ui.button("Increment").clicked() {
             //     value += 1.0;
             // }
+
+        #[cfg(target_arch = "wasm32")]
+        egui::Window::new("file input").show(ctx, |ui| {
+            use eframe::{wasm_bindgen, web_sys};
+            use wasm_bindgen::JsCast;
+            let text_agent: web_sys::HtmlInputElement = web_sys::window()
+                .unwrap()
+                .document()
+                .unwrap()
+                .get_element_by_id("egui_text_agent")
+                .unwrap()
+                .dyn_into()
+                .unwrap();
+
+            text_agent.set_type("file");
+
+            // file_agent / widget
+
+            if ui.button("file").clicked() {
+                text_agent.click();
+
+            }
+        });
+
 
         egui::Window::new("test").show(ctx, |ui| {
 
@@ -138,7 +174,6 @@ impl eframe::App for Frontend {
                 self.fullscreen = true;
             }
 
-            // TODO: blurryness https://github.com/emilk/egui/pull/1636
 
             self.emu.frame(true);
             let pixels = self.emu.gfx.screen.chunks_exact(3)
@@ -150,6 +185,7 @@ impl eframe::App for Frontend {
                     size: [320, 240],
                     pixels,
                 },
+                // TODO: blurryness https://github.com/emilk/egui/pull/1636
                 // egui::TextureFilter::Nearest
             );
             let img_size = self.tmp_zoom * texture.size_vec2() / texture.size_vec2().y;
