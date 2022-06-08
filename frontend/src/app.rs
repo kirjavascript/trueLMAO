@@ -103,21 +103,16 @@ impl eframe::App for Frontend {
         egui::Window::new("file input").show(ctx, |ui| {
             use eframe::{wasm_bindgen, web_sys};
             use wasm_bindgen::JsCast;
-            let text_agent: web_sys::HtmlInputElement = web_sys::window()
-                .unwrap()
-                .document()
-                .unwrap()
-                .get_element_by_id("egui_text_agent")
-                .unwrap()
-                .dyn_into()
-                .unwrap();
-
-            text_agent.set_type("file");
-
-            // file_agent / widget
 
             if ui.button("file").clicked() {
-                text_agent.click();
+
+                let task = rfd::AsyncFileDialog::new().pick_file();
+
+                wasm_bindgen_futures::spawn_local(async {
+                    if let Some(file) = task.await {
+                        web_sys::console::log_1(&format!("{:?}", file.read().await).into());
+                    }
+                });
 
             }
         });
@@ -181,59 +176,6 @@ impl eframe::App for Frontend {
             ui.image(texture, img_size);
 
         });
-
-        // egui::Window::new("hq3x").show(ctx, |ui| {
-        //     ctx.request_repaint();
-
-
-        //     let mut pixels3: [u8; 320*240*4] = [0;320*240*4];
-        //     let mut pixels2: [egui::Color32; 320*240] = [egui::Color32::DARK_RED;320*240];
-        //     static mut pixels32: [u32; 320*240] = [0;320*240];
-        //     let mut pixels4: [u32; 320*240*3*3] = [0;320*240*3*3];
-        //     let mut pixels42: [egui::Color32; 320*240*3*3] = [egui::Color32::DARK_RED;320*240*3*3];
-
-        //     self.emu.gfx.screen.chunks_exact(3)
-        //         .enumerate()
-        //         .for_each(|(i, p)| {
-        //             let index = i * 4;
-        //             pixels3[index] = p[0];
-        //             pixels3[index+1] = p[1];
-        //             pixels3[index+2] = p[2];
-        //             pixels3[index+3] = 255;
-        //         });
-
-        //     pixels3.chunks_exact(4)
-        //         .enumerate()
-        //         .for_each(|(i, p)| {
-        //             unsafe {
-        //                 pixels32[i] = ((p[0]as u32) << 24) + ((p[1]as u32) <<16) + ((p[2]as u32)<<8 ) + 255;
-        //             }
-        //         });
-
-        //     unsafe {
-
-        //         hqx::hq3x(&pixels32, &mut pixels4, 320, 240);
-        //     }
-
-        //     for (i, foo) in pixels4.iter().enumerate() {
-        //         pixels42[i] = egui::Color32::from_rgb(
-        //             (foo >> 24) as u8,
-        //             (foo >> 16) as u8 & 0xFF,
-        //             (foo >> 8) as u8 & 0xFF,
-        //         );
-        //     }
-        //     let texture: &egui::TextureHandle = &ui.ctx().load_texture(
-        //         "viewport",
-        //         egui::ColorImage {
-        //             size: [320*3, 240*3 ],
-        //             pixels: pixels42.to_vec(),
-        //         },
-        //         egui::TextureFilter::Nearest
-        //     );
-        //     let img_size = self.tmp_zoom * texture.size_vec2() / texture.size_vec2().y;
-        //     ui.image(texture, img_size);
-
-        // });
 
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             // The top panel is often a good place for a menu bar:

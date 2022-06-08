@@ -14,6 +14,8 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 emu = { path = "../emu" }
+rfd = "0.8"
+wasm-bindgen-futures = "0.4"
 
 # egui = "0.18.0"
 # eframe = { version = "0.18.0", features = ["persistence"] }
