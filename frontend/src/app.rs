@@ -1,11 +1,6 @@
 use emu::Megadrive;
 
-/// We derive Deserialize/Serialize so we can persist app state on shutdown.
-#[derive(serde::Deserialize, serde::Serialize)]
-#[serde(default)] // if we add new fields, give them default values when deserializing old state
 pub struct Frontend {
-    // Example stuff:
-    #[serde(skip)]
     emu:  Megadrive,
     fullscreen: bool,
     tmp_zoom: f32,
@@ -13,7 +8,6 @@ pub struct Frontend {
 
 impl Default for Frontend {
     fn default() -> Self {
-
         let buf: Vec<u8> = include_bytes!("/home/cake/sonic/roms/s1p.bin").to_vec();
         Self {
             emu: Megadrive::new(buf),
@@ -52,13 +46,6 @@ impl Frontend {
 }
 
 impl eframe::App for Frontend {
-    /// Called by the frame work to save state before shutdown.
-    fn save(&mut self, storage: &mut dyn eframe::Storage) {
-        eframe::set_value(storage, eframe::APP_KEY, self);
-    }
-
-    /// Called each time the UI needs repainting, which may be many times per second.
-    /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
 
         if self.fullscreen {
@@ -84,6 +71,7 @@ impl eframe::App for Frontend {
                         size: [320, 240],
                         pixels,
                     },
+                    egui::TextureFilter::Nearest
                 );
                 let img_size = ui.available_height() * texture.size_vec2() / texture.size_vec2().y;
 
@@ -135,7 +123,7 @@ impl eframe::App for Frontend {
         });
 
 
-        egui::Window::new("test").show(ctx, |ui| {
+        egui::Window::new("filter").show(ctx, |ui| {
 
             let texture: &egui::TextureHandle = &ui.ctx().load_texture(
                 "test",
@@ -148,8 +136,9 @@ impl eframe::App for Frontend {
                         egui::Color32::from_rgb(0, 0, 255),
                     ],
                 },
+                egui::TextureFilter::Nearest
             );
-            let img_size = 400. * texture.size_vec2() / texture.size_vec2().y;
+            let img_size = 20. * texture.size_vec2() / texture.size_vec2().y;
             ui.image(texture, img_size);
 
         });
@@ -186,12 +175,66 @@ impl eframe::App for Frontend {
                     pixels,
                 },
                 // TODO: blurryness https://github.com/emilk/egui/pull/1636
-                // egui::TextureFilter::Nearest
+                egui::TextureFilter::Nearest
             );
             let img_size = self.tmp_zoom * texture.size_vec2() / texture.size_vec2().y;
             ui.image(texture, img_size);
 
         });
+
+        // egui::Window::new("hq3x").show(ctx, |ui| {
+        //     ctx.request_repaint();
+
+
+        //     let mut pixels3: [u8; 320*240*4] = [0;320*240*4];
+        //     let mut pixels2: [egui::Color32; 320*240] = [egui::Color32::DARK_RED;320*240];
+        //     static mut pixels32: [u32; 320*240] = [0;320*240];
+        //     let mut pixels4: [u32; 320*240*3*3] = [0;320*240*3*3];
+        //     let mut pixels42: [egui::Color32; 320*240*3*3] = [egui::Color32::DARK_RED;320*240*3*3];
+
+        //     self.emu.gfx.screen.chunks_exact(3)
+        //         .enumerate()
+        //         .for_each(|(i, p)| {
+        //             let index = i * 4;
+        //             pixels3[index] = p[0];
+        //             pixels3[index+1] = p[1];
+        //             pixels3[index+2] = p[2];
+        //             pixels3[index+3] = 255;
+        //         });
+
+        //     pixels3.chunks_exact(4)
+        //         .enumerate()
+        //         .for_each(|(i, p)| {
+        //             unsafe {
+        //                 pixels32[i] = ((p[0]as u32) << 24) + ((p[1]as u32) <<16) + ((p[2]as u32)<<8 ) + 255;
+        //             }
+        //         });
+
+        //     unsafe {
+
+        //         hqx::hq3x(&pixels32, &mut pixels4, 320, 240);
+        //     }
+
+        //     for (i, foo) in pixels4.iter().enumerate() {
+        //         pixels42[i] = egui::Color32::from_rgb(
+        //             (foo >> 24) as u8,
+        //             (foo >> 16) as u8 & 0xFF,
+        //             (foo >> 8) as u8 & 0xFF,
+        //         );
+        //     }
+        //     let texture: &egui::TextureHandle = &ui.ctx().load_texture(
+        //         "viewport",
+        //         egui::ColorImage {
+        //             size: [320*3, 240*3 ],
+        //             pixels: pixels42.to_vec(),
+        //         },
+        //         egui::TextureFilter::Nearest
+        //     );
+        //     let img_size = self.tmp_zoom * texture.size_vec2() / texture.size_vec2().y;
+        //     ui.image(texture, img_size);
+
+        // });
+
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             // The top panel is often a good place for a menu bar:
             egui::menu::bar(ui, |ui| {

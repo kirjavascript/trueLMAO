@@ -14,10 +14,15 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 emu = { path = "../emu" }
-egui = "0.18.0"
-eframe = { version = "0.18.0", features = ["persistence"] }
+
+# egui = "0.18.0"
+# eframe = { version = "0.18.0", features = ["persistence"] }
+egui = { path = "/home/cake/dev/egui/egui" }
+eframe = { path = "/home/cake/dev/egui/eframe" }
 # egui = { git = "https://github.com/emilk/egui", branch = "master" }
 # eframe = { git = "https://github.com/emilk/egui", branch = "master" }
+# hqx = { git = "https://github.com/CryZe/wasmboy-rs", branch = "master" }
+
 serde = { version = "1", features = ["derive"] } # You only need this if you want app persistence
 
 # native:
