@@ -1,4 +1,5 @@
 use emu::Megadrive;
+use crate::widgets;
 
 pub struct Frontend {
     emu:  Megadrive,
@@ -48,38 +49,21 @@ impl Frontend {
 impl eframe::App for Frontend {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
 
+        // main layout should go here
+
+        // TODO: self.running
+
         if self.fullscreen {
             egui::CentralPanel::default().show(ctx, |ui| {
                 ctx.request_repaint();
 
-                let response = ui.interact(
-                    egui::Rect::EVERYTHING,
-                    ui.id(),
-                    egui::Sense::click()
-                );
+                self.emu.frame(true);
+
+                let response = ui.add(widgets::viewport(&self.emu.gfx.screen));
+
                 if response.double_clicked() {
                     self.fullscreen = false;
                 }
-
-                self.emu.frame(true);
-                let pixels = self.emu.gfx.screen.chunks_exact(3)
-                    .map(|p| egui::Color32::from_rgba_unmultiplied(p[0], p[1], p[2], 255))
-                    .collect();
-                let texture: &egui::TextureHandle = &ui.ctx().load_texture(
-                    "viewport",
-                    egui::ColorImage {
-                        size: [320, 240],
-                        pixels,
-                    },
-                    egui::TextureFilter::Nearest
-                );
-                let img_size = ui.available_height() * texture.size_vec2() / texture.size_vec2().y;
-
-                // let mut size = egui::Vec2::new(image.size[0] as f32, image.size[1] as f32);
-                // size *= (ui.available_width() / size.x).min(1.0);
-                // ui.image(texture_id, size);
-
-                ui.image(texture, img_size);
             });
 
             return
@@ -99,23 +83,23 @@ impl eframe::App for Frontend {
             //     value += 1.0;
             // }
 
-        #[cfg(target_arch = "wasm32")]
-        egui::Window::new("file input").show(ctx, |ui| {
-            use eframe::{wasm_bindgen, web_sys};
-            use wasm_bindgen::JsCast;
+        // #[cfg(target_arch = "wasm32")]
+        // egui::Window::new("file input").show(ctx, |ui| {
+        //     use eframe::{wasm_bindgen, web_sys};
+        //     use wasm_bindgen::JsCast;
 
-            if ui.button("file").clicked() {
+        //     if ui.button("file").clicked() {
 
-                let task = rfd::AsyncFileDialog::new().pick_file();
+        //         let task = rfd::AsyncFileDialog::new().pick_file();
 
-                wasm_bindgen_futures::spawn_local(async {
-                    if let Some(file) = task.await {
-                        web_sys::console::log_1(&format!("{:?}", file.read().await).into());
-                    }
-                });
+        //         wasm_bindgen_futures::spawn_local(async {
+        //             if let Some(file) = task.await {
+        //                 web_sys::console::log_1(&format!("{:?}", file.read().await).into());
+        //             }
+        //         });
 
-            }
-        });
+        //     }
+        // });
 
 
         egui::Window::new("filter").show(ctx, |ui| {
