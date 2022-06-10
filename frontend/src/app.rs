@@ -4,7 +4,6 @@ use crate::widgets;
 pub struct Frontend {
     emu:  Megadrive,
     fullscreen: bool,
-    tmp_zoom: f32,
 }
 
 impl Default for Frontend {
@@ -13,7 +12,6 @@ impl Default for Frontend {
         Self {
             emu: Megadrive::new(buf),
             fullscreen: false,
-            tmp_zoom: 400.0,
         }
     }
 }
@@ -49,22 +47,26 @@ impl Frontend {
 impl eframe::App for Frontend {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
 
+
         // main layout should go here
 
         // TODO: self.running
+        // TODO: emu_next here * requestrepaint
 
         if self.fullscreen {
-            egui::CentralPanel::default().show(ctx, |ui| {
-                ctx.request_repaint();
+            egui::CentralPanel::default()
+                .frame(egui::containers::Frame::none())
+                .show(ctx, |ui| {
+                    ctx.request_repaint();
 
-                self.emu.frame(true);
+                    self.emu.frame(true);
 
-                let response = ui.add(widgets::viewport(&self.emu.gfx.screen));
+                    let response = ui.add(widgets::viewport(&self.emu.gfx.screen));
 
-                if response.double_clicked() {
-                    self.fullscreen = false;
-                }
-            });
+                    if response.double_clicked() {
+                        self.fullscreen = false;
+                    }
+                });
 
             return
 
@@ -131,33 +133,13 @@ impl eframe::App for Frontend {
         egui::Window::new("screen").show(ctx, |ui| {
             ctx.request_repaint();
 
-            ui.add(egui::Slider::new(&mut self.tmp_zoom, 100.0..=700.0).text("tmp zoom"));
+            self.emu.frame(true);
 
-            let response = ui.interact(
-                egui::Rect::EVERYTHING,
-                ui.id(),
-                egui::Sense::click()
-            );
+            let response = ui.add(widgets::viewport(&self.emu.gfx.screen));
+
             if response.double_clicked() {
                 self.fullscreen = true;
             }
-
-
-            self.emu.frame(true);
-            let pixels = self.emu.gfx.screen.chunks_exact(3)
-                .map(|p| egui::Color32::from_rgb(p[0], p[1], p[2]))
-                .collect();
-            let texture: &egui::TextureHandle = &ui.ctx().load_texture(
-                "viewport",
-                egui::ColorImage {
-                    size: [320, 240],
-                    pixels,
-                },
-                // TODO: blurryness https://github.com/emilk/egui/pull/1636
-                egui::TextureFilter::Nearest
-            );
-            let img_size = self.tmp_zoom * texture.size_vec2() / texture.size_vec2().y;
-            ui.image(texture, img_size);
 
         });
 

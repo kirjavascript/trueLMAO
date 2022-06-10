@@ -12,9 +12,13 @@ fn viewport_ui(ui: &mut egui::Ui, screen: &Screen) -> egui::Response {
         },
         egui::TextureFilter::Nearest
     );
-    let img_size = ui.available_height() * texture.size_vec2() / texture.size_vec2().y;
+    // let size = ui.available_height() * texture.size_vec2() / texture.size_vec2().y;
 
-    let img = egui::Image::new(texture, img_size);
+    let mut size = texture.size_vec2();
+    // size *= ui.available_width() / size.x;
+    size *= ui.available_height() / size.y;
+
+    let img = egui::Image::new(texture, size);
 
     ui.add(img.sense(egui::Sense::click()))
 }
