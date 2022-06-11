@@ -14,6 +14,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 emu = { path = "../emu" }
+instant = "0.1"
 
 # rfd = "0.8"
 # wasm-bindgen-futures = "0.4"
