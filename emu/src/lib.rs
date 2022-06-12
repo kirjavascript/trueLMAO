@@ -124,9 +124,6 @@ impl Megadrive {
         // TODO: use slices for RGB copy
         // TODO: move clear_screen here
 
-        // TODO: try rendering with PIXI / web perf
-        // TODO: remove parts to hit 60
-
         // 0xFE is an invalid MD colour we use as a marker
         const MARKER: u8 = 0xFE;
 

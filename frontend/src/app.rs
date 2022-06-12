@@ -24,7 +24,7 @@ impl Default for GameState {
     fn default() -> Self {
         Self {
             running: true,
-            vsync: false,
+            vsync: true,
             frames: 0,
             frames_to_render: 0,
             epoch: Instant::now(),
@@ -154,19 +154,20 @@ impl eframe::App for Frontend {
                     self.fullscreen = true;
                 }
             });
-// https://doc.rust-lang.org/std/collections/struct.VecDeque.html
 
         egui::CentralPanel::default().show(ctx, |ui| {
             egui::warn_if_debug_build(ui);
             // ctx.inspection_ui(ui);
-            ui.label(&format!("{:?}", self.test_vec));
-            ui.label(&format!("{:?}", self.game_state.epoch));
-            ui.label(&format!("{:?}", Instant::now().duration_since(self.game_state.epoch).as_millis()));
-            ui.label(&format!("{:?}", self.game_state.frames));
-            ui.label(&format!("{:?}", self.game_state.frames_to_render));
 
-            ui.radio_value(&mut self.game_state.running, true, "running");
-            ui.radio_value(&mut self.game_state.running, false, "not running");
+            // ui.label(&format!("{:?}", self.game_state.epoch));
+            // ui.label(&format!("{:?}", Instant::now().duration_since(self.game_state.epoch).as_millis()));
+            // ui.label(&format!("{:?}", self.game_state.frames));
+            ui.label(&format!("MD frames this frame: {:?}", self.game_state.frames_to_render));
+            ui.label(&format!("avg frames {:?}", self.test_vec.iter().sum::<u64>() as f32 / self.test_vec.len() as f32));
+
+            if ui.button(if self.game_state.running { "pause" } else { "play" }).clicked() {
+                self.game_state.running = !self.game_state.running;
+            }
             ui.radio_value(&mut self.game_state.vsync, true, "vsync");
             ui.radio_value(&mut self.game_state.vsync, false, "not vsync");
 
@@ -194,8 +195,8 @@ impl eframe::App for Frontend {
             // }
 
             Plot::new("Normal Distribution Demo")
-                .width(600.)
-                .height(300.)
+                .width(200.)
+                .height(100.)
                 .legend(Legend::default())
                 .data_aspect(1.0)
                 .show(ui, |plot_ui| plot_ui.bar_chart(chart))
