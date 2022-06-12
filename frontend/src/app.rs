@@ -93,11 +93,11 @@ impl Frontend {
 
 impl eframe::App for Frontend {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
-        println!("{:#?}", ctx.input().keys_down);
-        println!("{:#?}", ctx.input().modifiers);
 
         if self.game_state.running {
             ctx.request_repaint();
+
+            crate::input::dummy_input(ctx, &mut self.emu);
 
             self.game_state.tick();
 
