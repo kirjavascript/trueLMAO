@@ -36,10 +36,19 @@ fn viewport_ui(ui: &mut egui::Ui, emu: &Megadrive, centered: bool) -> egui::Resp
 
         egui::Frame::none()
             .fill(egui::Color32::from_rgb(r, g, b))
+            // .sense(egui::Sense::click())
             .inner_margin(egui::style::Margin::symmetric(x_margin, y_margin))
             .show(ui, |ui| {
                 ui.add(img)
-            }).inner
+
+
+            })
+            .inner
+            .union(ui.interact(
+                egui::Rect::EVERYTHING,
+                ui.id(),
+                egui::Sense::click()
+            ))
     } else {
         ui.add(img)
     }

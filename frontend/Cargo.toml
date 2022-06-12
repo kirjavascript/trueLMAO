@@ -16,16 +16,19 @@ crate-type = ["cdylib", "rlib"]
 emu = { path = "../emu" }
 instant = "0.1"
 
+# puffin = "0.13.3"
+# puffin_egui = "0.15.0"
+
 # rfd = "0.8"
 # wasm-bindgen-futures = "0.4"
 # hqx = { git = "https://github.com/CryZe/wasmboy-rs", branch = "master" }
 
 # egui = "0.18.0"
 # eframe = { version = "0.18.0", features = ["persistence"] }
-egui = { path = "/home/cake/dev/egui/egui" }
-eframe = { path = "/home/cake/dev/egui/eframe" }
-# egui = { git = "https://github.com/emilk/egui", branch = "master" }
-# eframe = { git = "https://github.com/emilk/egui", branch = "master" }
+# egui = { path = "/home/cake/dev/egui/egui" }
+# eframe = { path = "/home/cake/dev/egui/eframe" }
+egui = { git = "https://github.com/emilk/egui", branch = "master" }
+eframe = { git = "https://github.com/emilk/egui", branch = "master" }
 # serde = { version = "1", features = ["derive"] } # You only need this if you want app persistence
 
 # native:

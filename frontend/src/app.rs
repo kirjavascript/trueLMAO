@@ -93,6 +93,8 @@ impl Frontend {
 
 impl eframe::App for Frontend {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+        println!("{:#?}", ctx.input().keys_down);
+        println!("{:#?}", ctx.input().modifiers);
 
         if self.game_state.running {
             ctx.request_repaint();
@@ -101,7 +103,7 @@ impl eframe::App for Frontend {
 
             let frames_to_render = self.game_state.frames_to_render();
 
-            if frames_to_render > 5 {
+            if frames_to_render > 3 {
                 self.emu.frame(true);
             } else if frames_to_render > 0 {
                 for _ in 0..frames_to_render - 1 {
@@ -136,7 +138,7 @@ impl eframe::App for Frontend {
                     }
                 });
 
-                ui.menu_button("Windows", |ui| {
+                ui.menu_button("Window", |ui| {
                     if ui.button("Auto-arrange").clicked() {
                         ui.ctx().memory().reset_areas();
                         ui.close_menu();
@@ -159,11 +161,8 @@ impl eframe::App for Frontend {
             egui::warn_if_debug_build(ui);
             // ctx.inspection_ui(ui);
 
-            // ui.label(&format!("{:?}", self.game_state.epoch));
-            // ui.label(&format!("{:?}", Instant::now().duration_since(self.game_state.epoch).as_millis()));
-            // ui.label(&format!("{:?}", self.game_state.frames));
-            ui.label(&format!("MD frames this frame: {:?}", self.game_state.frames_to_render));
-            ui.label(&format!("avg frames {:?}", self.test_vec.iter().sum::<u64>() as f32 / self.test_vec.len() as f32));
+            ui.label(&format!("MD frames this frame: {}", self.game_state.frames_to_render));
+            ui.label(&format!("avg frames {:.1}", self.test_vec.iter().sum::<u64>() as f32 / self.test_vec.len() as f32));
 
             if ui.button(if self.game_state.running { "pause" } else { "play" }).clicked() {
                 self.game_state.running = !self.game_state.running;
@@ -180,7 +179,7 @@ impl eframe::App for Frontend {
             use egui::plot::{
                 Bar, BarChart, Legend, Plot,
             };
-            let mut chart = BarChart::new(
+            let chart = BarChart::new(
                 self.test_vec
                     .iter()
                     .enumerate()
