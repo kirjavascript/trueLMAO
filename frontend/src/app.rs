@@ -1,12 +1,14 @@
 use emu::Megadrive;
 use crate::widgets;
-// use std::time::{Instant, Duration};
 use instant::Instant;
+use std::collections::VecDeque;
+
 
 pub struct Frontend {
     emu: Megadrive,
     fullscreen: bool,
     game_state: GameState,
+    test_vec: std::collections::VecDeque<u64>,
 }
 
 // TODO: move to core
@@ -56,6 +58,7 @@ impl Default for Frontend {
             emu: Megadrive::new(buf),
             fullscreen: false,
             game_state: Default::default(),
+            test_vec: VecDeque::with_capacity(60),
         }
     }
 }
@@ -122,6 +125,27 @@ impl eframe::App for Frontend {
             return
         }
 
+        // TODO menu module
+
+        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
+            // The top panel is often a good place for a menu bar:
+            egui::menu::bar(ui, |ui| {
+                ui.menu_button("File", |ui| {
+                    if ui.button("Quit").clicked() {
+                        frame.quit();
+                    }
+                });
+
+                ui.menu_button("Windows", |ui| {
+                    if ui.button("Auto-arrange").clicked() {
+                        ui.ctx().memory().reset_areas();
+                        ui.close_menu();
+                    }
+                });
+                // *ui.ctx().memory() = Default::default();
+            });
+        });
+
         egui::Window::new("screen")
             .min_height(100.)
             .show(ctx, |ui| {
@@ -130,15 +154,52 @@ impl eframe::App for Frontend {
                     self.fullscreen = true;
                 }
             });
-
+// https://doc.rust-lang.org/std/collections/struct.VecDeque.html
 
         egui::CentralPanel::default().show(ctx, |ui| {
             egui::warn_if_debug_build(ui);
             // ctx.inspection_ui(ui);
-            ui.label(&format!("{:?}", self.game_state.running));
+            ui.label(&format!("{:?}", self.test_vec));
             ui.label(&format!("{:?}", self.game_state.epoch));
+            ui.label(&format!("{:?}", Instant::now().duration_since(self.game_state.epoch).as_millis()));
             ui.label(&format!("{:?}", self.game_state.frames));
             ui.label(&format!("{:?}", self.game_state.frames_to_render));
+
+            ui.radio_value(&mut self.game_state.running, true, "running");
+            ui.radio_value(&mut self.game_state.running, false, "not running");
+            ui.radio_value(&mut self.game_state.vsync, true, "vsync");
+            ui.radio_value(&mut self.game_state.vsync, false, "not vsync");
+
+            self.test_vec.push_back(self.game_state.frames_to_render().min(4));
+
+            if self.test_vec.len() > 60 {
+                self.test_vec.pop_front();
+            }
+
+            use egui::plot::{
+                Bar, BarChart, Legend, Plot,
+            };
+            let mut chart = BarChart::new(
+                self.test_vec
+                    .iter()
+                    .enumerate()
+                    .map(|(i, x)| Bar::new((i + 1) as _, *x as f64))
+                    .collect()
+
+            )
+            .color(egui::Color32::LIGHT_BLUE)
+            .name("Normal Distribution");
+            // if !self.vertical {
+            //     chart = chart.horizontal();
+            // }
+
+            Plot::new("Normal Distribution Demo")
+                .width(600.)
+                .height(300.)
+                .legend(Legend::default())
+                .data_aspect(1.0)
+                .show(ui, |plot_ui| plot_ui.bar_chart(chart))
+                .response
         });
 
         // TODO debug module
@@ -171,20 +232,6 @@ impl eframe::App for Frontend {
                 }
                 ui.label(&debug);
             });
-
-        // TODO menu module
-
-        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            // The top panel is often a good place for a menu bar:
-            egui::menu::bar(ui, |ui| {
-                ui.menu_button("File", |ui| {
-                    if ui.button("Quit").clicked() {
-                        frame.quit();
-                    }
-                });
-                // TODO: window:arrange / other demo stuff
-            });
-        });
 
     }
 }
