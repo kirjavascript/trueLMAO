@@ -12,7 +12,14 @@ impl From<usize> for Gamepad {
 }
 
 impl Gamepad {
-    // .. SACBRLDU
+    pub const START: usize = 1 << 7;
+    pub const A: usize = 1 << 6;
+    pub const C: usize = 1 << 5;
+    pub const B: usize = 1 << 4;
+    pub const R: usize = 1 << 3;
+    pub const L: usize = 1 << 2;
+    pub const D: usize = 1 << 1;
+    pub const U: usize = 1;
 
     pub fn read(&self, register: u8, _control: u8) -> u8 {
         let select = register & 0x40;
