@@ -156,7 +156,28 @@ impl eframe::App for Frontend {
                 }
             });
 
+        egui::Window::new("palette")
+            .show(ctx, |ui| {
+                let pixels = self.emu.core.mem.vdp.cram_rgb().iter()
+                    .map(|&(r, g, b)| egui::Color32::from_rgb(r, g, b))
+                    .collect();
+                let texture: &egui::TextureHandle = &ui.ctx().load_texture(
+                    "palette",
+                    egui::ColorImage {
+                        size: [16, 4],
+                        pixels,
+                    },
+                    egui::TextureFilter::Nearest
+                );
+                let img = egui::Image::new(texture, texture.size_vec2() * 20.);
+
+                ui.add(img);
+            });
+
         egui::CentralPanel::default().show(ctx, |ui| {
+
+
+
             egui::warn_if_debug_build(ui);
             // ctx.inspection_ui(ui);
 
