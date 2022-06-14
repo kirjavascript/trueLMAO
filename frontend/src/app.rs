@@ -7,7 +7,7 @@ pub struct Frontend {
     emu: Megadrive,
     fullscreen: bool,
     game_state: GameState,
-    test_vec: std::collections::VecDeque<u64>,
+    test_vec: VecDeque<u64>,
 }
 
 impl Default for Frontend {

@@ -58,6 +58,8 @@ fn cram_to_rgb(color: u16) -> (u8, u8, u8) {
 }
 
 impl VDP {
+    // 91
+    // 13.2
     pub fn new() -> Self {
         Self {
             VRAM: [0; 0x10000],
@@ -83,6 +85,7 @@ impl VDP {
         self.color(line as _, index as _)
     }
 
+    // used in debugger
     pub fn cram_rgb(&self) -> [(u8, u8, u8); 64] {
         let mut rgb = [(0, 0, 0); 64];
         for (i, color) in self.CRAM.iter().enumerate() {

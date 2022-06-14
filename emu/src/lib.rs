@@ -119,7 +119,6 @@ impl Megadrive {
         let (plane_a, plane_b) = self.core.mem.vdp.nametables();
         let (hscroll_a, hscroll_b) = self.core.mem.vdp.hscroll(screen_y);
         let screen_width = self.core.mem.vdp.screen_width();
-        let cram_rgb = self.core.mem.vdp.cram_rgb();
 
         // TODO: use slices for RGB copy
         // TODO: move clear_screen here
@@ -134,7 +133,6 @@ impl Megadrive {
         Gfx::draw_plane_line(
             self,
             &mut line_high,
-            &cram_rgb,
             cell_w,
             cell_h,
             screen_y,
@@ -148,7 +146,6 @@ impl Megadrive {
         Gfx::draw_plane_line(
             self,
             &mut line_high,
-            &cram_rgb,
             cell_w,
             cell_h,
             screen_y,
@@ -162,7 +159,6 @@ impl Megadrive {
         Gfx::draw_sprite_line(
             self,
             &mut line_high,
-            &cram_rgb,
             screen_y,
             screen_width,
         );
@@ -171,7 +167,6 @@ impl Megadrive {
         Gfx::draw_window_line(
             self,
             &mut line_high,
-            &cram_rgb,
             screen_y,
         );
 

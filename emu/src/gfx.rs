@@ -29,7 +29,6 @@ impl Gfx {
     pub fn draw_plane_line<'a>(
         emu: &'a mut Megadrive,
         mut line_high: &'a mut [u8],
-        cram_rgb: &[(u8, u8, u8); 64],
         cell_w: usize,
         cell_h: usize,
         screen_y: usize,
@@ -113,7 +112,7 @@ impl Gfx {
 
                 for (x, px) in (&pixels[start..end]).iter().enumerate() {
                     if *px != 0 {
-                        let (r, g, b) = cram_rgb[*px as usize + (palette * 0x10)];
+                        let (r, g, b) = emu.core.mem.vdp.color(palette, *px as _);
                         let offset = (screen_x + x) * 3;
                         (*target)[offset] = r;
                         (*target)[offset + 1] = g;
@@ -129,7 +128,6 @@ impl Gfx {
     pub fn draw_sprite_line<'a>(
         emu: &'a mut Megadrive,
         mut line_high: &'a mut [u8],
-        cram_rgb: &[(u8, u8, u8); 64],
         screen_y: usize,
         screen_width: usize,
     ) {
@@ -163,7 +161,7 @@ impl Gfx {
                     let px = if sprite_base_x & 1 == 0 { px >> 4 } else { px & 0xF };
 
                     if px != 0 {
-                        let (r, g, b) = cram_rgb[px as usize + (sprite.palette * 0x10)];
+                        let (r, g, b) = emu.core.mem.vdp.color(sprite.palette, px as _);
                         let offset = x_offset as usize * 3;
 
                         if offset + 2 <= target.len() {
@@ -181,7 +179,6 @@ impl Gfx {
     pub fn draw_window_line<'a>(
         emu: &'a mut Megadrive,
         mut line_high: &'a mut [u8],
-        cram_rgb: &[(u8, u8, u8); 64],
         screen_y: usize,
     ) {
         let mut line_low = emu.gfx.line_slice(screen_y);
@@ -234,7 +231,7 @@ impl Gfx {
 
                     if px != 0 {
                         let screen_x = if hflip { cursor ^ 7 } else { cursor } + x;
-                        let (r, g, b) = cram_rgb[px as usize + (palette * 0x10)];
+                        let (r, g, b) = emu.core.mem.vdp.color(palette, px as _);
                         let offset = screen_x * 3;
                         (*target)[offset] = r;
                         (*target)[offset + 1] = g;
