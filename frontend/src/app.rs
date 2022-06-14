@@ -3,12 +3,23 @@ use crate::widgets;
 use instant::Instant;
 use std::collections::VecDeque;
 
-
 pub struct Frontend {
     emu: Megadrive,
     fullscreen: bool,
     game_state: GameState,
     test_vec: std::collections::VecDeque<u64>,
+}
+
+impl Default for Frontend {
+    fn default() -> Self {
+        let buf: Vec<u8> = include_bytes!("/home/cake/sonic/roms/s1p.bin").to_vec();
+        Self {
+            emu: Megadrive::new(buf),
+            fullscreen: true,
+            game_state: Default::default(),
+            test_vec: VecDeque::with_capacity(60),
+        }
+    }
 }
 
 // TODO: move to core
@@ -24,7 +35,7 @@ impl Default for GameState {
     fn default() -> Self {
         Self {
             running: true,
-            vsync: true,
+            vsync: false,
             frames: 0,
             frames_to_render: 0,
             epoch: Instant::now(),
@@ -46,19 +57,6 @@ impl GameState {
             1
         } else {
             self.frames_to_render
-        }
-    }
-}
-
-
-impl Default for Frontend {
-    fn default() -> Self {
-        let buf: Vec<u8> = include_bytes!("/home/cake/sonic/roms/s1p.bin").to_vec();
-        Self {
-            emu: Megadrive::new(buf),
-            fullscreen: false,
-            game_state: Default::default(),
-            test_vec: VecDeque::with_capacity(60),
         }
     }
 }
@@ -142,6 +140,10 @@ impl eframe::App for Frontend {
                         ui.ctx().memory().reset_areas();
                         ui.close_menu();
                     }
+                    if ui.button("Fullscreen").clicked() {
+                        self.fullscreen = true;
+                        ui.close_menu();
+                    }
                 });
                 // *ui.ctx().memory() = Default::default();
             });
@@ -172,6 +174,32 @@ impl eframe::App for Frontend {
                 let img = egui::Image::new(texture, texture.size_vec2() * 20.);
 
                 ui.add(img);
+            });
+
+        egui::Window::new("vram")
+            .show(ctx, |ui| {
+                // let qty = 2;
+
+                // let mut pixels = vec![];
+                // for duxel in &self.emu.core.mem.vdp.VRAM[0..(32*qty)] {
+                //     let pixel = (*duxel & 0xF0) >> 4;
+                //     let color = self.emu.core.mem.vdp.color(0, pixel as _);
+                //     pixels.push(egui::Color32::from_rgb(color.0, color.1, color.2));
+                //     let pixel = *duxel & 0xF;
+                //     let color = self.emu.core.mem.vdp.color(0, pixel as _);
+                //     pixels.push(egui::Color32::from_rgb(color.0, color.1, color.2));
+                // }
+                // let texture: &egui::TextureHandle = &ui.ctx().load_texture(
+                //     "palette",
+                //     egui::ColorImage {
+                //         size: [8, 8 * qty],
+                //         pixels,
+                //     },
+                //     egui::TextureFilter::Nearest
+                // );
+                // let img = egui::Image::new(texture, texture.size_vec2() * 20.);
+
+                // ui.add(img);
             });
 
         egui::CentralPanel::default().show(ctx, |ui| {
