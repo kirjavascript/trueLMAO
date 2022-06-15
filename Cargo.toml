@@ -2,8 +2,6 @@
 
 members = [
     "emu",
-    "web",
-    "desktop",
     "frontend",
 ]
 

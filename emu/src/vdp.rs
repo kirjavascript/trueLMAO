@@ -59,8 +59,6 @@ fn cram_to_rgb(color: u16) -> (u8, u8, u8) {
 }
 
 impl VDP {
-    // 91
-    // 13.2
     pub fn new() -> Self {
         Self {
             VRAM: [0; 0x10000],

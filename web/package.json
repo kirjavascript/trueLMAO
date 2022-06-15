@@ -1,9 +1,0 @@
-{
-    "scripts": {
-        "watch": "esbuild app/main.js --bundle --watch --outfile=static/main.js",
-        "build": "esbuild app/main.js --bundle --minify --outfile=static/main.js"
-    },
-    "dependencies": {
-        "esbuild": "^0.14.23"
-    }
-}
