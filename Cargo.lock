@@ -590,7 +590,7 @@ checksum = "6907e25393cdcc1f4f3f513d9aac1e840eb1cc341a0fccb01171f7d14d10b946"
 [[package]]
 name = "eframe"
 version = "0.18.0"
-source = "git+https://github.com/emilk/egui?branch=master#7eeb292adfacd9311a420ac3ea225e2261a8f8d3"
+source = "git+https://github.com/emilk/egui?rev=7eeb292a#7eeb292adfacd9311a420ac3ea225e2261a8f8d3"
 dependencies = [
  "bytemuck",
  "dark-light",
@@ -611,7 +611,7 @@ dependencies = [
 [[package]]
 name = "egui"
 version = "0.18.1"
-source = "git+https://github.com/emilk/egui?branch=master#7eeb292adfacd9311a420ac3ea225e2261a8f8d3"
+source = "git+https://github.com/emilk/egui?rev=7eeb292a#7eeb292adfacd9311a420ac3ea225e2261a8f8d3"
 dependencies = [
  "ahash 0.7.6",
  "epaint",
@@ -622,7 +622,7 @@ dependencies = [
 [[package]]
 name = "egui-winit"
 version = "0.18.0"
-source = "git+https://github.com/emilk/egui?branch=master#7eeb292adfacd9311a420ac3ea225e2261a8f8d3"
+source = "git+https://github.com/emilk/egui?rev=7eeb292a#7eeb292adfacd9311a420ac3ea225e2261a8f8d3"
 dependencies = [
  "arboard",
  "egui",
@@ -636,7 +636,7 @@ dependencies = [
 [[package]]
 name = "egui_glow"
 version = "0.18.1"
-source = "git+https://github.com/emilk/egui?branch=master#7eeb292adfacd9311a420ac3ea225e2261a8f8d3"
+source = "git+https://github.com/emilk/egui?rev=7eeb292a#7eeb292adfacd9311a420ac3ea225e2261a8f8d3"
 dependencies = [
  "bytemuck",
  "egui",
@@ -650,7 +650,7 @@ dependencies = [
 [[package]]
 name = "emath"
 version = "0.18.0"
-source = "git+https://github.com/emilk/egui?branch=master#7eeb292adfacd9311a420ac3ea225e2261a8f8d3"
+source = "git+https://github.com/emilk/egui?rev=7eeb292a#7eeb292adfacd9311a420ac3ea225e2261a8f8d3"
 dependencies = [
  "bytemuck",
 ]
@@ -687,7 +687,7 @@ dependencies = [
 [[package]]
 name = "epaint"
 version = "0.18.1"
-source = "git+https://github.com/emilk/egui?branch=master#7eeb292adfacd9311a420ac3ea225e2261a8f8d3"
+source = "git+https://github.com/emilk/egui?rev=7eeb292a#7eeb292adfacd9311a420ac3ea225e2261a8f8d3"
 dependencies = [
  "ab_glyph",
  "ahash 0.7.6",

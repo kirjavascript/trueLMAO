@@ -1,3 +1,3 @@
 /target
-./static/*.js
-./static/*.wasm
+static/*
+!static/index.html
