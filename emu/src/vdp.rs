@@ -11,6 +11,7 @@ pub struct VDP {
     pub control_address: u32,
     pub control_pending: bool,
     pub dma_pending: bool,
+    pub cram_rgb: [(u8, u8, u8); 0x40],
 }
 
 pub const VBLANK_MASK: u32 = 8;
@@ -71,27 +72,15 @@ impl VDP {
             control_address: 0,
             control_pending: false,
             dma_pending: false,
+            cram_rgb: [(0, 0, 0); 0x40],
         }
-    }
-
-    pub fn color(&self, line: usize, index: usize) -> (u8, u8, u8) {
-        cram_to_rgb(self.CRAM[index + (line * 0x10)])
     }
 
     pub fn bg_color(&self) -> (u8, u8, u8) {
         let vdp_bg = self.registers[7];
         let index = vdp_bg & 0xF;
         let line = (vdp_bg >> 4) & 3;
-        self.color(line as _, index as _)
-    }
-
-    // used in debugger
-    pub fn cram_rgb(&self) -> [(u8, u8, u8); 64] {
-        let mut rgb = [(0, 0, 0); 64];
-        for (i, color) in self.CRAM.iter().enumerate() {
-            rgb[i] = cram_to_rgb(*color);
-        }
-        rgb
+        cram_to_rgb(self.CRAM[index as usize + (line as usize * 0x10)])
     }
 
     pub fn screen_width(&self) -> usize {
@@ -253,7 +242,9 @@ impl VDP {
                 self.VRAM[self.control_address as usize + 1] = (value & 0xff) as _;
             },
             VDPType::CRAM => {
-                self.CRAM[((self.control_address & 0x7f) >> 1) as usize] = value as _;
+                let address = ((self.control_address & 0x7f) >> 1) as usize;
+                self.CRAM[address] = value as _;
+                self.cram_rgb[address] = cram_to_rgb(value as _);
             },
             VDPType::VSRAM => {
                 self.VSRAM[((self.control_address & 0x7f) >> 1) as usize] = value as _;

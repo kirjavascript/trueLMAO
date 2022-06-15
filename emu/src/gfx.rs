@@ -112,7 +112,7 @@ impl Gfx {
 
                 for (x, px) in (&pixels[start..end]).iter().enumerate() {
                     if *px != 0 {
-                        let (r, g, b) = emu.core.mem.vdp.color(palette, *px as _);
+                        let (r, g, b) = emu.core.mem.vdp.cram_rgb[*px as usize + (palette * 0x10)];
                         let offset = (screen_x + x) * 3;
                         (*target)[offset] = r;
                         (*target)[offset + 1] = g;
@@ -161,7 +161,7 @@ impl Gfx {
                     let px = if sprite_base_x & 1 == 0 { px >> 4 } else { px & 0xF };
 
                     if px != 0 {
-                        let (r, g, b) = emu.core.mem.vdp.color(sprite.palette, px as _);
+                        let (r, g, b) = emu.core.mem.vdp.cram_rgb[px as usize + (sprite.palette * 0x10)];
                         let offset = x_offset as usize * 3;
 
                         if offset + 2 <= target.len() {
@@ -231,7 +231,7 @@ impl Gfx {
 
                     if px != 0 {
                         let screen_x = if hflip { cursor ^ 7 } else { cursor } + x;
-                        let (r, g, b) = emu.core.mem.vdp.color(palette, px as _);
+                        let (r, g, b) = emu.core.mem.vdp.cram_rgb[px as usize + (palette * 0x10)];
                         let offset = screen_x * 3;
                         (*target)[offset] = r;
                         (*target)[offset + 1] = g;

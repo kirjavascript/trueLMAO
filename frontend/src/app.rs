@@ -160,7 +160,7 @@ impl eframe::App for Frontend {
 
         egui::Window::new("palette")
             .show(ctx, |ui| {
-                let pixels = self.emu.core.mem.vdp.cram_rgb().iter()
+                let pixels = self.emu.core.mem.vdp.cram_rgb.iter()
                     .map(|&(r, g, b)| egui::Color32::from_rgb(r, g, b))
                     .collect();
                 let texture: &egui::TextureHandle = &ui.ctx().load_texture(
@@ -178,26 +178,26 @@ impl eframe::App for Frontend {
 
         egui::Window::new("vram")
             .show(ctx, |ui| {
-                let mut pixels = vec![];
-                for duxel in &self.emu.core.mem.vdp.VRAM[0..64] {
-                    let pixel = (*duxel & 0xF0) >> 4;
-                    let color = self.emu.core.mem.vdp.color(0, pixel as _);
-                    pixels.push(egui::Color32::from_rgb(color.0, color.1, color.2));
-                    let pixel = *duxel & 0xF;
-                    let color = self.emu.core.mem.vdp.color(0, pixel as _);
-                    pixels.push(egui::Color32::from_rgb(color.0, color.1, color.2));
-                }
-                let texture: &egui::TextureHandle = &ui.ctx().load_texture(
-                    "palette",
-                    egui::ColorImage {
-                        size: [8, 8* 2],
-                        pixels,
-                    },
-                    egui::TextureFilter::Nearest
-                );
-                let img = egui::Image::new(texture, texture.size_vec2() * 20.);
+                // let mut pixels = vec![];
+                // for duxel in &self.emu.core.mem.vdp.VRAM[0..64] {
+                //     let pixel = (*duxel & 0xF0) >> 4;
+                //     let color = self.emu.core.mem.vdp.color(0, pixel as _);
+                //     pixels.push(egui::Color32::from_rgb(color.0, color.1, color.2));
+                //     let pixel = *duxel & 0xF;
+                //     let color = self.emu.core.mem.vdp.color(0, pixel as _);
+                //     pixels.push(egui::Color32::from_rgb(color.0, color.1, color.2));
+                // }
+                // let texture: &egui::TextureHandle = &ui.ctx().load_texture(
+                //     "palette",
+                //     egui::ColorImage {
+                //         size: [8, 8* 2],
+                //         pixels,
+                //     },
+                //     egui::TextureFilter::Nearest
+                // );
+                // let img = egui::Image::new(texture, texture.size_vec2() * 20.);
 
-                ui.add(img);
+                // ui.add(img);
             });
 
         egui::CentralPanel::default().show(ctx, |ui| {
