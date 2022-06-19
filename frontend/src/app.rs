@@ -178,26 +178,57 @@ impl eframe::App for Frontend {
 
         egui::Window::new("vram")
             .show(ctx, |ui| {
-                // let mut pixels = vec![];
-                // for duxel in &self.emu.core.mem.vdp.VRAM[0..64] {
-                //     let pixel = (*duxel & 0xF0) >> 4;
-                //     let color = self.emu.core.mem.vdp.color(0, pixel as _);
-                //     pixels.push(egui::Color32::from_rgb(color.0, color.1, color.2));
-                //     let pixel = *duxel & 0xF;
-                //     let color = self.emu.core.mem.vdp.color(0, pixel as _);
-                //     pixels.push(egui::Color32::from_rgb(color.0, color.1, color.2));
-                // }
-                // let texture: &egui::TextureHandle = &ui.ctx().load_texture(
-                //     "palette",
-                //     egui::ColorImage {
-                //         size: [8, 8* 2],
-                //         pixels,
-                //     },
-                //     egui::TextureFilter::Nearest
-                // );
-                // let img = egui::Image::new(texture, texture.size_vec2() * 20.);
+                // TODO gui palette toggle
+                const width: usize = 4;
+                const height: usize = 4;
+                const pixel_qty: usize = (width * 8) * (height * 8);
+                // TODO use retained buffer
+                let mut pixels: [egui::Color32; pixel_qty] = [ egui::Color32::from_rgb(0, 0, 0); pixel_qty];
 
-                // ui.add(img);
+                for x_tile in 0..width {
+                    for y_tile in 0..height {
+                        let offset = x_tile + (y_tile * width);
+                        let vram_offset = offset * 32;
+                        let mut view_offset = (x_tile * 8) + (y_tile * (width * 8));
+                        let mut pixels_drawn = 0;
+
+                        for duxel in &self.emu.core.mem.vdp.VRAM[vram_offset..vram_offset+32] {
+                            let pixel = (*duxel & 0xF0) >> 4;
+
+                            let (r, g, b) = self.emu.core.mem.vdp.cram_rgb[pixel as usize];
+                            pixels[view_offset] = egui::Color32::from_rgb(r, g, b);
+                            pixels_drawn += 1;
+                            if pixels_drawn % 8 == 0 {
+                                view_offset += width * 8;
+                            } else {
+                                view_offset += 1;
+                            }
+                            let pixel = *duxel & 0xF;
+                            let (r, g, b) = self.emu.core.mem.vdp.cram_rgb[pixel as usize];
+                            pixels[view_offset] = egui::Color32::from_rgb(r, g, b);
+                            pixels_drawn += 1;
+                            view_offset += 1;
+                            if pixels_drawn % 8 == 0 {
+                                view_offset += width * 8;
+                            } else {
+                                view_offset += 1;
+                            }
+                        }
+
+                    }
+                }
+
+                let texture: &egui::TextureHandle = &ui.ctx().load_texture(
+                    "vram",
+                    egui::ColorImage {
+                        size: [width*8, height*8],
+                        pixels: pixels.to_vec(),
+                    },
+                    egui::TextureFilter::Nearest
+                );
+                let img = egui::Image::new(texture, texture.size_vec2() * 20.);
+
+                ui.add(img);
             });
 
         egui::CentralPanel::default().show(ctx, |ui| {

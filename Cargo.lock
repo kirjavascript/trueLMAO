@@ -292,15 +292,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cmake"
-version = "0.1.45"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb6210b637171dfba4cda12e579ac6dc73f5165ad56133e5d72ef3131f320855"
-dependencies = [
- "cc",
-]
-
-[[package]]
 name = "cocoa"
 version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -518,14 +509,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "desktop"
-version = "0.1.0"
-dependencies = [
- "emu",
- "fltk",
-]
-
-[[package]]
 name = "detect-desktop-environment"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -721,40 +704,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3fcf0cee53519c866c09b5de1f6c56ff9d647101f81c1964fa632e148896cdf"
 dependencies = [
  "instant",
-]
-
-[[package]]
-name = "fltk"
-version = "1.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a6592e1dc57ff737c486ef4bd43721a22ba2d08211305f5ef2d1ab1021755197"
-dependencies = [
- "bitflags",
- "fltk-derive",
- "fltk-sys",
- "lazy_static 1.4.0",
- "objc",
- "raw-window-handle 0.3.3",
-]
-
-[[package]]
-name = "fltk-derive"
-version = "1.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "01fdc87a8c3af8cb94ba7a558ed415bda3d185906e6734b2104fc0c861a610dd"
-dependencies = [
- "quote",
- "syn",
-]
-
-[[package]]
-name = "fltk-sys"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd114ac679ce2717fd78c8ed15b42b88c6693aeb7ffaf89e35c268a458fb0698"
-dependencies = [
- "cmake",
- "libc",
 ]
 
 [[package]]
@@ -1048,15 +997,6 @@ name = "khronos_api"
 version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2db585e1d738fc771bf08a151420d3ed193d9d895a36df7f6f8a9456b911ddc"
-
-[[package]]
-name = "lazy_mut"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "767a23ea51ed54e6a9cd2a6d0fe156feb4934a4d95e585b55f4585577e195a5b"
-dependencies = [
- "libc",
-]
 
 [[package]]
 name = "lazy_static"
@@ -1570,15 +1510,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d34f1408f55294453790c48b2f1ebbb1c5b4b7563eb1f418bcfcfdbb06ebb4e7"
 dependencies = [
  "getrandom",
-]
-
-[[package]]
-name = "raw-window-handle"
-version = "0.3.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a441a7a6c80ad6473bd4b74ec1c9a4c951794285bf941c2126f607c72e48211"
-dependencies = [
- "libc",
 ]
 
 [[package]]
@@ -2197,15 +2128,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "web"
-version = "0.1.0"
-dependencies = [
- "emu",
- "lazy_mut",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "web-sys"
 version = "0.3.57"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2350,7 +2272,7 @@ dependencies = [
  "objc",
  "parking_lot 0.11.2",
  "percent-encoding",
- "raw-window-handle 0.4.3",
+ "raw-window-handle",
  "smithay-client-toolkit",
  "wasm-bindgen",
  "wayland-client",

@@ -236,8 +236,9 @@ impl VDP {
     fn write_data(&mut self, target: VDPType, value: u32) {
         match target {
             VDPType::VRAM => {
-                self.VRAM[self.control_address as usize] = ((value >> 8) & 0xff) as _;
-                self.VRAM[self.control_address as usize + 1] = (value & 0xff) as _;
+                let addr = self.control_address as usize;
+                self.VRAM[addr] = ((value >> 8) & 0xff) as _;
+                self.VRAM[addr + 1] = (value & 0xff) as _;
             },
             VDPType::CRAM => {
                 let address = ((self.control_address & 0x7f) >> 1) as usize;
