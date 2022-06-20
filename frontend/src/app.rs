@@ -3,20 +3,22 @@ use crate::widgets;
 use instant::Instant;
 use std::collections::VecDeque;
 
-pub struct Frontend {
+pub struct App {
     emu: Megadrive,
-    fullscreen: bool,
+    debug: crate::debug::Debug,
     game_state: GameState,
+    pub fullscreen: bool,
     test_vec: VecDeque<u64>,
 }
 
-impl Default for Frontend {
+impl Default for App {
     fn default() -> Self {
         let buf: Vec<u8> = include_bytes!("/home/cake/sonic/roms/s1p.bin").to_vec();
         Self {
             emu: Megadrive::new(buf),
-            fullscreen: false,
+            debug: Default::default(),
             game_state: Default::default(),
+            fullscreen: false,
             test_vec: VecDeque::with_capacity(60),
         }
     }
@@ -61,7 +63,7 @@ impl GameState {
     }
 }
 
-impl Frontend {
+impl App {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         cc.egui_ctx.set_visuals(egui::Visuals {
             dark_mode: true,
@@ -89,7 +91,7 @@ impl Frontend {
     }
 }
 
-impl eframe::App for Frontend {
+impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
 
         if self.game_state.running {
@@ -111,8 +113,6 @@ impl eframe::App for Frontend {
             }
         }
 
-        // main layout
-
         if self.fullscreen {
             egui::CentralPanel::default()
                 .frame(egui::containers::Frame::none())
@@ -125,29 +125,11 @@ impl eframe::App for Frontend {
             return
         }
 
-        // TODO menu module
-
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            egui::menu::bar(ui, |ui| {
-                ui.menu_button("File", |ui| {
-                    if ui.button("Quit").clicked() {
-                        frame.quit();
-                    }
-                });
-
-                ui.menu_button("Window", |ui| {
-                    if ui.button("Auto-arrange").clicked() {
-                        ui.ctx().memory().reset_areas();
-                        ui.close_menu();
-                    }
-                    if ui.button("Fullscreen").clicked() {
-                        self.fullscreen = true;
-                        ui.close_menu();
-                    }
-                });
-                // *ui.ctx().memory() = Default::default();
-            });
+            ui.add(crate::widgets::menu(&mut self.fullscreen, frame));
         });
+
+        // game window
 
         egui::Window::new("screen")
             .min_height(100.)
@@ -158,76 +140,11 @@ impl eframe::App for Frontend {
                 }
             });
 
-        egui::Window::new("palette")
-            .show(ctx, |ui| {
-                let pixels = self.emu.core.mem.vdp.cram_rgb.iter()
-                    .map(|&(r, g, b)| egui::Color32::from_rgb(r, g, b))
-                    .collect();
-                let texture: &egui::TextureHandle = &ui.ctx().load_texture(
-                    "palette",
-                    egui::ColorImage {
-                        size: [16, 4],
-                        pixels,
-                    },
-                    egui::TextureFilter::Nearest
-                );
-                let img = egui::Image::new(texture, texture.size_vec2() * 20.);
+        crate::debug::palette::palette_window(&ctx, &self.emu);
 
-                ui.add(img);
-            });
-
-        egui::Window::new("vram")
-            .show(ctx, |ui| {
-                // TODO gui palette toggle
-                const width: usize = 16;
-                const height: usize = 128;
-                const pixel_qty: usize = (width * 8) * (height * 8);
-                // TODO use retained buffer
-                let mut pixels: [egui::Color32; pixel_qty] = [ egui::Color32::from_rgb(0, 0, 0); pixel_qty];
-
-                for x_tile in 0..width {
-                    for y_tile in 0..height {
-                        let offset = x_tile + (y_tile * width);
-                        let vram_offset = offset * 32;
-                        let mut view_offset = (x_tile * 8) + (y_tile * 8 * (width * 8));
-                        let mut count = 0;
-
-                        for duxel in &self.emu.core.mem.vdp.VRAM[vram_offset..vram_offset+32] {
-                            let pixel = (*duxel & 0xF0) >> 4;
-
-                            let (r, g, b) = self.emu.core.mem.vdp.cram_rgb[pixel as usize];
-                            pixels[view_offset] = egui::Color32::from_rgb(r, g, b);
-                            view_offset += 1;
-                            let pixel = *duxel & 0xF;
-                            let (r, g, b) = self.emu.core.mem.vdp.cram_rgb[pixel as usize];
-                            pixels[view_offset] = egui::Color32::from_rgb(r, g, b);
-                            view_offset += 1;
-                            count += 2;
-                            if view_offset % 8 == 0 {
-                                view_offset += (width-1) * 8;
-                            }
-                        }
-
-                    }
-                }
-
-                let texture: &egui::TextureHandle = &ui.ctx().load_texture(
-                    "vram",
-                    egui::ColorImage {
-                        size: [width*8, height*8],
-                        pixels: pixels.to_vec(),
-                    },
-                    egui::TextureFilter::Nearest
-                );
-                let img = egui::Image::new(texture, texture.size_vec2() * 2.);
-
-                ui.add(img);
-            });
+        self.debug.vram.render(&ctx, &self.emu);
 
         egui::CentralPanel::default().show(ctx, |ui| {
-
-
-
             egui::warn_if_debug_build(ui);
             // ctx.inspection_ui(ui);
 

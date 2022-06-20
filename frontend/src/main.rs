@@ -11,6 +11,6 @@ fn main() {
     eframe::run_native(
         "trueLMAO",
         native_options,
-        Box::new(|cc| Box::new(frontend::Frontend::new(cc))),
+        Box::new(|cc| Box::new(frontend::App::new(cc))),
     );
 }
