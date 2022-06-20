@@ -15,7 +15,7 @@ impl Default for Frontend {
         let buf: Vec<u8> = include_bytes!("/home/cake/sonic/roms/s1p.bin").to_vec();
         Self {
             emu: Megadrive::new(buf),
-            fullscreen: true,
+            fullscreen: false,
             game_state: Default::default(),
             test_vec: VecDeque::with_capacity(60),
         }
@@ -179,8 +179,8 @@ impl eframe::App for Frontend {
         egui::Window::new("vram")
             .show(ctx, |ui| {
                 // TODO gui palette toggle
-                const width: usize = 4;
-                const height: usize = 4;
+                const width: usize = 16;
+                const height: usize = 128;
                 const pixel_qty: usize = (width * 8) * (height * 8);
                 // TODO use retained buffer
                 let mut pixels: [egui::Color32; pixel_qty] = [ egui::Color32::from_rgb(0, 0, 0); pixel_qty];
@@ -189,29 +189,22 @@ impl eframe::App for Frontend {
                     for y_tile in 0..height {
                         let offset = x_tile + (y_tile * width);
                         let vram_offset = offset * 32;
-                        let mut view_offset = (x_tile * 8) + (y_tile * (width * 8));
-                        let mut pixels_drawn = 0;
+                        let mut view_offset = (x_tile * 8) + (y_tile * 8 * (width * 8));
+                        let mut count = 0;
 
                         for duxel in &self.emu.core.mem.vdp.VRAM[vram_offset..vram_offset+32] {
                             let pixel = (*duxel & 0xF0) >> 4;
 
                             let (r, g, b) = self.emu.core.mem.vdp.cram_rgb[pixel as usize];
                             pixels[view_offset] = egui::Color32::from_rgb(r, g, b);
-                            pixels_drawn += 1;
-                            if pixels_drawn % 8 == 0 {
-                                view_offset += width * 8;
-                            } else {
-                                view_offset += 1;
-                            }
+                            view_offset += 1;
                             let pixel = *duxel & 0xF;
                             let (r, g, b) = self.emu.core.mem.vdp.cram_rgb[pixel as usize];
                             pixels[view_offset] = egui::Color32::from_rgb(r, g, b);
-                            pixels_drawn += 1;
                             view_offset += 1;
-                            if pixels_drawn % 8 == 0 {
-                                view_offset += width * 8;
-                            } else {
-                                view_offset += 1;
+                            count += 2;
+                            if view_offset % 8 == 0 {
+                                view_offset += (width-1) * 8;
                             }
                         }
 
@@ -226,7 +219,7 @@ impl eframe::App for Frontend {
                     },
                     egui::TextureFilter::Nearest
                 );
-                let img = egui::Image::new(texture, texture.size_vec2() * 20.);
+                let img = egui::Image::new(texture, texture.size_vec2() * 2.);
 
                 ui.add(img);
             });
