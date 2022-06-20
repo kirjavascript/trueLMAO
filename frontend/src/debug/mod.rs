@@ -15,34 +15,36 @@ impl Default for Debug {
 }
 
 pub struct VRAM {
-
+    palette_line: usize,
 }
 
 impl Default for VRAM {
     fn default() -> Self {
         Self {
-
+            palette_line: 0,
         }
     }
 }
 
 impl VRAM {
-    pub fn render(&self, ctx: &egui::Context, emu: &emu::Megadrive) {
+    pub fn render(&mut self, ctx: &egui::Context, emu: &emu::Megadrive) {
         egui::Window::new("vram")
             .vscroll(true)
             .show(ctx, |ui| {
-                ui.group(|ui| {
-                    ui.label("Within a frame");
-                    ui.label("Within a frame");
+                ui.horizontal(|ui| {
+                    ui.radio_value(&mut self.palette_line, 0, "0");
+                    ui.radio_value(&mut self.palette_line, 1, "1");
+                    ui.radio_value(&mut self.palette_line, 2, "2");
+                    ui.radio_value(&mut self.palette_line, 3, "3");
                 });
-                // TODO gui palette toggle
+
                 const width: usize = 16;
                 const height: usize = 128;
                 const pixel_qty: usize = (width * 8) * (height * 8);
                 // TODO use retained buffer
-                // TODO: widget local state
                 let mut pixels: [egui::Color32; pixel_qty] = [ egui::Color32::from_rgb(0, 0, 0); pixel_qty];
 
+                let palette_offset = self.palette_line * 0x10;
                 for x_tile in 0..width {
                     for y_tile in 0..height {
                         let offset = x_tile + (y_tile * width);
@@ -52,11 +54,11 @@ impl VRAM {
                         for duxel in &emu.core.mem.vdp.VRAM[vram_offset..vram_offset+32] {
                             let pixel = (*duxel & 0xF0) >> 4;
 
-                            let (r, g, b) = emu.core.mem.vdp.cram_rgb[pixel as usize];
+                            let (r, g, b) = emu.core.mem.vdp.cram_rgb[palette_offset + pixel as usize];
                             pixels[view_offset] = egui::Color32::from_rgb(r, g, b);
                             view_offset += 1;
                             let pixel = *duxel & 0xF;
-                            let (r, g, b) = emu.core.mem.vdp.cram_rgb[pixel as usize];
+                            let (r, g, b) = emu.core.mem.vdp.cram_rgb[palette_offset + pixel as usize];
                             pixels[view_offset] = egui::Color32::from_rgb(r, g, b);
                             view_offset += 1;
                             if view_offset % 8 == 0 {

@@ -94,6 +94,8 @@ impl App {
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
 
+        // game logic
+
         if self.game_state.running {
             ctx.request_repaint();
 
@@ -112,6 +114,8 @@ impl eframe::App for App {
                 self.emu.frame(true);
             }
         }
+
+        // layout starts with fullscreen
 
         if self.fullscreen {
             egui::CentralPanel::default()
@@ -139,6 +143,8 @@ impl eframe::App for App {
                     self.fullscreen = true;
                 }
             });
+
+        // debug stuff
 
         crate::debug::palette::palette_window(&ctx, &self.emu);
 
