@@ -1,7 +1,5 @@
 pub mod palette;
 
-// pub fn vram(ctx: &egui::Context, ui: &egui::Ui, emu: &mut emu::Megadrive) {
-// }
 pub struct Debug {
     pub vram: VRAM,
 }
@@ -42,6 +40,7 @@ impl VRAM {
                 const height: usize = 128;
                 const pixel_qty: usize = (width * 8) * (height * 8);
                 // TODO use retained buffer
+                // TODO: only show onscreen ram"
                 let mut pixels: [egui::Color32; pixel_qty] = [ egui::Color32::from_rgb(0, 0, 0); pixel_qty];
 
                 let palette_offset = self.palette_line * 0x10;

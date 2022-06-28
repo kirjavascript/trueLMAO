@@ -6,8 +6,10 @@ use std::collections::VecDeque;
 pub struct App {
     emu: Megadrive,
     debug: crate::debug::Debug,
-    game_state: GameState,
+    game_state: FrameCounter,
     pub fullscreen: bool,
+    pub vsync: bool,
+    pub running: bool,
     test_vec: VecDeque<u64>,
 }
 
@@ -19,25 +21,23 @@ impl Default for App {
             debug: Default::default(),
             game_state: Default::default(),
             fullscreen: false,
+            vsync: false,
+            running: true,
             test_vec: VecDeque::with_capacity(60),
         }
     }
 }
 
 // TODO: move to core
-pub struct GameState {
-    pub running: bool,
-    pub vsync: bool,
+pub struct FrameCounter {
     frames: u64,
     epoch: Instant,
     frames_to_render: u64,
 }
 
-impl Default for GameState {
+impl Default for FrameCounter {
     fn default() -> Self {
         Self {
-            running: true,
-            vsync: false,
             frames: 0,
             frames_to_render: 0,
             epoch: Instant::now(),
@@ -45,21 +45,17 @@ impl Default for GameState {
     }
 }
 
-impl GameState {
-    pub fn tick(&mut self) {
+impl FrameCounter {
+    pub fn tick(&mut self) -> u64 {
         let diff = Instant::now().duration_since(self.epoch);
         let frames = (diff.as_millis() as f64 * 0.05992274) as u64; // TODO: PAL
         // self.emu.gfx.framerate()
         self.frames_to_render = frames - self.frames;
         self.frames = frames;
+        self.frames_to_render
     }
-
     pub fn frames_to_render(&self) -> u64 {
-        if self.vsync {
-            1
-        } else {
-            self.frames_to_render
-        }
+        self.frames_to_render
     }
 }
 
@@ -96,14 +92,12 @@ impl eframe::App for App {
 
         // game logic
 
-        if self.game_state.running {
+        if self.running {
             ctx.request_repaint();
 
             crate::input::dummy_input(ctx, &mut self.emu);
 
-            self.game_state.tick();
-
-            let frames_to_render = self.game_state.frames_to_render();
+            let frames_to_render = self.game_state.tick();
 
             if frames_to_render > 3 {
                 self.emu.frame(true);
@@ -157,11 +151,11 @@ impl eframe::App for App {
             ui.label(&format!("MD frames this frame: {}", self.game_state.frames_to_render));
             ui.label(&format!("avg frames {:.1}", self.test_vec.iter().sum::<u64>() as f32 / self.test_vec.len() as f32));
 
-            if ui.button(if self.game_state.running { "pause" } else { "play" }).clicked() {
-                self.game_state.running = !self.game_state.running;
+            if ui.button(if self.running { "pause" } else { "play" }).clicked() {
+                self.running = !self.running;
             }
-            ui.radio_value(&mut self.game_state.vsync, true, "vsync");
-            ui.radio_value(&mut self.game_state.vsync, false, "not vsync");
+            ui.radio_value(&mut self.vsync, true, "vsync");
+            ui.radio_value(&mut self.vsync, false, "not vsync");
 
             self.test_vec.push_back(self.game_state.frames_to_render().min(4));
 
