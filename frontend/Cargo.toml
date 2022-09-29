@@ -23,12 +23,12 @@ instant = "0.1"
 # wasm-bindgen-futures = "0.4"
 # hqx = { git = "https://github.com/CryZe/wasmboy-rs", branch = "master" }
 
-# egui = "0.18.0"
-# eframe = { version = "0.18.0", features = ["persistence"] }
+egui = "0.19.0"
+eframe = { version = "0.19.0", features = ["persistence"] }
 # egui = { path = "/home/cake/dev/egui/egui" }
 # eframe = { path = "/home/cake/dev/egui/eframe" }
-egui = { git = "https://github.com/emilk/egui", rev = "7eeb292a" }
-eframe = { git = "https://github.com/emilk/egui", rev = "7eeb292a" }
+# egui = { git = "https://github.com/emilk/egui", rev = "7eeb292a" }
+# eframe = { git = "https://github.com/emilk/egui", rev = "7eeb292a" }
 # serde = { version = "1", features = ["derive"] } # You only need this if you want app persistence
 
 # native:

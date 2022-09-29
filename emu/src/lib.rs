@@ -11,6 +11,7 @@ pub mod z80;
 use gfx::Gfx;
 
 // TODO: composit layers in gfx istead of multiple buffers
+//       just draw directly to layers
 
 pub struct Megadrive {
     pub core: ConfiguredCore<AutoInterruptController, mem::Mem>,
