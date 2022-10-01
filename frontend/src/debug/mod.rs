@@ -36,19 +36,19 @@ impl VRAM {
                     ui.radio_value(&mut self.palette_line, 3, "3");
                 });
 
-                const width: usize = 16;
-                const height: usize = 128;
-                const pixel_qty: usize = (width * 8) * (height * 8);
+                const WIDTH: usize = 16;
+                const HEIGHT: usize = 128;
+                const PIXEL_QTY: usize = (WIDTH * 8) * (HEIGHT * 8);
                 // TODO use retained buffer
                 // TODO: only show onscreen ram"
-                let mut pixels: [egui::Color32; pixel_qty] = [ egui::Color32::from_rgb(0, 0, 0); pixel_qty];
+                let mut pixels: [egui::Color32; PIXEL_QTY] = [ egui::Color32::from_rgb(0, 0, 0); PIXEL_QTY];
 
                 let palette_offset = self.palette_line * 0x10;
-                for x_tile in 0..width {
-                    for y_tile in 0..height {
-                        let offset = x_tile + (y_tile * width);
+                for x_tile in 0..WIDTH {
+                    for y_tile in 0..HEIGHT {
+                        let offset = x_tile + (y_tile * WIDTH);
                         let vram_offset = offset * 32;
-                        let mut view_offset = (x_tile * 8) + (y_tile * 8 * (width * 8));
+                        let mut view_offset = (x_tile * 8) + (y_tile * 8 * (WIDTH * 8));
 
                         for duxel in &emu.core.mem.vdp.VRAM[vram_offset..vram_offset+32] {
                             let pixel = (*duxel & 0xF0) >> 4;
@@ -61,7 +61,7 @@ impl VRAM {
                             pixels[view_offset] = egui::Color32::from_rgb(r, g, b);
                             view_offset += 1;
                             if view_offset % 8 == 0 {
-                                view_offset += (width-1) * 8;
+                                view_offset += (WIDTH-1) * 8;
                             }
                         }
 
@@ -71,7 +71,7 @@ impl VRAM {
                 let texture: &egui::TextureHandle = &ui.ctx().load_texture(
                     "vram",
                     egui::ColorImage {
-                        size: [width*8, height*8],
+                        size: [WIDTH*8, HEIGHT*8],
                         pixels: pixels.to_vec(),
                     },
                     egui::TextureFilter::Nearest
