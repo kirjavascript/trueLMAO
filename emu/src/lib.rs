@@ -12,6 +12,13 @@ use gfx::Gfx;
 
 // TODO: composit layers in gfx istead of multiple buffers
 //       just draw directly to layers
+//       just have two layers
+
+
+// set version?? store in core
+// or just have a parser to get the version
+
+//
 
 pub struct Megadrive {
     pub core: ConfiguredCore<AutoInterruptController, mem::Mem>,

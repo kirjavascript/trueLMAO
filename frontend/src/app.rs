@@ -46,6 +46,7 @@ impl Default for FrameCounter {
 }
 
 impl FrameCounter {
+    /// returns frames to render
     pub fn tick(&mut self) -> u64 {
         let diff = Instant::now().duration_since(self.epoch);
         let frames = (diff.as_millis() as f64 * 0.05992274) as u64; // TODO: PAL
@@ -54,8 +55,9 @@ impl FrameCounter {
         self.frames = frames;
         self.frames_to_render
     }
-    pub fn frames_to_render(&self) -> u64 {
-        self.frames_to_render
+    /// for unpausing
+    pub fn reset_epoch(&mut self) {
+        self.epoch = Instant::now();
     }
 }
 
