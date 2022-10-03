@@ -159,7 +159,7 @@ impl eframe::App for App {
             ui.radio_value(&mut self.vsync, true, "vsync");
             ui.radio_value(&mut self.vsync, false, "not vsync");
 
-            self.test_vec.push_back(self.game_state.frames_to_render().min(4));
+            self.test_vec.push_back(self.game_state.frames_to_render.min(4));
 
             if self.test_vec.len() > 60 {
                 self.test_vec.pop_front();
@@ -216,7 +216,7 @@ impl eframe::App for App {
                 debug.push_str(&format!("\n"));
                 debug.push_str(&format!("\n"));
 
-                for (pc, opcode) in self.emu.disasm() {
+                for (pc, opcode) in emu::debug::disasm_demo(&self.emu) {
                     debug.push_str(&format!("0x{:X}\t{}\n", pc, opcode));
                 }
                 ui.label(&debug);
