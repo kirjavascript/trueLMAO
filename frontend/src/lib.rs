@@ -10,7 +10,7 @@ use eframe::wasm_bindgen::{self, prelude::*};
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
-pub fn start(canvas_id: &str) -> Result<(), eframe::wasm_bindgen::JsValue> {
+pub fn start() {
     // make sure panics are logged using `console.error`
     console_error_panic_hook::set_once();
 
@@ -18,7 +18,7 @@ pub fn start(canvas_id: &str) -> Result<(), eframe::wasm_bindgen::JsValue> {
     tracing_wasm::set_as_global_default();
 
     eframe::start_web(
-        canvas_id,
+        "emu",
         Default::default(),
         Box::new(|cc| Box::new(App::new(cc)))
     ).expect("eframe didnt load");

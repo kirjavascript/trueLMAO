@@ -35,6 +35,8 @@ html {
             overflow: hidden;
             margin: 0 !important;
             padding: 0 !important;
+            height: 100%;
+            width: 100%;
         }
 
         /* Position canvas in center-top: */
@@ -97,7 +99,7 @@ html {
 
     <body>
         <!-- The WASM code will resize the canvas dynamically -->
-        <canvas id="the_canvas_id"></canvas>
+        <canvas id="emu"></canvas>
         <div class="centered" id="center_text">
             <p style="font-size:16px">
                 Loading…
@@ -134,7 +136,7 @@ function on_wasm_loaded() {
     console.debug("wasm loaded. starting app…");
 
     // This call installs a bunch of callbacks and then returns:
-    wasm_bindgen.start("the_canvas_id");
+    wasm_bindgen.start();
 
     console.debug("app started.");
     document.getElementById("center_text").remove();
