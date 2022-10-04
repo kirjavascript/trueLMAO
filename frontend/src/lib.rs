@@ -1,10 +1,9 @@
-#![warn(clippy::all, rust_2018_idioms)]
-
 mod app;
 mod debug;
 mod input;
 mod widgets;
 pub use app::App;
+
 
 #[cfg(target_arch = "wasm32")]
 use eframe::wasm_bindgen::{self, prelude::*};
@@ -22,5 +21,5 @@ pub fn start(canvas_id: &str) -> Result<(), eframe::wasm_bindgen::JsValue> {
         canvas_id,
         Default::default(),
         Box::new(|cc| Box::new(App::new(cc)))
-    )
+    ).expect("eframe didnt load");
 }

@@ -1,4 +1,5 @@
 pub mod debug;
+pub mod frame_timer;
 pub mod gfx;
 pub mod io;
 pub mod mem;
@@ -8,7 +9,6 @@ pub mod z80;
 
 use r68k_emu::cpu::{STACK_POINTER_REG, ConfiguredCore};
 use r68k_emu::interrupts::AutoInterruptController;
-use instant::Instant;
 use gfx::Gfx;
 
 // TODO: composit layers in gfx istead of multiple buffers
@@ -24,43 +24,9 @@ use gfx::Gfx;
 pub struct Megadrive {
     pub core: ConfiguredCore<AutoInterruptController, mem::Mem>,
     pub gfx: Gfx,
-    pub frame_timer: FrameTimer,
+    pub frame_timer: frame_timer::FrameTimer,
     // version: NTSC/PAL
 }
-
-pub struct FrameTimer {
-    pub frames_to_render: u64,
-    pub frames: u64,
-    pub epoch: Instant,
-}
-
-impl Default for FrameTimer {
-    fn default() -> Self {
-        Self {
-            frames: 0,
-            frames_to_render: 0,
-            epoch: Instant::now(),
-        }
-    }
-}
-
-impl FrameTimer {
-    /// returns frames to render
-    pub fn frames_to_render(&mut self) -> u64 {
-        let diff = Instant::now().duration_since(self.epoch);
-        let frames = (diff.as_millis() as f64 * 0.05992274) as u64; // TODO: PAL
-        // self.emu.gfx.framerate()
-        self.frames_to_render = frames - self.frames;
-        self.frames = frames;
-        self.frames_to_render
-    }
-    /// for unpausing
-    pub fn reset_epoch(&mut self) {
-        self.epoch = Instant::now();
-    }
-}
-
-// impl default for gfx
 
 impl Megadrive {
     pub fn new(buf: Vec<u8>) -> Self {
