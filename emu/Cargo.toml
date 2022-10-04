@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 r68k-emu = { git = "https://github.com/marhel/r68k.git" }
 r68k-tools = { git = "https://github.com/marhel/r68k.git" }
+instant = "0.1"

@@ -514,6 +514,7 @@ dependencies = [
 name = "emu"
 version = "0.0.1"
 dependencies = [
+ "instant",
  "r68k-emu",
  "r68k-tools",
 ]
@@ -652,7 +653,6 @@ dependencies = [
  "eframe",
  "egui",
  "emu",
- "instant",
  "tracing-subscriber",
  "tracing-wasm",
 ]

@@ -14,7 +14,6 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 emu = { path = "../emu" }
-instant = "0.1"
 
 # puffin = "0.13.3"
 # puffin_egui = "0.15.0"
