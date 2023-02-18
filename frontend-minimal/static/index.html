@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta
+            content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=1"
+            name="viewport"
+        />
+        <link
+            href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAdJ6tAP///wAmOUAAq6ahAIpyUwB4TxkA45MrAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYAZjMzMAAABmZjERETMAAGZjERERERAAZmMREiIhFABmZzIlIiIwQGZ3d1IiACAAZ3d3IiIAUAB3d3ciIgB3AHd3dyIiB3cAd3d3QiRXd1B3d3V0RXd3cHYzd1d3d3cAdjERdVVXdwBmMRZ1d3d2AHdhZ3d3d2YAd2Z3d3dwZgBgPwAAAA8AAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAADAAAAAwAAAAMAAAADAAAAEwAA"
+            rel="icon"
+            type="image/x-icon"
+        />
+        <style>
+            canvas {
+                width: 100%;
+                max-height: 90vh;
+                box-shadow: 2px 2px 5px black;
+                /*
+                    image-rendering: -moz-crisp-edges;
+                    image-rendering: -webkit-crisp-edges;
+                    image-rendering: pixelated;
+                    image-rendering: crisp-edges;
+                */
+            }
+            main {
+                width: 800px;
+            }
+            html, body {
+                height: 100%;
+                margin: 0;
+                background-color: #111;
+                color: #777;
+            }
+            body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-family: monospace;
+            }
+            h1, span {
+                font-size: 15px;
+                margin: 6px 0;
+            }
+        </style>
+        <title>trueLMAO</title>
+    </head>
+    <body>
+        <noscript>noscript mode</noscript>
+        <main>
+            <canvas width="320" height="224"></canvas>
+            <h1>DEMO</h1>
+            <span class="frameCount"></span>
+        </main>
+        <script type="module">
+            import init, { MDEmu } from './frontend_minimal.js';
+            import gamepad from './gamepad.js';
+
+            const canvas = document.querySelector('canvas');
+            const ctx = canvas.getContext('2d', { alpha: false });
+            const img = ctx.createImageData(320, 240);
+
+            (async () => {
+                const instance = await init();
+
+                const emu = new MDEmu();
+
+                function draw() {
+                    const buffer = new Uint8ClampedArray(
+                        instance.memory.buffer, emu.screen(), 320 * 240 * 3
+                    );
+                    for (let i = 0; i < 320*240; i++) {
+                        const bufferIndex = i * 3;
+                        const imgIndex = i * 4;
+                        img.data[imgIndex+0] = buffer[bufferIndex+0];
+                        img.data[imgIndex+1] = buffer[bufferIndex+1];
+                        img.data[imgIndex+2] = buffer[bufferIndex+2];
+                        img.data[imgIndex+3] = 255;
+                    }
+
+                    ctx.putImageData(img, 0, 0);
+
+                    // ctx.putImageData(new ImageData(buffer, 320), 0, 0);
+                }
+
+                const frameCount = document.querySelector('.frameCount');
+                const epoch = performance.now();
+                let framesDone = 0;
+                const loop = () => {
+                    requestAnimationFrame(loop);
+
+                    const diff = performance.now() - epoch;
+                    const frames = diff * 0.05992274 | 0;
+                    const frameAmount = frames - framesDone;
+                    frameCount.textContent = String(frameAmount);
+
+                    if (document.visibilityState !== 'hidden') {
+
+                        emu.gamepad_p1(gamepad());
+
+                        if (frameAmount > 5) {
+                            emu.frame(true);
+                        } else {
+                            for (let i = 0; i < frameAmount; i++) {
+                                emu.frame(i === frameAmount - 1);
+                            }
+                        }
+                        if (frameAmount > 0) {
+                            draw();
+                        }
+                    }
+                    framesDone = frames;
+                };
+                loop();
+            })();
+        </script>
+    </body>
+</html>
