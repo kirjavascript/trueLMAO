@@ -16,12 +16,10 @@
                 width: 100%;
                 max-height: 90vh;
                 box-shadow: 2px 2px 5px black;
-                /*
-                    image-rendering: -moz-crisp-edges;
-                    image-rendering: -webkit-crisp-edges;
-                    image-rendering: pixelated;
-                    image-rendering: crisp-edges;
-                */
+                image-rendering: -moz-crisp-edges;
+                image-rendering: -webkit-crisp-edges;
+                image-rendering: pixelated;
+                image-rendering: crisp-edges;
             }
             main {
                 width: 800px;
@@ -53,7 +51,7 @@
             <span class="frameCount"></span>
         </main>
         <script type="module">
-            import init, { MDEmu } from './frontend_minimal.js';
+            import init, { MDEmu as Megadrive } from './frontend_minimal.js';
             import gamepad from './gamepad.js';
 
             const canvas = document.querySelector('canvas');
@@ -63,7 +61,9 @@
             (async () => {
                 const instance = await init();
 
-                const emu = new MDEmu();
+                console.log(instance);
+
+                const emu = new Megadrive();
 
                 function draw() {
                     const buffer = new Uint8ClampedArray(

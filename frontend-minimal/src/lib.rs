@@ -2,8 +2,6 @@ use wasm_bindgen::prelude::*;
 
 use emu::Megadrive;
 
-// https://rustwasm.github.io/wasm-bindgen/contributing/design/exporting-rust-struct.html
-
 #[wasm_bindgen]
 pub struct MDEmu(Megadrive);
 

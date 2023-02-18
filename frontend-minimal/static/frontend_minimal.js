@@ -1,5 +1,3 @@
-import * as __wbg_star0 from 'env';
-
 let wasm;
 
 const cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
@@ -104,7 +102,6 @@ function getImports() {
     imports.wbg.__wbindgen_throw = function(arg0, arg1) {
         throw new Error(getStringFromWasm0(arg0, arg1));
     };
-    imports['env'] = __wbg_star0;
 
     return imports;
 }
