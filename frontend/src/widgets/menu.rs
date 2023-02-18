@@ -3,9 +3,9 @@ pub fn menu<'a>(fullscreen: &'a mut bool, _frame: &'a mut eframe::Frame) ->
 {
     move |ui: &mut egui::Ui| {
         egui::menu::bar(ui, |ui| {
-            ui.menu_button("File", |ui| {
+            ui.menu_button("File", |_ui| {
                 #[cfg(not(target_arch = "wasm32"))]
-                if ui.button("Quit").clicked() {
+                if _ui.button("Quit").clicked() {
                     _frame.close();
                 }
             });

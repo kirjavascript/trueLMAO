@@ -10,7 +10,7 @@ pub fn palette_window(ctx: &egui::Context, emu: &emu::Megadrive) {
                     size: [16, 4],
                     pixels,
                 },
-                egui::TextureFilter::Nearest
+                egui::TextureOptions::NEAREST
             );
             let img = egui::Image::new(texture, texture.size_vec2() * 20.);
 

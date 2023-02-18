@@ -28,6 +28,8 @@ impl VRAM {
     pub fn render(&mut self, ctx: &egui::Context, emu: &emu::Megadrive) {
         egui::Window::new("vram")
             .vscroll(true)
+            // TODO: only show onscreen ram"
+            // TODO: show_rows
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
                     ui.radio_value(&mut self.palette_line, 0, "0");
@@ -40,7 +42,6 @@ impl VRAM {
                 const HEIGHT: usize = 128;
                 const PIXEL_QTY: usize = (WIDTH * 8) * (HEIGHT * 8);
                 // TODO use retained buffer
-                // TODO: only show onscreen ram"
                 let mut pixels: [egui::Color32; PIXEL_QTY] = [ egui::Color32::from_rgb(0, 0, 0); PIXEL_QTY];
 
                 let palette_offset = self.palette_line * 0x10;
@@ -74,7 +75,7 @@ impl VRAM {
                         size: [WIDTH*8, HEIGHT*8],
                         pixels: pixels.to_vec(),
                     },
-                    egui::TextureFilter::Nearest
+                    egui::TextureOptions::NEAREST
                 );
                 let img = egui::Image::new(texture, texture.size_vec2() * 2.);
 

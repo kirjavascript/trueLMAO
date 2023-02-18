@@ -10,7 +10,7 @@ fn viewport_ui(ui: &mut egui::Ui, emu: &Megadrive, centered: bool) -> egui::Resp
             size: [320, 240],
             pixels,
         },
-        egui::TextureFilter::Nearest
+        egui::TextureOptions::NEAREST
     );
 
     let (width, height) = (ui.available_width(), ui.available_height());
