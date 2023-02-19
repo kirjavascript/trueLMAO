@@ -106,7 +106,7 @@ impl eframe::App for App {
             // ctx.inspection_ui(ui);
 
             ui.label(&format!("MD frames this frame: {}", self.emu.frame_timer.frame_count));
-            ui.label(&format!("avg frames {:.1}", self.test_vec.iter().sum::<u64>() as f32 / self.test_vec.len() as f32));
+            ui.label(&format!("avg frames {:.2}", self.test_vec.iter().sum::<u64>() as f32 / self.test_vec.len() as f32));
 
             if ui.button(if self.running { "pause" } else { "play" }).clicked() {
                 self.running = !self.running;
