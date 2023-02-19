@@ -48,7 +48,7 @@
         <main>
             <canvas width="320" height="224"></canvas>
             <h1>DEMO</h1>
-            <span class="frameCount"></span>
+            <pre class="frameCount"></pre>
         </main>
         <script type="module">
             import init, { MDEmu as Megadrive } from './frontend_minimal.js';
@@ -81,17 +81,20 @@
                     // ctx.putImageData(new ImageData(buffer, 320), 0, 0);
                 }
 
-                const frameCount = document.querySelector('.frameCount');
+                const frameCountEl = document.querySelector('.frameCount');
+                const frames = [];
                 (function loop() {
                     requestAnimationFrame(loop);
-                    frameCount.textContent = String('???');
-
                     if (document.visibilityState !== 'hidden') {
                         emu.gamepad_p1(gamepad());
 
-                        if (emu.render()) {
-                            draw();
-                        }
+                        const frameCount = emu.render();
+                        if (frameCount > 0) draw();
+
+
+                        frames.push(frameCount);
+                        if (frames.length > 60) frames.shift();
+                        frameCountEl.textContent = `frames this frame: ${frameCount}\navg frames: ${(frames.reduce((a, b) => a + Number(b), 0) / frames.length).toFixed(2)}`;
                     }
                 })();
             })();
