@@ -109,7 +109,7 @@ impl Megadrive {
 
         self.core.execute(3420-588);
 
-        for _ in screen_height..262 {
+        for _ in screen_height..262 { // TODO: PAL scanlines
             self.core.execute(3420);
         }
     }

@@ -10,7 +10,9 @@ impl MDEmu {
     #[wasm_bindgen(constructor)]
     pub fn new() -> MDEmu {
         MDEmu(Megadrive::new(
-            include_bytes!("/home/cake/sonic/roms/s1p.bin").to_vec()
+            // include_bytes!("/home/cake/sonic/roms/s1p.bin").to_vec()
+            // include_bytes!("/home/cake/sonic/roms/s2.bin").to_vec()
+            include_bytes!("/home/cake/Genesis/Sonic The Hedgehog 3 (E) [!].bin").to_vec()
         ))
     }
 

@@ -39,5 +39,6 @@ impl ROM {
     pub fn serial_number(&self) -> String { self.read_string(0x180..0x18E) }
     pub fn checksum(&self) -> u16 { self.read_word(0x18E) }
     pub fn device_support(&self) -> String { self.read_string(0x190..0x1A0) }
+    pub fn region(&self) -> String { self.read_string(0x1F0..0x1F3) }
 
 }

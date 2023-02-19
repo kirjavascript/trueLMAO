@@ -37,7 +37,7 @@ impl Mem {
             0xA11100..=0xA112FF => self.z80.ctrl_read(address) as _,
             0xC00000..=0xDFFFFF => self.vdp.read(address),
             0xFF0000..=0xFFFFFF => self.ram[address as usize & 0xFFFF] as _,
-            _ => todo!("read byte {:X}", address),
+            _ => 0, //todo!("read byte {:X}", address),
         }
     }
     pub fn read_u16(&self, address: u32) -> u32 {
@@ -67,7 +67,7 @@ impl Mem {
             0xFF0000..=0xFFFFFF => {
                 self.ram[address as usize & 0xFFFF] = value as u8;
             },
-            _ => todo!("write byte {:X} {:X}", address, value),
+            _ => (), //todo!("write byte {:X} {:X}", address, value),
         }
     }
     pub fn write_u16(&mut self, address: u32, value: u32) {
