@@ -14,8 +14,9 @@ impl MDEmu {
         ))
     }
 
-    pub fn frame(&mut self, render: bool)  {
-        self.0.frame(render);
+
+    pub fn render(&mut self) -> u64  {
+        self.0.render()
     }
 
     pub fn screen(&self) -> *const u8 {

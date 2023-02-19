@@ -105,7 +105,7 @@ impl eframe::App for App {
             egui::warn_if_debug_build(ui);
             // ctx.inspection_ui(ui);
 
-            ui.label(&format!("MD frames this frame: {}", self.emu.frame_timer.frames_to_render));
+            ui.label(&format!("MD frames this frame: {}", self.emu.frame_timer.frame_count));
             ui.label(&format!("avg frames {:.1}", self.test_vec.iter().sum::<u64>() as f32 / self.test_vec.len() as f32));
 
             if ui.button(if self.running { "pause" } else { "play" }).clicked() {
@@ -114,7 +114,7 @@ impl eframe::App for App {
             ui.radio_value(&mut self.vsync, true, "vsync");
             ui.radio_value(&mut self.vsync, false, "not vsync");
 
-            self.test_vec.push_back(self.emu.frame_timer.frames_to_render.min(4));
+            self.test_vec.push_back(self.emu.frame_timer.frame_count.min(4));
 
             if self.test_vec.len() > 60 {
                 self.test_vec.pop_front();

@@ -44,17 +44,19 @@ impl Megadrive {
         }
     }
 
-    /// render frame at current instant
-    pub fn render(&mut self) {
-        let frames_to_render = self.frame_timer.frames_to_render();
-        if frames_to_render > 3 { // magic number
+    /// render frame(s) at current instant
+    /// returns number of rendered frames
+    pub fn render(&mut self) -> u64 {
+        let frame_count = self.frame_timer.frame_count();
+        if frame_count > 3 { // magic number
             self.frame(true);
-        } else if frames_to_render > 0 {
-            for _ in 0..frames_to_render - 1 {
+        } else if frame_count > 0 {
+            for _ in 0..frame_count - 1 {
                 self.frame(false);
             }
             self.frame(true);
         }
+        frame_count
     }
 
     /// renders a single frame

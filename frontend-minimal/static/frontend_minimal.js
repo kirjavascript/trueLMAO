@@ -211,10 +211,11 @@ export class MDEmu {
         return MDEmu.__wrap(ret);
     }
     /**
-    * @param {boolean} render
+    * @returns {bigint}
     */
-    frame(render) {
-        wasm.mdemu_frame(this.ptr, render);
+    render() {
+        const ret = wasm.mdemu_render(this.ptr);
+        return BigInt.asUintN(64, ret);
     }
     /**
     * @returns {number}
