@@ -17,9 +17,14 @@ impl Default for FrameTimer {
 }
 
 impl FrameTimer {
-    pub fn frame_count(&mut self) -> u64 {
+    pub fn frame_count(&mut self, region: &crate::region::Region) -> u64 {
         let diff = Instant::now().duration_since(self.epoch);
-        let frames = (diff.as_millis() as f64 * 0.05992274) as u64; // TODO: PAL
+        let rate = if region.is_pal() {
+            0.049701459
+        } else {
+            0.05992274
+        };
+        let frames = (diff.as_millis() as f64 * rate) as u64;
         // self.emu.gfx.framerate()
         self.frame_count = frames - self.frames;
         self.frames = frames;

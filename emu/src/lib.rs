@@ -3,6 +3,7 @@ pub mod frame_timer;
 pub mod gfx;
 pub mod io;
 pub mod mem;
+pub mod region;
 pub mod rom;
 pub mod vdp;
 pub mod z80;
@@ -25,6 +26,7 @@ pub struct Megadrive {
     pub core: ConfiguredCore<AutoInterruptController, mem::Mem>,
     pub gfx: Gfx,
     pub frame_timer: frame_timer::FrameTimer,
+    pub region: region::Region,
     // version: NTSC/PAL
 }
 
@@ -37,17 +39,24 @@ impl Megadrive {
 
         core.dar[STACK_POINTER_REG] = core.mem.rom.stack_pointer();
 
-        Megadrive {
+        let region = region::Region::detect(&core.mem.rom);
+
+        let mut emu = Megadrive {
             core,
             gfx: Gfx::new(),
             frame_timer: Default::default(),
-        }
+            region,
+        };
+
+        region::Region::set_io_region(&emu.region, &mut emu.core.mem.io);
+
+        emu
     }
 
     /// render frame(s) at current instant
     /// returns number of rendered frames
     pub fn render(&mut self) -> u64 {
-        let frame_count = self.frame_timer.frame_count();
+        let frame_count = self.frame_timer.frame_count(&self.region);
         if frame_count > 3 { // magic number
             self.frame(true);
         } else if frame_count > 0 {

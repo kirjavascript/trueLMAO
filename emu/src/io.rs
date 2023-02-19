@@ -1,5 +1,5 @@
 pub struct IO {
-    registers: [u8; 0x10],
+    pub registers: [u8; 0x10],
     pub gamepad: [Gamepad; 2],
 }
 
