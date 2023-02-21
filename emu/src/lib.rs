@@ -27,7 +27,6 @@ pub struct Megadrive {
     pub gfx: Gfx,
     pub frame_timer: frame_timer::FrameTimer,
     pub region: region::Region,
-    // version: NTSC/PAL
 }
 
 impl Megadrive {
@@ -118,7 +117,8 @@ impl Megadrive {
 
         self.core.execute(3420-588);
 
-        for _ in screen_height..262 { // TODO: PAL scanlines
+        let scanlines = if self.region.is_pal() { 313 } else { 262 };  // TODO: PAL scanlines
+        for _ in screen_height..scanlines {
             self.core.execute(3420);
         }
     }

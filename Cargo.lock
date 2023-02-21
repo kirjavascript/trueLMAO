@@ -845,6 +845,7 @@ name = "frontend-minimal"
 version = "0.1.0"
 dependencies = [
  "emu",
+ "js-sys",
  "wasm-bindgen",
 ]
 

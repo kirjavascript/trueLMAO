@@ -1,4 +1,5 @@
 use wasm_bindgen::prelude::*;
+use js_sys::Uint8Array;
 
 use emu::Megadrive;
 
@@ -8,14 +9,9 @@ pub struct MDEmu(Megadrive);
 #[wasm_bindgen]
 impl MDEmu {
     #[wasm_bindgen(constructor)]
-    pub fn new() -> MDEmu {
-        MDEmu(Megadrive::new(
-            // include_bytes!("/home/cake/sonic/roms/s1p.bin").to_vec()
-            // include_bytes!("/home/cake/sonic/roms/s2.bin").to_vec()
-            include_bytes!("/home/cake/Genesis/Sonic The Hedgehog 3 (E) [!].bin").to_vec()
-        ))
+    pub fn new(rom: Uint8Array) -> MDEmu {
+        MDEmu(Megadrive::new(rom.to_vec()))
     }
-
 
     pub fn render(&mut self) -> u64  {
         self.0.render()
@@ -27,5 +23,9 @@ impl MDEmu {
 
     pub fn gamepad_p1(&mut self, value: usize) {
         self.0.core.mem.io.gamepad[0].set(value)
+    }
+
+    pub fn change_rom(&mut self, rom: Uint8Array) {
+        self.0 = Megadrive::new(rom.to_vec())
     }
 }

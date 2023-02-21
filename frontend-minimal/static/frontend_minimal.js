@@ -205,9 +205,10 @@ export class MDEmu {
         wasm.__wbg_mdemu_free(ptr);
     }
     /**
+    * @param {Uint8Array} rom
     */
-    constructor() {
-        const ret = wasm.mdemu_new();
+    constructor(rom) {
+        const ret = wasm.mdemu_new(addHeapObject(rom));
         return MDEmu.__wrap(ret);
     }
     /**
@@ -229,6 +230,12 @@ export class MDEmu {
     */
     gamepad_p1(value) {
         wasm.mdemu_gamepad_p1(this.ptr, value);
+    }
+    /**
+    * @param {Uint8Array} rom
+    */
+    change_rom(rom) {
+        wasm.mdemu_change_rom(this.ptr, addHeapObject(rom));
     }
 }
 
@@ -313,6 +320,21 @@ function getImports() {
         const ret = getObject(arg0) === undefined;
         return ret;
     };
+    imports.wbg.__wbg_buffer_3f3d764d4747d564 = function(arg0) {
+        const ret = getObject(arg0).buffer;
+        return addHeapObject(ret);
+    };
+    imports.wbg.__wbg_new_8c3f0052272a457a = function(arg0) {
+        const ret = new Uint8Array(getObject(arg0));
+        return addHeapObject(ret);
+    };
+    imports.wbg.__wbg_set_83db9690f9353e79 = function(arg0, arg1, arg2) {
+        getObject(arg0).set(getObject(arg1), arg2 >>> 0);
+    };
+    imports.wbg.__wbg_length_9e1ae1900cb0fbd5 = function(arg0) {
+        const ret = getObject(arg0).length;
+        return ret;
+    };
     imports.wbg.__wbindgen_debug_string = function(arg0, arg1) {
         const ret = debugString(getObject(arg1));
         const ptr0 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
@@ -322,6 +344,10 @@ function getImports() {
     };
     imports.wbg.__wbindgen_throw = function(arg0, arg1) {
         throw new Error(getStringFromWasm0(arg0, arg1));
+    };
+    imports.wbg.__wbindgen_memory = function() {
+        const ret = wasm.memory;
+        return addHeapObject(ret);
     };
 
     return imports;

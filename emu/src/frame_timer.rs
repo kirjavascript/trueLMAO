@@ -25,7 +25,6 @@ impl FrameTimer {
             0.05992274
         };
         let frames = (diff.as_millis() as f64 * rate) as u64;
-        // self.emu.gfx.framerate()
         self.frame_count = frames - self.frames;
         self.frames = frames;
         self.frame_count
