@@ -16,11 +16,7 @@ use gfx::Gfx;
 //       just draw directly to layers
 //       just have two layers
 
-
-// set version?? store in core
-// or just have a parser to get the version
-
-//
+// TODO: dump resolution and support it
 
 pub struct Megadrive {
     pub core: ConfiguredCore<AutoInterruptController, mem::Mem>,
