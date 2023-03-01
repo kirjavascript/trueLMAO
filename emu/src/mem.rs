@@ -30,7 +30,7 @@ impl Mem {
         match address & 0xFFFFFF {
             0..=0x7FFFFF => self.rom.read_byte(address & 0x3FFFFF) as _,
             0x800000..=0x9FFFFF => /* reserved */ 0,
-            0xA00000..=0xA03FFF => self.z80.read_byte(address) as _,
+            0xA00000..=0xA03FFF => self.z80.read_byte(address as u16) as _,
             0xA04000..=0xA0FFFF => /* Z80 */ 0,
             0xA10000..=0xA1001F => self.io.read_byte(address) as _,
             0xA10020..=0xA10FFF => /* reserved */ 0,
@@ -58,7 +58,7 @@ impl Mem {
         match address & 0xFFFFFF {
             0..=0x3FFFFF => {/* ROM */},
             0x400000..=0x9FFFFF => {/* reserved */},
-            0xA00000..=0xA03FFF => self.z80.write_byte(address, value),
+            0xA00000..=0xA03FFF => self.z80.write_byte(address as u16, value as u8),
             0xA04000..=0xA0FFFF => {/* Z80 */},
             0xA10000..=0xA1001F => self.io.write_byte(address, value),
             0xA10020..=0xA10FFF => {/* reserved */},

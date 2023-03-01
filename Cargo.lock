@@ -676,6 +676,7 @@ dependencies = [
  "instant",
  "r68k-emu",
  "r68k-tools",
+ "z80",
 ]
 
 [[package]]
@@ -2319,3 +2320,9 @@ name = "xml-rs"
 version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2d7d3948613f75c98fd9328cfdcc45acc4d360655289d0a7d4ec931392200a3"
+
+[[package]]
+name = "z80"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5b0da1e980dcad2d81fc5d2a6384fc67997ecfa4a2263772e5ccc9a2faedc043"

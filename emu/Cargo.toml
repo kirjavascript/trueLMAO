@@ -6,4 +6,5 @@ edition = "2021"
 [dependencies]
 r68k-emu = { git = "https://github.com/marhel/r68k.git" }
 r68k-tools = { git = "https://github.com/marhel/r68k.git" }
+z80 = "1.0.2"
 instant = { version = "0.1.12", features = [ "wasm-bindgen" ] }
