@@ -97,9 +97,7 @@ impl eframe::App for App {
 
         // debug stuff
 
-        crate::debug::palette::palette_window(&ctx, &self.emu);
-
-        self.debug.vram.render(&ctx, &self.emu);
+        self.debug.render(&ctx, &self.emu);
 
         egui::CentralPanel::default().show(ctx, |ui| {
             egui::warn_if_debug_build(ui);
@@ -119,63 +117,7 @@ impl eframe::App for App {
             if self.test_vec.len() > 60 {
                 self.test_vec.pop_front();
             }
-
-            use egui::plot::{
-                Bar, BarChart, Legend, Plot,
-            };
-            let chart = BarChart::new(
-                self.test_vec
-                    .iter()
-                    .enumerate()
-                    .map(|(i, x)| Bar::new((i + 1) as _, *x as f64))
-                    .collect()
-
-            )
-            .color(egui::Color32::LIGHT_BLUE)
-            .name("Normal Distribution");
-            // if !self.vertical {
-            //     chart = chart.horizontal();
-            // }
-
-            Plot::new("Normal Distribution Demo")
-                .width(200.)
-                .height(100.)
-                .legend(Legend::default())
-                .data_aspect(1.0)
-                .show(ui, |plot_ui| plot_ui.bar_chart(chart))
-                .response
         });
-
-        // TODO debug module
-
-        egui::Window::new("cpu")
-            .min_width(800.)
-            .show(ctx, |ui| {
-                let mut debug = String::new();
-                debug.push_str(&format!("PC: {:X}\n\n", self.emu.core.pc));
-
-
-                // let v = self.emu.core.mem.vdp.VSRAM.iter().map(|x|format!("{:X}", x)).collect::<Vec<String>>().join(" ");
-                // debug.push_str(&format!("VSRAM: {}\n\n", v));
-
-                debug.push_str(&format!("D "));
-                for i in 0..=7 {
-                    debug.push_str(&format!("{:X} ", self.emu.core.dar[i]));
-                }
-                debug.push_str(&format!("\n"));
-
-                debug.push_str(&format!("A "));
-                for i in 0..=7 {
-                    debug.push_str(&format!("{:X} ", self.emu.core.dar[i + 8]));
-                }
-                debug.push_str(&format!("\n"));
-                debug.push_str(&format!("\n"));
-
-                for (pc, opcode) in emu::debug::disasm_demo(&self.emu) {
-                    debug.push_str(&format!("0x{:X}\t{}\n", pc, opcode));
-                }
-                ui.label(&debug);
-            });
 
     }
 }
