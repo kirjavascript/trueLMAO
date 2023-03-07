@@ -90,21 +90,27 @@ impl AddressBus for Mem {
     fn copy_from(&mut self, _other: &Self) {
         todo!("copy from");
     }
+    #[inline]
     fn read_byte(&self, _address_space: AddressSpace, address: u32) -> u32 {
         self.read_u8(address)
     }
+    #[inline]
     fn read_word(&self, _address_space: AddressSpace, address: u32) -> u32 {
         self.read_u16(address)
     }
+    #[inline]
     fn read_long(&self, _address_space: AddressSpace, address: u32) -> u32 {
         self.read_u32(address)
     }
+    #[inline]
     fn write_byte(&mut self, _address_space: AddressSpace, address: u32, value: u32) {
         self.write_u8(address, value)
     }
+    #[inline]
     fn write_word(&mut self, _address_space: AddressSpace, address: u32, value: u32) {
         self.write_u16(address, value)
     }
+    #[inline]
     fn write_long(&mut self, _address_space: AddressSpace, address: u32, value: u32) {
         self.write_u32(address, value)
     }
