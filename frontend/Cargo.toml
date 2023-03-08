@@ -20,7 +20,6 @@ emu = { path = "../emu" }
 
 egui = "0.20.1"
 eframe = { version = "0.20.1", features = ["persistence"] }
-egui_memory_editor = "0.1.0"
 # serde = { version = "1", features = ["derive"] } # You only need this if you want app persistence
 
 # native:

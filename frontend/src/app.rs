@@ -13,7 +13,7 @@ pub struct App {
 
 impl Default for App {
     fn default() -> Self {
-        let buf: Vec<u8> = include_bytes!("/home/cake/sonic/roms/s1p.bin").to_vec();
+        let buf: Vec<u8> = include_bytes!("./s1proto.bin").to_vec();
         Self {
             emu: Megadrive::new(buf),
             debug: Default::default(),
