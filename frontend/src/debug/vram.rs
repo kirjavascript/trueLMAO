@@ -60,7 +60,7 @@ impl VRAM {
                             "vram",
                             egui::ColorImage {
                                 size: [WIDTH*8, (end - start) * 8],
-                                pixels: pixels.to_vec(),
+                                pixels,
                             },
                             egui::TextureOptions::NEAREST
                         );

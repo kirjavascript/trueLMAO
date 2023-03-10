@@ -12,7 +12,7 @@ pub fn menu<'a>(fullscreen: &'a mut bool, _frame: &'a mut eframe::Frame) ->
 
             ui.menu_button("Window", |ui| {
                 if ui.button("Auto-arrange").clicked() {
-                    ui.ctx().memory().reset_areas();
+                    ui.ctx().memory_mut(|mem| mem.reset_areas());
                     ui.close_menu();
                 }
                 if ui.button("Fullscreen").clicked() {

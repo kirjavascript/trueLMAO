@@ -21,5 +21,8 @@ impl Debug {
         cpu::cpu_window(&ctx, &emu);
         palette::palette_window(&ctx, &emu);
         self.vram.render(&ctx, &emu);
+
+
+
     }
 }

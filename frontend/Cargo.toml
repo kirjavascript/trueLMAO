@@ -18,8 +18,8 @@ emu = { path = "../emu" }
 # rfd = "0.8"
 # hqx = { git = "https://github.com/CryZe/wasmboy-rs", branch = "master" }
 
-egui = "0.20.1"
-eframe = { version = "0.20.1", features = ["persistence"] }
+egui = "0.21.0"
+eframe = { version = "0.21.0", features = ["persistence"] }
 # serde = { version = "1", features = ["derive"] } # You only need this if you want app persistence
 
 # native:
