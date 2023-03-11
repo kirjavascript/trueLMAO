@@ -32,16 +32,6 @@ impl App {
             ..egui::Visuals::default()
         });
 
-        // let mut fonts = egui::FontDefinitions::default();
-
-        // fonts
-        //     .families
-        //     .entry(egui::FontFamily::Proportional)
-        //     .or_default()
-        //     .push("Hack".to_string());
-
-        // cc.egui_ctx.set_fonts(fonts);
-
         // Load previous app state (if any).
         // Note that you must enable the `persistence` feature for this to work.
         // if let Some(storage) = cc.storage {

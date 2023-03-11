@@ -6,12 +6,14 @@ use vram::VRAM;
 
 pub struct Debug {
     pub vram: VRAM,
+    tab_index: usize,
 }
 
 impl Default for Debug {
     fn default() -> Self {
         Self {
             vram: Default::default(),
+            tab_index: 0,
         }
     }
 }
@@ -22,20 +24,32 @@ impl Debug {
         palette::palette_window(&ctx, &emu);
         self.vram.render(&ctx, &emu);
 
-        const ASCII: &str = r##"................................ !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~................................. ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþ"##;
+        const ASCII: &str = r##"................................ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~................................. ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþ"##;
 
         egui::Window::new("memory")
             .show(ctx, |ui| {
 
-                // TODO: difference accessors
+                let tabs: [(&str, usize, Box<dyn Fn(usize) -> u8>); 2] = [
+                    ("RAM", 0x10000, Box::new(|offset: usize|
+                         emu.core.mem.ram[offset])),
+                    ("ROM", emu.core.mem.rom.size(), Box::new(|offset: usize|
+                          emu.core.mem.rom.read_byte(offset as _))),
+                ];
 
-                // let tabs = [
-                //     (0xFFFF, &emu.core.mem.ram),
-                // ];
+                let (selected_name, total_bytes, accessor) = &tabs[self.tab_index];
 
-                // emu.core.mem.ram
+                ui.horizontal(|ui| {
+                    for (i, (name, _, _)) in tabs.iter().enumerate() {
+                        if ui
+                            .selectable_label(selected_name == name, *name)
+                                .clicked()
+                        {
+                            self.tab_index = i;
+                        }
+                    }
+                });
+
                 let bytes_row = 16;
-                let total_bytes = 0xFFFF;
                 let rows = total_bytes / bytes_row;
 
                 egui::ScrollArea::vertical()
@@ -44,17 +58,15 @@ impl Debug {
                         for i in row_range {
                             let offset = i * bytes_row;
                             let bytes = (offset..offset+bytes_row)
-                                .enumerate()
-                                .map(|(idx, offset)| {
-                                    format!(" {:02X}", emu.core.mem.ram[idx + offset])
+                                .map(|offset| {
+                                    format!(" {:02X}", accessor(offset))
                                 }).collect::<String>();
 
                             let ascii = (offset..offset+bytes_row)
-                                .enumerate()
-                                .map(|(idx, offset)| {
-                                    format!("{}", ASCII.chars().nth(emu.core.mem.ram[idx + offset] as _).unwrap_or('.'))
+                                .map(|offset| {
+                                    format!("{}", ASCII.chars().nth(accessor(offset) as _).unwrap_or('.'))
                                 }).collect::<String>();
-                            ui.monospace(format!("{:04X} {} {}", i, bytes, ascii));
+                            ui.monospace(format!("{:04X} {} {}", i * 16, bytes, ascii));
                         }
                     });
 

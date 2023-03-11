@@ -1,11 +1,11 @@
 [package]
 name = "frontend"
-default-run = "frontend_bin"
+default-run = "trueLMAO"
 version = "0.1.0"
 edition = "2021"
 
 [[bin]]
-name = "frontend_bin"
+name = "trueLMAO"
 path = "src/main.rs"
 
 [lib]
