@@ -36,7 +36,7 @@ impl App {
 
         // fonts
         //     .families
-        //     .entry(egui::FontFamily::Monospace)
+        //     .entry(egui::FontFamily::Proportional)
         //     .or_default()
         //     .push("Hack".to_string());
 

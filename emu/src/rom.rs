@@ -22,6 +22,10 @@ impl ROM {
         ((self.read_word(addr) as u32) << 16) | self.read_word(addr + 2) as u32
     }
 
+    pub fn size(&self) -> usize {
+        self.bytes.len()
+    }
+
     pub fn read_string(&self, range: std::ops::Range<usize>) -> String {
         if range.end >= self.bytes.len() {
             return format!("end {} >= length {}", range.end, self.bytes.len())
