@@ -4,7 +4,6 @@ mod input;
 mod widgets;
 pub use app::App;
 
-
 #[cfg(target_arch = "wasm32")]
 use eframe::wasm_bindgen::{self, prelude::*};
 

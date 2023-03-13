@@ -1,5 +1,6 @@
 use emu::Megadrive;
 use crate::widgets;
+use widgets::file::FileDialog;
 use std::collections::VecDeque;
 
 pub struct App {
@@ -9,6 +10,7 @@ pub struct App {
     pub vsync: bool,
     pub running: bool,
     test_vec: VecDeque<u64>,
+    file: FileDialog,
 }
 
 impl Default for App {
@@ -21,6 +23,7 @@ impl Default for App {
             vsync: false,
             running: true,
             test_vec: VecDeque::with_capacity(60),
+            file: Default::default(),
         }
     }
 }
@@ -87,7 +90,7 @@ impl eframe::App for App {
 
         // debug stuff
 
-        self.debug.render(&ctx, &self.emu);
+        self.debug.render(&ctx, &mut self.emu);
 
         egui::CentralPanel::default().show(ctx, |ui| {
             egui::warn_if_debug_build(ui);
@@ -106,6 +109,10 @@ impl eframe::App for App {
 
             if self.test_vec.len() > 60 {
                 self.test_vec.pop_front();
+            }
+
+            if ui.button("Open file…").clicked() {
+                self.file.open_file();
             }
         });
 
