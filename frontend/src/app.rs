@@ -115,11 +115,9 @@ impl eframe::App for App {
                 self.file.open_file();
             }
 
-use web_sys::{window, console, Element, HtmlInputElement, FileReader};
 
             if let Some(file) = self.file.opened() {
-                console::log_1(&format!("File data buffer: {:?}", file).into());
-
+                println!("{:#?}", file);
             }
         });
 

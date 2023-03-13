@@ -1,18 +1,14 @@
-type File = Vec<u8>;
+// use std::future::Future;
+// use eframe::{egui, epi};
+// use rfd;
 
-// wasm
-
-#[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
-#[cfg(target_arch = "wasm32")]
 use wasm_bindgen::JsCast;
-#[cfg(target_arch = "wasm32")]
 use web_sys::{window, console, Element, HtmlInputElement, FileReader};
-#[cfg(target_arch = "wasm32")]
 use js_sys::{Uint8Array, ArrayBuffer, Object};
 
+type File = Vec<u8>;
 
-#[cfg(target_arch = "wasm32")]
 pub struct FileDialog {
     tx: std::sync::mpsc::Sender<File>,
     rx: std::sync::mpsc::Receiver<File>,
@@ -20,8 +16,10 @@ pub struct FileDialog {
     closure: Option<Closure<dyn FnMut()>>,
 }
 
-#[cfg(target_arch = "wasm32")]
+// #[cfg(not(target_arch = "wasm32"))]
+
 impl Default for FileDialog {
+    #[cfg(target_arch = "wasm32")]
     fn default() -> Self {
         let (tx, rx) = std::sync::mpsc::channel();
 
@@ -41,14 +39,12 @@ impl Default for FileDialog {
     }
 }
 
-#[cfg(target_arch = "wasm32")]
 impl Drop for FileDialog {
     fn drop(&mut self) {
         self.input.remove();
     }
 }
 
-#[cfg(target_arch = "wasm32")]
 impl FileDialog {
     pub fn open_file(&mut self) {
         if let Some(closure) = &self.closure {
@@ -78,6 +74,14 @@ impl FileDialog {
         self.input.add_event_listener_with_callback("change", closure.as_ref().unchecked_ref()).unwrap();
         self.closure = Some(closure);
         self.input.click();
+
+
+
+            // if ui.button("Open file…").clicked() {
+            //     if let Some(path) = rfd::AsyncFileDialog::new().pick_file() {
+            //         let _ = Some(path.display().to_string());
+            //     }
+            // }
     }
 
     pub fn opened(&self) -> Option<Vec<u8>> {
@@ -90,36 +94,63 @@ impl FileDialog {
 
 }
 
-// native
+// pub fn filedialog(state: FileState) ->
+//     impl egui::Widget
+// {
+//     move |ui: &mut egui::Ui| {
 
-#[cfg(not(target_arch = "wasm32"))]
-use rfd;
+// }
 
-#[cfg(not(target_arch = "wasm32"))]
-pub struct FileDialog {
-    file: Option<File>,
-}
 
-#[cfg(not(target_arch = "wasm32"))]
-impl Default for FileDialog {
-    fn default() -> Self {
-        Self {
-            file: None,
-        }
-    }
-}
+// impl epi::App for FileApp {
+//     fn name(&self) -> &str {
+//         "file dialog app"
+//     }
+//     fn update(&mut self, ctx: &egui::CtxRef, _frame: &mut epi::Frame<'_>) {
+//         // This is important, otherwise file dialog can hang
+//         // and messages are not processed
+//         ctx.request_repaint();
 
-#[cfg(not(target_arch = "wasm32"))]
-impl FileDialog {
-    pub fn open_file(&mut self) {
-        let path = rfd::FileDialog::new().pick_file();
-        if let Some(path) = path {
-            self.file = std::fs::read(path).ok();
-        }
-    }
+//         loop {
+//             match self.message_channel.1.try_recv() {
+//                 Ok(_message) => {
+//                     // Process FileOpen and other messages
+//                 }
+//                 Err(_) => {
+//                     break;
+//                 }
+//             }
+//         }
 
-    pub fn opened(&mut self) -> Option<File> {
-        std::mem::replace(&mut self.file, None)
-    }
+//         egui::CentralPanel::default().show(ctx, |ui| {
+//             let open_button = ui.add(egui::widgets::Button::new("Open..."));
 
-}
+//             if open_button.clicked() {
+//                 let task = rfd::AsyncFileDialog::new()
+//                     .add_filter("Text files", &["txt"])
+//                     .set_directory("/")
+//                     .pick_file();
+
+//                 let message_sender = self.message_channel.0.clone();
+
+//                 execute(async move {
+//                     let file = task.await;
+
+//                     if let Some(file) = file {
+//                         message_sender.send(file.read().await).ok();
+//                     }
+//                 });
+
+//             }
+//         });
+//     }
+// }
+
+// #[cfg(not(target_arch = "wasm32"))]
+// fn execute<F: Future<Output = ()> + Send + 'static>(f: F) {
+//     std::thread::spawn(move || futures::executor::block_on(f));
+// }
+// #[cfg(target_arch = "wasm32")]
+// fn execute<F: Future<Output = ()> + 'static>(f: F) {
+//     wasm_bindgen_futures::spawn_local(f);
+// }
