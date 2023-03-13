@@ -48,11 +48,11 @@ impl App {
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+        ctx.request_repaint();
 
         // game logic
 
         if self.running {
-            ctx.request_repaint();
 
             crate::input::dummy_input(ctx, &mut self.emu);
 
@@ -113,6 +113,13 @@ impl eframe::App for App {
 
             if ui.button("Open file…").clicked() {
                 self.file.open_file();
+            }
+
+use web_sys::{window, console, Element, HtmlInputElement, FileReader};
+
+            if let Some(file) = self.file.opened() {
+                console::log_1(&format!("File data buffer: {:?}", file).into());
+
             }
         });
 

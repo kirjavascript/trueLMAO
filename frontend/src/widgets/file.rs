@@ -7,14 +7,11 @@ use wasm_bindgen::JsCast;
 use web_sys::{window, console, Element, HtmlInputElement, FileReader};
 use js_sys::{Uint8Array, ArrayBuffer, Object};
 
-pub enum Message {
-    File(Vec<u8>),
-    // Other messages
-}
+type File = Vec<u8>;
 
 pub struct FileDialog {
-    tx: std::sync::mpsc::Sender<Message>,
-    rx: std::sync::mpsc::Receiver<Message>,
+    tx: std::sync::mpsc::Sender<File>,
+    rx: std::sync::mpsc::Receiver<File>,
     input: HtmlInputElement,
     closure: Option<Closure<dyn FnMut()>>,
 }
@@ -32,26 +29,6 @@ impl Default for FileDialog {
         input.set_attribute("type", "file").unwrap();
         input.style().set_property("display", "none").unwrap();
         body.append_child(&input).unwrap();
-
-
-        // let input_clone = input.clone();
-        // let closure = Closure::wrap(Box::new(move || {
-        //     if let Some(file) = input_clone.files().and_then(|files| files.get(0)) {
-        //         let reader = FileReader::new().unwrap();
-        //         let reader_clone = reader.clone();
-        //         let onload_closure = Closure::wrap(Box::new(move || {
-        //             let array_buffer = reader_clone.result().unwrap().dyn_into::<ArrayBuffer>().unwrap();
-        //             let buffer = Uint8Array::new(&array_buffer).to_vec();
-        //             console::log_1(&format!("File data buffer: {:?}", buffer).into());
-        //         }) as Box<dyn FnMut()>);
-
-        //         reader.set_onload(Some(onload_closure.as_ref().unchecked_ref()));
-        //         reader.read_as_array_buffer(&file).unwrap();
-        //         onload_closure.forget();
-        //     }
-        // }) as Box<dyn FnMut()>);
-        // input.add_event_listener_with_callback("change", closure.as_ref().unchecked_ref()).unwrap();
-        // closure.forget();
 
         Self {
             rx,
@@ -85,8 +62,7 @@ impl FileDialog {
                 let onload_closure = Closure::once(Box::new(move || {
                     let array_buffer = reader_clone.result().unwrap().dyn_into::<ArrayBuffer>().unwrap();
                     let buffer = Uint8Array::new(&array_buffer).to_vec();
-                    console::log_1(&format!("File data buffer: {:?}", buffer).into());
-                    tx.send(Message::File(buffer));
+                    tx.send(buffer);
                 }));
 
                 reader.set_onload(Some(onload_closure.as_ref().unchecked_ref()));
@@ -107,6 +83,15 @@ impl FileDialog {
             //     }
             // }
     }
+
+    pub fn opened(&self) -> Option<Vec<u8>> {
+        if let Ok(file) = self.rx.try_recv() {
+            Some(file)
+        } else {
+            None
+        }
+    }
+
 }
 
 // pub fn filedialog(state: FileState) ->
