@@ -45,6 +45,9 @@ impl Default for FileDialog {
 impl Drop for FileDialog {
     fn drop(&mut self) {
         self.input.remove();
+        if self.closure.is_some() {
+            std::mem::replace(&mut self.closure, None).unwrap().forget();
+        }
     }
 }
 
