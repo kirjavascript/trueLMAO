@@ -53,7 +53,7 @@ impl Drop for FileDialog {
 
 #[cfg(target_arch = "wasm32")]
 impl FileDialog {
-    pub fn open_file(&mut self) {
+    pub fn open(&mut self) {
         if let Some(closure) = &self.closure {
             self.input.remove_event_listener_with_callback("change", closure.as_ref().unchecked_ref()).unwrap();
             std::mem::replace(&mut self.closure, None).unwrap().forget();
@@ -83,7 +83,7 @@ impl FileDialog {
         self.input.click();
     }
 
-    pub fn opened(&self) -> Option<Vec<u8>> {
+    pub fn get(&self) -> Option<Vec<u8>> {
         if let Ok(file) = self.rx.try_recv() {
             Some(file)
         } else {
@@ -114,14 +114,14 @@ impl Default for FileDialog {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl FileDialog {
-    pub fn open_file(&mut self) {
+    pub fn open(&mut self) {
         let path = rfd::FileDialog::new().pick_file();
         if let Some(path) = path {
             self.file = std::fs::read(path).ok();
         }
     }
 
-    pub fn opened(&mut self) -> Option<File> {
+    pub fn get(&mut self) -> Option<File> {
         std::mem::replace(&mut self.file, None)
     }
 

@@ -112,11 +112,11 @@ impl eframe::App for App {
             }
 
             if ui.button("Open file…").clicked() {
-                self.file.open_file();
+                self.file.open();
             }
 
 
-            if let Some(file) = self.file.opened() {
+            if let Some(file) = self.file.get() {
                 println!("{:#?}", file);
             }
         });
