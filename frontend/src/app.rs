@@ -111,10 +111,13 @@ impl eframe::App for App {
                 self.test_vec.pop_front();
             }
 
-            if ui.button("Open file…").clicked() {
+            if ui.button("Open file").clicked() {
                 self.file.open();
             }
 
+            if ui.button("Save file").clicked() {
+                self.file.save("test.txt", vec![0, 1, 2, 3, 33]);
+            }
 
             if let Some(file) = self.file.get() {
                 println!("{:#?}", file);

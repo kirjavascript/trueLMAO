@@ -1,4 +1,4 @@
-type File = Vec<u8>;
+type FileData = Vec<u8>;
 
 // wasm
 
@@ -7,15 +7,15 @@ use wasm_bindgen::prelude::*;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::JsCast;
 #[cfg(target_arch = "wasm32")]
-use web_sys::{window, console, Element, HtmlInputElement, FileReader};
+use web_sys::{window, Url, File, HtmlInputElement, FileReader};
 #[cfg(target_arch = "wasm32")]
-use js_sys::{Uint8Array, ArrayBuffer, Object};
+use js_sys::{Uint8Array, ArrayBuffer};
 
 
 #[cfg(target_arch = "wasm32")]
 pub struct FileDialog {
-    tx: std::sync::mpsc::Sender<File>,
-    rx: std::sync::mpsc::Receiver<File>,
+    tx: std::sync::mpsc::Sender<FileData>,
+    rx: std::sync::mpsc::Receiver<FileData>,
     input: HtmlInputElement,
     closure: Option<Closure<dyn FnMut()>>,
 }
@@ -69,7 +69,7 @@ impl FileDialog {
                 let onload_closure = Closure::once(Box::new(move || {
                     let array_buffer = reader_clone.result().unwrap().dyn_into::<ArrayBuffer>().unwrap();
                     let buffer = Uint8Array::new(&array_buffer).to_vec();
-                    tx.send(buffer);
+                    tx.send(buffer).ok();
                 }));
 
                 reader.set_onload(Some(onload_closure.as_ref().unchecked_ref()));
@@ -91,6 +91,21 @@ impl FileDialog {
         }
     }
 
+    pub fn save(&self, filename: &str, filedata: FileData) {
+        let array = js_sys::Uint8Array::from(filedata.as_slice());
+        let blob_parts = js_sys::Array::new();
+        blob_parts.push(&array.buffer());
+
+        let file = File::new_with_blob_sequence_and_options(
+            &blob_parts.into(),
+            filename,
+            web_sys::FilePropertyBag::new().type_("application/octet-stream")
+        ).unwrap();
+        let url = Url::create_object_url_with_blob(&file);
+        if let Some(window) = web_sys::window() {
+            window.location().set_href(&url.unwrap()).ok();
+        }
+    }
 }
 
 // native
@@ -100,7 +115,7 @@ use rfd;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub struct FileDialog {
-    file: Option<File>,
+    file: Option<FileData>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -121,8 +136,17 @@ impl FileDialog {
         }
     }
 
-    pub fn get(&mut self) -> Option<File> {
+    pub fn get(&mut self) -> Option<FileData> {
         std::mem::replace(&mut self.file, None)
     }
 
+    pub fn save(&self, filename: &str, file: FileData) {
+        let path = rfd::FileDialog::new()
+            .set_file_name(filename)
+            .save_file();
+
+        if let Some(path) = path {
+            std::fs::write(path, file).ok();
+        }
+    }
 }

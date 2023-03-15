@@ -19,18 +19,18 @@ emu = { path = "../emu" }
 
 egui = "0.21.0"
 eframe = { version = "0.21.0", features = ["persistence"] }
-rfd = "0.11"
 # serde = { version = "1", features = ["derive"] } # You only need this if you want app persistence
 
 # native:
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tracing-subscriber = "0.3"
+rfd = "0.11"
 
 # web:
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 console_error_panic_hook = "0.1.6"
 tracing-wasm = "0.2"
 wasm-bindgen-futures = "0.4"
-web-sys = { version = "0.3.58" }
+web-sys = { version = "0.3.61", features = ["Window", "Url", "File", "Blob", "HtmlAnchorElement", "BlobPropertyBag", "FilePropertyBag"] }
 wasm-bindgen = "=0.2.84"
 js-sys = "0.3"
