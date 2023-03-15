@@ -9,7 +9,7 @@ use wasm_bindgen::JsCast;
 #[cfg(target_arch = "wasm32")]
 use web_sys::{window, Url, File, HtmlInputElement, FileReader};
 #[cfg(target_arch = "wasm32")]
-use js_sys::{Uint8Array, ArrayBuffer};
+use js_sys::{Uint8Array, Array};
 
 
 #[cfg(target_arch = "wasm32")]
@@ -92,8 +92,8 @@ impl FileDialog {
     }
 
     pub fn save(&self, filename: &str, filedata: FileData) {
-        let array = js_sys::Uint8Array::from(filedata.as_slice());
-        let blob_parts = js_sys::Array::new();
+        let array = Uint8Array::from(filedata.as_slice());
+        let blob_parts = Array::new();
         blob_parts.push(&array.buffer());
 
         let file = File::new_with_blob_sequence_and_options(
