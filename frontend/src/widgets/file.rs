@@ -9,7 +9,7 @@ use wasm_bindgen::JsCast;
 #[cfg(target_arch = "wasm32")]
 use web_sys::{window, Url, File, HtmlInputElement, FileReader};
 #[cfg(target_arch = "wasm32")]
-use js_sys::{Uint8Array, Array};
+use js_sys::{Uint8Array, Array, ArrayBuffer};
 
 
 #[cfg(target_arch = "wasm32")]
